@@ -22,10 +22,14 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: ''
+
       - name: Install Android SDK 35
         run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+          sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - uses: gradle/actions/setup-gradle@v4
         with:
@@ -62,7 +66,6 @@ jobs:
               dst.parent.mkdir(parents=True, exist_ok=True)
               shutil.copy2(src, dst)
 
-          # Files intentionally omitted from offline-files.json but useful in the package.
           for name in ['offline-files.json', 'README-AR.md', 'INSPECTION-AR.md', 'server.py']:
               src = flat / name
               if src.exists():
