@@ -12,6 +12,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+
     steps:
       - uses: actions/checkout@v4
 
@@ -29,27 +31,75 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Download CBT package from release
+      - name: Download all CBT release assets
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release download Emp190 -p 'EMB190-Mobile.zip'
-          rm -rf app/src/main/assets
-          mkdir -p app/src/main/assets
-          unzip -q EMB190-Mobile.zip -d app/src/main/assets
-          if [ ! -f app/src/main/assets/index.html ]; then
-            echo 'index.html not found after extraction'
-            exit 1
-          fi
+          rm -rf flat-assets app/src/main/assets
+          mkdir -p flat-assets app/src/main/assets
+          gh release download Emp190 --dir flat-assets
+          test -f flat-assets/offline-files.json
+          echo "Downloaded $(find flat-assets -maxdepth 1 -type f | wc -l) release assets"
+
+      - name: Restore original CBT folder structure
+        run: |
+          python3 - <<'PY'
+          import json
+          import shutil
+          from pathlib import Path
+
+          flat = Path('flat-assets')
+          out = Path('app/src/main/assets')
+          paths = json.loads((flat / 'offline-files.json').read_text(encoding='utf-8'))
+
+          missing = []
+          for rel in paths:
+              src = flat / Path(rel).name
+              dst = out / rel
+              if not src.exists():
+                  missing.append(rel)
+                  continue
+              dst.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(src, dst)
+
+          # Files intentionally omitted from offline-files.json but useful in the package.
+          for name in ['offline-files.json', 'README-AR.md', 'INSPECTION-AR.md', 'server.py']:
+              src = flat / name
+              if src.exists():
+                  shutil.copy2(src, out / name)
+
+          if missing:
+              print('Missing assets:')
+              print('\n'.join(missing[:100]))
+              raise SystemExit(f'{len(missing)} required CBT files are missing')
+
+          required = [
+              out / 'index.html',
+              out / 'app.js',
+              out / 'catalog.js',
+              out / 'Data' / 'Data.txt',
+              out / 'ruffle' / 'ruffle.js',
+              out / 'Start.swf',
+          ]
+          for p in required:
+              if not p.exists():
+                  raise SystemExit(f'Required file not found after reconstruction: {p}')
+
+          files = [p for p in out.rglob('*') if p.is_file()]
+          print(f'Reconstructed {len(files)} CBT files')
+          PY
 
       - name: Build debug APK
         run: gradle --no-daemon assembleDebug --stacktrace
 
       - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk EMB190-CBT.apk
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk EMB190-CBT.apk
+          ls -lh EMB190-CBT.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: EMB190-CBT-APK
           path: EMB190-CBT.apk
+          retention-days: 7
