@@ -1,1 +1,1 @@
-Build requested after reconstructing CBT release assets.
+Second build requested with Android SDK setup v4.
