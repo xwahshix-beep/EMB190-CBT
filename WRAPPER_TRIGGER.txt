@@ -1,1 +1,1 @@
-Build wrapper and signing tools for local CBT packaging.
+Rebuild wrapper tools including libc++ for zipalign.
