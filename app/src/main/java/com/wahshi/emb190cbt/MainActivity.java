@@ -7,15 +7,19 @@ import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.ByteArrayInputStream;
@@ -29,12 +33,16 @@ import java.util.Locale;
 import java.util.Map;
 
 public class MainActivity extends Activity {
-    private static final String HOST = "app.emb190.local";
-    private static final String START_URL = "https://" + HOST + "/index.html";
-    private WebView webView;
+    private static final String HOST = "appassets.androidplatform.net";
+    private static final String PREFIX = "/assets/";
+    private static final String START_URL = "https://" + HOST + PREFIX + "index.html";
+
     private FrameLayout root;
+    private TextView statusView;
+    private WebView webView;
     private View customView;
     private WebChromeClient.CustomViewCallback customViewCallback;
+    private WebChromeClient chromeClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,80 +51,127 @@ public class MainActivity extends Activity {
         getWindow().setNavigationBarColor(Color.rgb(16, 42, 67));
 
         root = new FrameLayout(this);
-        webView = new WebView(this);
-        root.addView(webView, new FrameLayout.LayoutParams(
+        root.setBackgroundColor(Color.rgb(16, 42, 67));
+
+        statusView = new TextView(this);
+        statusView.setText("EMB190 CBT\nLoading…");
+        statusView.setTextColor(Color.WHITE);
+        statusView.setTextSize(22f);
+        statusView.setGravity(Gravity.CENTER);
+        statusView.setPadding(40, 40, 40, 40);
+        root.addView(statusView, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
+
         setContentView(root);
 
-        WebSettings settings = webView.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true);
-        settings.setDatabaseEnabled(true);
-        settings.setMediaPlaybackRequiresUserGesture(false);
-        settings.setBuiltInZoomControls(true);
-        settings.setDisplayZoomControls(false);
-        settings.setSupportZoom(true);
-        settings.setAllowFileAccess(false);
-        settings.setAllowContentAccess(false);
-        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        settings.setUserAgentString(settings.getUserAgentString() + " EMB190APK/1.0");
+        // Draw the native startup screen first, then initialize WebView.
+        root.postDelayed(() -> initializeWebView(savedInstanceState), 350);
+    }
 
-        webView.setBackgroundColor(Color.rgb(16, 42, 67));
-        webView.setWebViewClient(new LocalAssetClient(getAssets()));
-        webView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onShowCustomView(View view, CustomViewCallback callback) {
-                if (customView != null) {
-                    callback.onCustomViewHidden();
-                    return;
+    private void initializeWebView(Bundle savedInstanceState) {
+        try {
+            // Verify the most important packaged file before touching WebView.
+            try (InputStream ignored = getAssets().open("index.html", AssetManager.ACCESS_STREAMING)) {
+                // Asset exists.
+            }
+
+            statusView.setText("EMB190 CBT\nStarting training system…");
+
+            webView = new WebView(this);
+            WebSettings settings = webView.getSettings();
+            settings.setJavaScriptEnabled(true);
+            settings.setDomStorageEnabled(true);
+            settings.setDatabaseEnabled(true);
+            settings.setMediaPlaybackRequiresUserGesture(false);
+            settings.setBuiltInZoomControls(true);
+            settings.setDisplayZoomControls(false);
+            settings.setSupportZoom(true);
+            settings.setAllowFileAccess(false);
+            settings.setAllowContentAccess(false);
+            settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+            settings.setUserAgentString(settings.getUserAgentString() + " EMB190APK/2.0");
+
+            webView.setBackgroundColor(Color.rgb(16, 42, 67));
+            webView.setWebViewClient(new LocalAssetClient(getAssets()));
+
+            chromeClient = new WebChromeClient() {
+                @Override
+                public void onShowCustomView(View view, CustomViewCallback callback) {
+                    if (customView != null) {
+                        callback.onCustomViewHidden();
+                        return;
+                    }
+                    customView = view;
+                    customViewCallback = callback;
+                    webView.setVisibility(View.GONE);
+                    root.addView(customView, new FrameLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT));
+                    getWindow().getDecorView().setSystemUiVisibility(
+                            View.SYSTEM_UI_FLAG_FULLSCREEN |
+                            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
                 }
-                customView = view;
-                customViewCallback = callback;
-                webView.setVisibility(View.GONE);
-                root.addView(customView, new FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT));
-                getWindow().getDecorView().setSystemUiVisibility(
-                        View.SYSTEM_UI_FLAG_FULLSCREEN |
-                        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-            }
 
-            @Override
-            public void onHideCustomView() {
-                if (customView == null) return;
-                root.removeView(customView);
-                customView = null;
-                webView.setVisibility(View.VISIBLE);
-                getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-                if (customViewCallback != null) customViewCallback.onCustomViewHidden();
-                customViewCallback = null;
-            }
-        });
+                @Override
+                public void onHideCustomView() {
+                    if (customView == null) return;
+                    root.removeView(customView);
+                    customView = null;
+                    webView.setVisibility(View.VISIBLE);
+                    getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+                    if (customViewCallback != null) customViewCallback.onCustomViewHidden();
+                    customViewCallback = null;
+                }
+            };
+            webView.setWebChromeClient(chromeClient);
 
-        if (savedInstanceState == null) {
-            webView.loadUrl(START_URL);
-        } else {
-            webView.restoreState(savedInstanceState);
+            root.addView(webView, 0, new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT));
+
+            if (savedInstanceState == null || !webView.restoreState(savedInstanceState)) {
+                webView.loadUrl(START_URL);
+            }
+        } catch (Throwable t) {
+            showStartupError(t);
         }
+    }
+
+    private void showStartupError(Throwable t) {
+        String detail = t.getClass().getSimpleName();
+        if (!TextUtils.isEmpty(t.getMessage())) detail += ": " + t.getMessage();
+        statusView.setText("EMB190 CBT could not start.\n\n" + detail +
+                "\n\nTake a screenshot of this screen and send it to ChatGPT.");
+        statusView.bringToFront();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        webView.saveState(outState);
+        if (webView != null) webView.saveState(outState);
         super.onSaveInstanceState(outState);
     }
 
     @Override
     public void onBackPressed() {
-        if (customView != null) {
-            ((WebChromeClient) webView.getWebChromeClient()).onHideCustomView();
-        } else if (webView.canGoBack()) {
+        if (customView != null && chromeClient != null) {
+            chromeClient.onHideCustomView();
+        } else if (webView != null && webView.canGoBack()) {
             webView.goBack();
         } else {
             super.onBackPressed();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (webView != null) {
+            webView.stopLoading();
+            webView.destroy();
+            webView = null;
+        }
+        super.onDestroy();
     }
 
     private class LocalAssetClient extends WebViewClient {
@@ -150,10 +205,31 @@ public class MainActivity extends Activity {
             return true;
         }
 
+        @Override
+        public void onPageFinished(WebView view, String url) {
+            super.onPageFinished(view, url);
+            if (statusView != null) {
+                statusView.setVisibility(View.GONE);
+            }
+        }
+
+        @Override
+        public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+            super.onReceivedError(view, request, error);
+            if (request.isForMainFrame()) {
+                CharSequence description = error.getDescription();
+                statusView.setText("EMB190 CBT page error.\n\n" + description +
+                        "\n\nTake a screenshot and send it to ChatGPT.");
+                statusView.setVisibility(View.VISIBLE);
+                statusView.bringToFront();
+            }
+        }
+
         private WebResourceResponse assetResponse(Uri uri) {
             String path = uri.getPath();
-            if (path == null || path.equals("/") || path.isEmpty()) path = "/index.html";
-            path = path.substring(1);
+            if (path == null || path.equals("/") || path.isEmpty()) path = PREFIX + "index.html";
+            if (!path.startsWith(PREFIX)) return error(404, "Not Found");
+            path = path.substring(PREFIX.length());
             if (path.contains("..")) return error(403, "Forbidden");
 
             String mime = mimeType(path);
