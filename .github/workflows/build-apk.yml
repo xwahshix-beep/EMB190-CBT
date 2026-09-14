@@ -2,6 +2,9 @@ name: Build EMB190 CBT APK
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'BUILD_TRIGGER.txt'
 
 permissions:
   contents: read
