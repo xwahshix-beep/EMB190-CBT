@@ -64,14 +64,11 @@ public class MainActivity extends Activity {
                 ViewGroup.LayoutParams.MATCH_PARENT));
 
         setContentView(root);
-
-        // Draw the native startup screen first, then initialize WebView.
         root.postDelayed(() -> initializeWebView(savedInstanceState), 350);
     }
 
     private void initializeWebView(Bundle savedInstanceState) {
         try {
-            // Verify the most important packaged file before touching WebView.
             try (InputStream ignored = getAssets().open("index.html", AssetManager.ACCESS_STREAMING)) {
                 // Asset exists.
             }
@@ -131,7 +128,7 @@ public class MainActivity extends Activity {
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT));
 
-            if (savedInstanceState == null || !webView.restoreState(savedInstanceState)) {
+            if (savedInstanceState == null || webView.restoreState(savedInstanceState) == null) {
                 webView.loadUrl(START_URL);
             }
         } catch (Throwable t) {
@@ -144,6 +141,7 @@ public class MainActivity extends Activity {
         if (!TextUtils.isEmpty(t.getMessage())) detail += ": " + t.getMessage();
         statusView.setText("EMB190 CBT could not start.\n\n" + detail +
                 "\n\nTake a screenshot of this screen and send it to ChatGPT.");
+        statusView.setVisibility(View.VISIBLE);
         statusView.bringToFront();
     }
 
@@ -208,17 +206,14 @@ public class MainActivity extends Activity {
         @Override
         public void onPageFinished(WebView view, String url) {
             super.onPageFinished(view, url);
-            if (statusView != null) {
-                statusView.setVisibility(View.GONE);
-            }
+            if (statusView != null) statusView.setVisibility(View.GONE);
         }
 
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             super.onReceivedError(view, request, error);
             if (request.isForMainFrame()) {
-                CharSequence description = error.getDescription();
-                statusView.setText("EMB190 CBT page error.\n\n" + description +
+                statusView.setText("EMB190 CBT page error.\n\n" + error.getDescription() +
                         "\n\nTake a screenshot and send it to ChatGPT.");
                 statusView.setVisibility(View.VISIBLE);
                 statusView.bringToFront();
