@@ -1,0 +1,57 @@
+name: Build Android Wrapper Tools
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'WRAPPER_TRIGGER.txt'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: ''
+
+      - name: Install Android SDK 35
+        run: sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build wrapper APK
+        run: gradle --no-daemon assembleDebug --stacktrace
+
+      - name: Collect signing tools
+        run: |
+          mkdir -p signing-tools/lib
+          cp "$ANDROID_HOME/build-tools/35.0.0/apksigner" signing-tools/
+          cp "$ANDROID_HOME/build-tools/35.0.0/zipalign" signing-tools/
+          cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" signing-tools/lib/
+          chmod +x signing-tools/apksigner signing-tools/zipalign
+          cp app/build/outputs/apk/debug/app-debug.apk wrapper-debug.apk
+          ls -lh wrapper-debug.apk signing-tools/apksigner signing-tools/zipalign signing-tools/lib/apksigner.jar
+
+      - name: Upload wrapper and tools
+        uses: actions/upload-artifact@v4
+        with:
+          name: EMB190-wrapper-tools
+          path: |
+            wrapper-debug.apk
+            signing-tools
+          retention-days: 7
