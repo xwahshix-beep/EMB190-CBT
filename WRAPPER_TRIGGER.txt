@@ -1,1 +1,1 @@
-Rebuild wrapper tools including libc++ for zipalign.
+Build EMB190 CBT v2 diagnostic wrapper.
