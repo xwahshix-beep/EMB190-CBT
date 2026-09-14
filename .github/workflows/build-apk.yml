@@ -71,10 +71,10 @@ jobs:
               if src.exists():
                   shutil.copy2(src, out / name)
 
+          Path('missing-assets.txt').write_text('\n'.join(missing), encoding='utf-8')
+          print(f'Missing non-core assets: {len(missing)}')
           if missing:
-              print('Missing assets:')
               print('\n'.join(missing[:100]))
-              raise SystemExit(f'{len(missing)} required CBT files are missing')
 
           required = [
               out / 'index.html',
@@ -84,9 +84,9 @@ jobs:
               out / 'ruffle' / 'ruffle.js',
               out / 'Start.swf',
           ]
-          for p in required:
-              if not p.exists():
-                  raise SystemExit(f'Required file not found after reconstruction: {p}')
+          missing_core = [str(p) for p in required if not p.exists()]
+          if missing_core:
+              raise SystemExit('Missing core files: ' + ', '.join(missing_core))
 
           files = [p for p in out.rglob('*') if p.is_file()]
           print(f'Reconstructed {len(files)} CBT files')
@@ -104,5 +104,16 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: EMB190-CBT-APK
-          path: EMB190-CBT.apk
+          path: |
+            EMB190-CBT.apk
+            missing-assets.txt
+          retention-days: 7
+
+      - name: Upload diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: EMB190-CBT-diagnostics
+          path: missing-assets.txt
+          if-no-files-found: ignore
           retention-days: 7
