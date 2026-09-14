@@ -1,1 +1,1 @@
-Second build requested with Android SDK setup v4.
+Third build requested with tolerant asset reconstruction.
