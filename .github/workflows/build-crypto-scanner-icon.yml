@@ -1,0 +1,128 @@
+name: Build Crypto Explosion Radar APK with New Icon
+
+on:
+  push:
+    branches: [ crypto-scanner-apk-build ]
+    paths:
+      - '.github/workflows/build-crypto-scanner-icon.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install Android SDK 35
+        run: sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Restore scanner source from original build workflow
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, base64, io, tarfile
+
+          wf = Path('.github/workflows/build-crypto-scanner.yml').read_text(encoding='utf-8')
+          m = re.search(r"echo '([A-Za-z0-9+/=]+)'", wf)
+          if not m:
+              raise SystemExit('Scanner source archive not found')
+          raw = base64.b64decode(m.group(1))
+          Path('scanner').mkdir(exist_ok=True)
+          with tarfile.open(fileobj=io.BytesIO(raw), mode='r:gz') as tf:
+              tf.extractall('scanner')
+          print('Scanner source restored')
+          PY
+
+      - name: Apply new premium radar icon
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          manifest = Path('scanner/app/src/main/AndroidManifest.xml')
+          text = manifest.read_text(encoding='utf-8')
+
+          def patch_app(m):
+              attrs = m.group(1)
+              if 'android:icon=' in attrs:
+                  attrs = re.sub(r'android:icon="[^"]*"', 'android:icon="@drawable/app_icon"', attrs)
+              else:
+                  attrs += ' android:icon="@drawable/app_icon"'
+              if 'android:roundIcon=' in attrs:
+                  attrs = re.sub(r'android:roundIcon="[^"]*"', 'android:roundIcon="@drawable/app_icon"', attrs)
+              else:
+                  attrs += ' android:roundIcon="@drawable/app_icon"'
+              return '<application' + attrs + '>'
+
+          text, n = re.subn(r'<application([^>]*)>', patch_app, text, count=1)
+          if n != 1:
+              raise SystemExit('Could not patch <application> icon')
+          manifest.write_text(text, encoding='utf-8')
+
+          drawable = Path('scanner/app/src/main/res/drawable')
+          drawable.mkdir(parents=True, exist_ok=True)
+          icon = '''<?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp"
+              android:height="108dp"
+              android:viewportWidth="108"
+              android:viewportHeight="108">
+
+              <path android:fillColor="#0A0B0D" android:pathData="M0,0H108V108H0Z"/>
+
+              <path android:fillColor="#15110A" android:pathData="M8,8H100V100H8Z"/>
+              <path android:fillColor="#00000000" android:strokeColor="#F5B72B" android:strokeWidth="2.6"
+                  android:pathData="M8,8H100V100H8Z"/>
+
+              <path android:fillColor="#00000000" android:strokeColor="#C98912" android:strokeWidth="1.2"
+                  android:pathData="M54,16A38,38 0,1 1,53.9 16"/>
+              <path android:fillColor="#00000000" android:strokeColor="#A96B0D" android:strokeWidth="1.0"
+                  android:pathData="M54,27A27,27 0,1 1,53.9 27"/>
+              <path android:fillColor="#00000000" android:strokeColor="#825209" android:strokeWidth="1.0"
+                  android:pathData="M54,38A16,16 0,1 1,53.9 38"/>
+              <path android:fillColor="#00000000" android:strokeColor="#A96B0D" android:strokeWidth="1.0"
+                  android:pathData="M16,54H92M54,16V92"/>
+
+              <path android:fillColor="#4DF4B72B" android:pathData="M54,54L87,20A46,46 0,0 1,96 37Z"/>
+              <path android:fillColor="#FFE06A" android:pathData="M83,23A3.2,3.2 0,1 1,82.9 23"/>
+              <path android:fillColor="#E3A321" android:pathData="M29,31A2.2,2.2 0,1 1,28.9 31M38,43A2.0,2.0 0,1 1,37.9 43M26,66A2.1,2.1 0,1 1,25.9 66"/>
+
+              <path android:fillColor="#F4B72B" android:pathData="M30,72H34V84H30ZM40,64H44V80H40ZM50,58H54V75H50ZM60,52H64V70H60ZM70,44H74V64H70ZM80,35H84V57H80Z"/>
+              <path android:fillColor="#FFD968" android:pathData="M32,68H32.9V88H32ZM42,60H42.9V84H42ZM52,54H52.9V79H52ZM62,48H62.9V74H62ZM72,40H72.9V68H72ZM82,30H82.9V61H82Z"/>
+
+              <path android:fillColor="#00000000" android:strokeColor="#FFD24A" android:strokeWidth="3.2"
+                  android:strokeLineCap="round" android:pathData="M20,86C38,84 60,78 84,58"/>
+              <path android:fillColor="#FFD24A" android:pathData="M79,56L91,50L86,62Z"/>
+          </vector>'''
+          (drawable / 'app_icon.xml').write_text(icon, encoding='utf-8')
+          print('New launcher icon applied')
+          PY
+
+      - name: Build APK
+        working-directory: scanner
+        run: gradle --no-daemon assembleDebug --stacktrace
+
+      - name: Rename APK
+        run: cp scanner/app/build/outputs/apk/debug/app-debug.apk Crypto-Explosion-Radar-New-Icon.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Crypto-Explosion-Radar-New-Icon-APK
+          path: Crypto-Explosion-Radar-New-Icon.apk
+          retention-days: 7
