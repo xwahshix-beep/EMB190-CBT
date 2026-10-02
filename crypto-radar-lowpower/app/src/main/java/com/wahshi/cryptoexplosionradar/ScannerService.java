@@ -52,11 +52,13 @@ public class ScannerService extends Service {
     private static final String BINANCE_API = "https://api.binance.com";
     private static final String NANSEN_API = "https://api.nansen.ai";
 
+    // Restrict discovery to chains also supported by Flow Intelligence so a token can
+    // always be verified at the whale/cohort layer after Token Screener discovery.
     private static final String[][] CHAIN_GROUPS = new String[][]{
             {"ethereum", "solana", "base", "bnb", "arbitrum"},
             {"polygon", "optimism", "avalanche", "linea", "scroll"},
             {"sui", "ton", "tron", "sei", "sonic"},
-            {"mantle", "zksync", "unichain", "monad", "plasma"}
+            {"mantle", "monad", "plasma", "near", "starknet"}
     };
 
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -167,7 +169,8 @@ public class ScannerService extends Service {
             body.put("timeframe", "1h");
             body.put("pagination", new JSONObject().put("page", 1).put("per_page", 100));
             body.put("filters", new JSONObject().put("only_smart_money", true).put("hide_spam_tokens", true));
-            body.put("order_by", new JSONArray().put(new JSONObject().put("field", "netflow").put("direction", "DESC")));
+            // buy_volume is a documented sortable field; netflow is still used by our own gate below.
+            body.put("order_by", new JSONArray().put(new JSONObject().put("field", "buy_volume").put("direction", "DESC")));
 
             JSONObject response = postNansen(apiKey, "/api/v1/token-screener", body);
             JSONArray data = response.optJSONArray("data");
@@ -215,29 +218,33 @@ public class ScannerService extends Service {
     }
 
     private List<WhaleSignal> analyzeTopSeeds(String apiKey, List<Seed> seeds,
-                                               Map<String, BinanceTicker> binance, int max) throws Exception {
+                                               Map<String, BinanceTicker> binance, int max) {
         List<WhaleSignal> out = new ArrayList<>();
         int n = Math.min(max, seeds.size());
         for (int x = 0; x < n; x++) {
             Seed seed = seeds.get(x);
             BinanceTicker bt = binance.get(seed.symbol);
             if (bt == null) continue;
+            try {
+                FlowData h1 = loadFlowIntelligence(apiKey, seed, "1h");
+                if (h1 == null) continue;
+                if (h1.whaleNet <= 0 || h1.whaleCount < 2) continue;
 
-            FlowData h1 = loadFlowIntelligence(apiKey, seed, "1h");
-            if (h1 == null) continue;
-            if (h1.whaleNet <= 0 || h1.whaleCount < 2) continue;
-
-            WhaleSignal s = scoreSignal(seed, bt, h1);
-            if (s.score >= 4.0) {
-                FlowData d1 = loadFlowIntelligence(apiKey, seed, "1d");
-                s.day = d1;
-                if (d1 != null) {
-                    if (d1.whaleNet > 0 && d1.whaleCount >= 2) s.score += 0.75;
-                    if (d1.smartNet > 0 && d1.smartCount >= 2) s.score += 0.50;
-                    if (d1.exchangeNet < 0) s.score += 0.50;
+                WhaleSignal s = scoreSignal(seed, bt, h1);
+                if (s.score >= 4.0) {
+                    FlowData d1 = null;
+                    try { d1 = loadFlowIntelligence(apiKey, seed, "1d"); } catch (Exception ignored) {}
+                    s.day = d1;
+                    if (d1 != null) {
+                        if (d1.whaleNet > 0 && d1.whaleCount >= 2) s.score += 0.75;
+                        if (d1.smartNet > 0 && d1.smartCount >= 2) s.score += 0.50;
+                        if (d1.exchangeNet < 0) s.score += 0.50;
+                    }
+                    s.strong = s.score >= 5.5 && d1 != null && d1.whaleNet > 0 && h1.exchangeNet <= 0;
+                    out.add(s);
                 }
-                s.strong = s.score >= 5.5 && d1 != null && d1.whaleNet > 0 && h1.exchangeNet <= 0;
-                out.add(s);
+            } catch (Exception ignored) {
+                // A single unsupported/malformed token must not abort the whole scan cycle.
             }
         }
         out.sort((a, b) -> Double.compare(b.score, a.score));
