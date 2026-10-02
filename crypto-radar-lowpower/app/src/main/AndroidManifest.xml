@@ -9,7 +9,7 @@
         android:allowBackup="true"
         android:icon="@drawable/app_icon"
         android:roundIcon="@drawable/app_icon"
-        android:label="Explosion Radar"
+        android:label="Whale Radar"
         android:theme="@style/AppTheme">
 
         <activity
