@@ -18,13 +18,21 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -36,30 +44,40 @@ public class ScannerService extends Service {
     public static final String ACTION_STOP = "com.wahshi.cryptoexplosionradar.STOP";
     public static final String ACTION_UI = "com.wahshi.cryptoexplosionradar.UI";
 
-    private static final String SERVICE_CHANNEL = "whale_radar_service";
-    private static final String ALERT_CHANNEL = "whale_accumulation_alerts";
-    private static final int SERVICE_NOTIFICATION_ID = 3101;
+    private static final String SERVICE_CHANNEL = "free_whale_radar_service";
+    private static final String ALERT_CHANNEL = "free_whale_accumulation_alerts";
+    private static final int SERVICE_NOTIFICATION_ID = 4101;
 
-    private static final long QUIET_INTERVAL_MS = 20 * 60_000L;
+    private static final long NORMAL_INTERVAL_MS = 20 * 60_000L;
     private static final long WATCH_INTERVAL_MS = 10 * 60_000L;
-    private static final long ERROR_RETRY_MS = 10 * 60_000L;
-    private static final long ALERT_COOLDOWN_MS = 6 * 60 * 60_000L;
+    private static final long ERROR_RETRY_MS = 12 * 60_000L;
+    private static final long ALERT_COOLDOWN_MS = 4 * 60 * 60_000L;
 
+    private static final int ROTATING_BATCH = 24;
+    private static final int QUIET_PRIORITY = 12;
     private static final double MIN_BINANCE_24H_QUOTE_USDT = 1_500_000.0;
     private static final double MAX_EARLY_24H_CHANGE = 8.0;
-    private static final double MAX_SCREENER_1H_CHANGE = 6.0;
-
+    private static final double MIN_DEX_LIQUIDITY_USD = 100_000.0;
+    private static final double BASE_WHALE_USD = 25_000.0;
     private static final String BINANCE_API = "https://api.binance.com";
-    private static final String NANSEN_API = "https://api.nansen.ai";
+    private static final String DEX_API = "https://api.dexscreener.com";
+    private static final String SOLANA_RPC = "https://api.mainnet.solana.com";
+    private static final String TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 
-    // Restrict discovery to chains also supported by Flow Intelligence so a token can
-    // always be verified at the whale/cohort layer after Token Screener discovery.
-    private static final String[][] CHAIN_GROUPS = new String[][]{
-            {"ethereum", "solana", "base", "bnb", "arbitrum"},
-            {"polygon", "optimism", "avalanche", "linea", "scroll"},
-            {"sui", "ton", "tron", "sei", "sonic"},
-            {"mantle", "monad", "plasma", "near", "starknet"}
-    };
+    private static final Map<String, String> EVM_RPC = new HashMap<>();
+    private static final Map<String, Integer> EVM_LOOKBACK_BLOCKS = new HashMap<>();
+    static {
+        EVM_RPC.put("ethereum", "https://cloudflare-eth.com/v1/mainnet");
+        EVM_RPC.put("base", "https://mainnet.base.org");
+        EVM_RPC.put("arbitrum", "https://arb1.arbitrum.io/rpc");
+        EVM_RPC.put("avalanche", "https://api.avax.network/ext/bc/C/rpc");
+
+        // Roughly 30–90 minutes depending on chain cadence. The range is address-filtered.
+        EVM_LOOKBACK_BLOCKS.put("ethereum", 360);
+        EVM_LOOKBACK_BLOCKS.put("base", 2400);
+        EVM_LOOKBACK_BLOCKS.put("arbitrum", 8000);
+        EVM_LOOKBACK_BLOCKS.put("avalanche", 2400);
+    }
 
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private volatile boolean running = false;
@@ -67,7 +85,7 @@ public class ScannerService extends Service {
 
     @Override public void onCreate() {
         super.onCreate();
-        prefs = getSharedPreferences("whale_radar", MODE_PRIVATE);
+        prefs = getSharedPreferences("free_whale_radar_v3", MODE_PRIVATE);
         createChannels();
     }
 
@@ -83,14 +101,9 @@ public class ScannerService extends Service {
 
     private synchronized void startScanner() {
         if (running) return;
-        if (!SecretStore.hasNansenKey(this)) {
-            sendUi("Nansen API key مطلوب", "أدخل المفتاح داخل التطبيق ثم أعد تشغيل الرادار.");
-            stopSelf();
-            return;
-        }
         running = true;
-        startForeground(SERVICE_NOTIFICATION_ID, buildServiceNotification("Whale Radar يعمل • فحص On-chain هادئ"));
-        sendUi("🐋 Whale Radar يعمل", "أول فحص On-chain خلال ثوانٍ…");
+        startForeground(SERVICE_NOTIFICATION_ID, buildServiceNotification("Free Whale Radar يعمل • On-chain"));
+        sendUi("🐋 Free Whale Radar يعمل", "أول فحص مجاني On-chain خلال ثوانٍ…");
         scheduleNext(2_000L);
     }
 
@@ -108,43 +121,63 @@ public class ScannerService extends Service {
 
     private void runCycleSafe() {
         if (!running) return;
-        long next = QUIET_INTERVAL_MS;
+        long next = NORMAL_INTERVAL_MS;
         try {
-            String key = SecretStore.getNansenKey(this);
-            if (key.isEmpty()) throw new Exception("Nansen API key غير موجود");
+            List<BinanceTicker> all = loadBinanceSpotTickers();
+            List<BinanceTicker> batch = selectBatch(all);
+            List<WhaleSignal> signals = new ArrayList<>();
+            int mapped = 0;
+            int directOnChain = 0;
 
-            Map<String, BinanceTicker> binance = loadBinanceSpotTickers();
-            List<Seed> seeds = discoverSmartMoneySeeds(key, binance);
-            List<WhaleSignal> signals = analyzeTopSeeds(key, seeds, binance, 6);
+            for (BinanceTicker bt : batch) {
+                if (!running) break;
+                try {
+                    DexToken token = resolveDexToken(bt);
+                    if (token == null) continue;
+                    mapped++;
 
-            boolean activeWatch = false;
-            for (WhaleSignal s : signals) {
-                if (s.score >= 4.0) {
-                    activeWatch = true;
-                    maybeAlert(s);
+                    WhaleSignal s = null;
+                    if ("solana".equals(token.chain)) {
+                        directOnChain++;
+                        s = analyzeSolanaTopHolders(bt, token);
+                    } else if (EVM_RPC.containsKey(token.chain)) {
+                        directOnChain++;
+                        s = analyzeEvmTransfers(bt, token);
+                    }
+
+                    if (s != null) {
+                        signals.add(s);
+                        maybeAlert(s);
+                    }
+                } catch (Exception ignored) {
+                    // Public endpoints are best-effort; a single token/provider failure must never stop the cycle.
                 }
             }
-            next = activeWatch ? WATCH_INTERVAL_MS : QUIET_INTERVAL_MS;
 
-            String status = activeWatch ? "🐋 Whale Watch • تجميع قيد المتابعة" : "Whale Radar • مراقبة هادئة";
-            String details = formatSignals(seeds, signals, next);
+            signals.sort((a, b) -> Double.compare(b.score, a.score));
+            boolean watch = false;
+            for (WhaleSignal s : signals) if (s.score >= 4.25) { watch = true; break; }
+            next = watch ? WATCH_INTERVAL_MS : NORMAL_INTERVAL_MS;
+
+            String status = watch ? "🐋 Whale Watch • تجميع محتمل قيد المتابعة" : "Free Whale Radar • مراقبة هادئة";
+            String details = formatSignals(batch.size(), mapped, directOnChain, signals, next);
             sendUi(status, details);
             updateServiceNotification(status + " • التالي ~" + (next / 60_000L) + "m");
         } catch (Exception e) {
             next = ERROR_RETRY_MS;
-            String msg = safe(e.getMessage());
-            sendUi("Whale Radar • خطأ مؤقت", "سيعيد المحاولة تلقائيًا.\n" + msg);
-            updateServiceNotification("Whale Radar • إعادة محاولة لاحقًا");
+            sendUi("Free Whale Radar • خطأ مؤقت", "سيعيد المحاولة تلقائيًا.\n" + safe(e.getMessage()));
+            updateServiceNotification("Free Whale Radar • إعادة محاولة لاحقًا");
         } finally {
             scheduleNext(next);
         }
     }
 
-    private Map<String, BinanceTicker> loadBinanceSpotTickers() throws Exception {
+    private List<BinanceTicker> loadBinanceSpotTickers() throws Exception {
         JSONArray rows = new JSONArray(readUrl(BINANCE_API + "/api/v3/ticker/24hr"));
-        Map<String, BinanceTicker> out = new HashMap<>();
+        List<BinanceTicker> out = new ArrayList<>();
         for (int n = 0; n < rows.length(); n++) {
-            JSONObject j = rows.getJSONObject(n);
+            JSONObject j = rows.optJSONObject(n);
+            if (j == null) continue;
             String symbol = j.optString("symbol", "");
             if (!eligibleBinanceSymbol(symbol)) continue;
             BinanceTicker t = new BinanceTicker();
@@ -153,272 +186,453 @@ public class ScannerService extends Service {
             t.last = d(j, "lastPrice");
             t.quoteVolume = d(j, "quoteVolume");
             t.change24 = d(j, "priceChangePercent");
-            if (t.quoteVolume < MIN_BINANCE_24H_QUOTE_USDT) continue;
-            out.put(t.base, t);
+            if (t.last <= 0 || t.quoteVolume < MIN_BINANCE_24H_QUOTE_USDT) continue;
+            if (Math.abs(t.change24) > MAX_EARLY_24H_CHANGE) continue;
+            out.add(t);
         }
         return out;
     }
 
-    private List<Seed> discoverSmartMoneySeeds(String apiKey, Map<String, BinanceTicker> binance) throws Exception {
-        Map<String, Seed> bestBySymbol = new HashMap<>();
-        for (String[] group : CHAIN_GROUPS) {
-            JSONObject body = new JSONObject();
-            JSONArray chains = new JSONArray();
-            for (String c : group) chains.put(c);
-            body.put("chains", chains);
-            body.put("timeframe", "1h");
-            body.put("pagination", new JSONObject().put("page", 1).put("per_page", 100));
-            body.put("filters", new JSONObject().put("only_smart_money", true).put("hide_spam_tokens", true));
-            // buy_volume is a documented sortable field; netflow is still used by our own gate below.
-            body.put("order_by", new JSONArray().put(new JSONObject().put("field", "buy_volume").put("direction", "DESC")));
+    private List<BinanceTicker> selectBatch(List<BinanceTicker> all) {
+        if (all.isEmpty()) return all;
+        LinkedHashMap<String, BinanceTicker> chosen = new LinkedHashMap<>();
 
-            JSONObject response = postNansen(apiKey, "/api/v1/token-screener", body);
-            JSONArray data = response.optJSONArray("data");
-            if (data == null) continue;
+        List<BinanceTicker> quiet = new ArrayList<>(all);
+        quiet.sort(Comparator.comparingDouble(a -> Math.abs(a.change24)));
+        for (int i = 0; i < Math.min(QUIET_PRIORITY, quiet.size()); i++) {
+            chosen.put(quiet.get(i).symbol, quiet.get(i));
+        }
 
-            for (int n = 0; n < data.length(); n++) {
-                JSONObject j = data.optJSONObject(n);
-                if (j == null) continue;
-                String symbol = j.optString("token_symbol", "").toUpperCase(Locale.US).trim();
-                String chain = j.optString("chain", "").trim();
-                String address = j.optString("token_address", "").trim();
-                if (symbol.isEmpty() || chain.isEmpty() || address.isEmpty()) continue;
+        List<BinanceTicker> alphabetical = new ArrayList<>(all);
+        alphabetical.sort(Comparator.comparing(a -> a.symbol));
+        int cursor = prefs.getInt("rotation_cursor", 0);
+        if (cursor >= alphabetical.size()) cursor = 0;
+        int take = Math.min(ROTATING_BATCH, alphabetical.size());
+        for (int i = 0; i < take; i++) {
+            BinanceTicker t = alphabetical.get((cursor + i) % alphabetical.size());
+            chosen.put(t.symbol, t);
+        }
+        prefs.edit().putInt("rotation_cursor", (cursor + take) % alphabetical.size()).apply();
+        return new ArrayList<>(chosen.values());
+    }
 
-                BinanceTicker bt = binance.get(symbol);
-                if (bt == null || bt.change24 > MAX_EARLY_24H_CHANGE) continue;
+    private DexToken resolveDexToken(BinanceTicker bt) throws Exception {
+        String q = URLEncoder.encode(bt.base + "/USDT", StandardCharsets.UTF_8.name());
+        JSONObject root = new JSONObject(readUrl(DEX_API + "/latest/dex/search?q=" + q));
+        JSONArray pairs = root.optJSONArray("pairs");
+        if (pairs == null) return null;
 
-                Seed s = new Seed();
-                s.symbol = symbol;
-                s.chain = chain;
-                s.tokenAddress = address;
-                s.netflow = d(j, "netflow");
-                s.buyVolume = d(j, "buy_volume");
-                s.sellVolume = d(j, "sell_volume");
-                s.priceChange1h = d(j, "price_change");
-                s.liquidity = d(j, "liquidity");
-                s.marketCap = d(j, "market_cap_usd");
-                s.volume = d(j, "volume");
-                if (s.priceChange1h > MAX_SCREENER_1H_CHANGE) continue;
+        DexToken best = null;
+        for (int i = 0; i < pairs.length(); i++) {
+            JSONObject p = pairs.optJSONObject(i);
+            if (p == null) continue;
+            String chain = p.optString("chainId", "").toLowerCase(Locale.US);
+            if (!("solana".equals(chain) || EVM_RPC.containsKey(chain))) continue;
 
-                boolean netPositive = s.netflow > 0;
-                boolean buyDominant = s.buyVolume > 0 && s.buyVolume > s.sellVolume * 1.05;
-                if (!netPositive && !buyDominant) continue;
+            JSONObject base = p.optJSONObject("baseToken");
+            if (base == null || !bt.base.equalsIgnoreCase(base.optString("symbol", ""))) continue;
+            String address = base.optString("address", "").trim();
+            if (address.isEmpty()) continue;
 
-                s.discoveryQuality = Math.max(0, s.netflow)
-                        + Math.max(0, s.buyVolume - s.sellVolume)
-                        + Math.min(250_000.0, s.liquidity * 0.02);
-                Seed old = bestBySymbol.get(symbol);
-                if (old == null || s.discoveryQuality > old.discoveryQuality) bestBySymbol.put(symbol, s);
+            double price = parseDouble(p.optString("priceUsd", "0"));
+            if (price <= 0) continue;
+            double diff = Math.abs(price / bt.last - 1.0) * 100.0;
+            if (diff > 8.0) continue; // protects against same-symbol clones/wrong contracts.
+
+            JSONObject liq = p.optJSONObject("liquidity");
+            double liquidity = liq == null ? 0 : liq.optDouble("usd", 0);
+            if (liquidity < MIN_DEX_LIQUIDITY_USD) continue;
+
+            DexToken x = new DexToken();
+            x.symbol = bt.base;
+            x.chain = chain;
+            x.address = address;
+            x.pairAddress = p.optString("pairAddress", "");
+            x.priceUsd = price;
+            x.liquidityUsd = liquidity;
+            x.priceChange1h = nestedNumber(p, "priceChange", "h1");
+            x.volume1h = nestedNumber(p, "volume", "h1");
+            JSONObject txns = p.optJSONObject("txns");
+            JSONObject h1 = txns == null ? null : txns.optJSONObject("h1");
+            if (h1 != null) {
+                x.buys1h = h1.optInt("buys", 0);
+                x.sells1h = h1.optInt("sells", 0);
             }
+            if (best == null || x.liquidityUsd > best.liquidityUsd) best = x;
         }
-
-        List<Seed> out = new ArrayList<>(bestBySymbol.values());
-        out.sort((a, b) -> Double.compare(b.discoveryQuality, a.discoveryQuality));
-        return out;
+        return best;
     }
 
-    private List<WhaleSignal> analyzeTopSeeds(String apiKey, List<Seed> seeds,
-                                               Map<String, BinanceTicker> binance, int max) {
-        List<WhaleSignal> out = new ArrayList<>();
-        int n = Math.min(max, seeds.size());
-        for (int x = 0; x < n; x++) {
-            Seed seed = seeds.get(x);
-            BinanceTicker bt = binance.get(seed.symbol);
-            if (bt == null) continue;
+    private WhaleSignal analyzeEvmTransfers(BinanceTicker bt, DexToken token) throws Exception {
+        String rpc = EVM_RPC.get(token.chain);
+        if (rpc == null) return null;
+        int decimals = erc20Decimals(rpc, token.address);
+        if (decimals < 0 || decimals > 36) return null;
+
+        long latest = hexLong((String) rpcCall(rpc, "eth_blockNumber", new JSONArray()));
+        int lookback = EVM_LOOKBACK_BLOCKS.get(token.chain);
+        long from = Math.max(0, latest - lookback);
+        JSONArray logs = getTransferLogs(rpc, token.address, from, latest, 0);
+        if (logs == null || logs.length() == 0 || logs.length() > 6000) return null;
+
+        Map<String, WalletFlow> flows = new HashMap<>();
+        String pair = token.pairAddress == null ? "" : token.pairAddress.toLowerCase(Locale.US);
+        String contract = token.address.toLowerCase(Locale.US);
+        BigDecimal divisor = BigDecimal.TEN.pow(decimals);
+
+        for (int i = 0; i < logs.length(); i++) {
+            JSONObject log = logs.optJSONObject(i);
+            if (log == null) continue;
+            JSONArray topics = log.optJSONArray("topics");
+            if (topics == null || topics.length() < 3) continue;
+            String fromAddr = topicAddress(topics.optString(1, ""));
+            String toAddr = topicAddress(topics.optString(2, ""));
+            String data = log.optString("data", "0x0");
+            if (fromAddr.isEmpty() || toAddr.isEmpty()) continue;
+            if (isZero(fromAddr) || isZero(toAddr)) continue;
+
+            double usd;
             try {
-                FlowData h1 = loadFlowIntelligence(apiKey, seed, "1h");
-                if (h1 == null) continue;
-                if (h1.whaleNet <= 0 || h1.whaleCount < 2) continue;
-
-                WhaleSignal s = scoreSignal(seed, bt, h1);
-                if (s.score >= 4.0) {
-                    FlowData d1 = null;
-                    try { d1 = loadFlowIntelligence(apiKey, seed, "1d"); } catch (Exception ignored) {}
-                    s.day = d1;
-                    if (d1 != null) {
-                        if (d1.whaleNet > 0 && d1.whaleCount >= 2) s.score += 0.75;
-                        if (d1.smartNet > 0 && d1.smartCount >= 2) s.score += 0.50;
-                        if (d1.exchangeNet < 0) s.score += 0.50;
-                    }
-                    s.strong = s.score >= 5.5 && d1 != null && d1.whaleNet > 0 && h1.exchangeNet <= 0;
-                    out.add(s);
-                }
-            } catch (Exception ignored) {
-                // A single unsupported/malformed token must not abort the whole scan cycle.
+                BigInteger raw = hexBig(data);
+                double tokens = new BigDecimal(raw).divide(divisor).doubleValue();
+                usd = tokens * token.priceUsd;
+            } catch (Exception e) {
+                continue;
             }
+            if (!Double.isFinite(usd) || usd < 250.0) continue;
+
+            WalletFlow in = flows.computeIfAbsent(toAddr, k -> new WalletFlow());
+            in.inUsd += usd;
+            in.inCount++;
+            in.counterparties.add(fromAddr);
+
+            WalletFlow out = flows.computeIfAbsent(fromAddr, k -> new WalletFlow());
+            out.outUsd += usd;
+            out.outCount++;
+            out.counterparties.add(toAddr);
         }
-        out.sort((a, b) -> Double.compare(b.score, a.score));
-        return out;
-    }
 
-    private FlowData loadFlowIntelligence(String apiKey, Seed seed, String timeframe) throws Exception {
-        JSONObject body = new JSONObject()
-                .put("chain", seed.chain)
-                .put("token_address", seed.tokenAddress)
-                .put("timeframe", timeframe);
-        JSONObject response = postNansen(apiKey, "/api/v1/tgm/flow-intelligence", body);
-        JSONArray data = response.optJSONArray("data");
-        if (data == null || data.length() == 0) return null;
-        JSONObject j = data.optJSONObject(0);
-        if (j == null) return null;
+        double threshold = dynamicWhaleThreshold(token.liquidityUsd);
+        List<Map.Entry<String, WalletFlow>> candidates = new ArrayList<>(flows.entrySet());
+        candidates.sort((a, b) -> Double.compare(b.getValue().net(), a.getValue().net()));
 
-        FlowData f = new FlowData();
-        f.whaleNet = d(j, "whale_net_flow_usd");
-        f.whaleCount = i(j, "whale_wallet_count");
-        f.smartNet = d(j, "smart_trader_net_flow_usd");
-        f.smartCount = i(j, "smart_trader_wallet_count");
-        f.topPnlNet = d(j, "top_pnl_net_flow_usd");
-        f.topPnlCount = i(j, "top_pnl_wallet_count");
-        f.exchangeNet = d(j, "exchange_net_flow_usd");
-        f.exchangeCount = i(j, "exchange_wallet_count");
-        f.freshNet = d(j, "fresh_wallets_net_flow_usd");
-        f.freshCount = i(j, "fresh_wallets_wallet_count");
-        return f;
-    }
+        int whales = 0;
+        double combined = 0;
+        double largest = 0;
+        int checked = 0;
+        for (Map.Entry<String, WalletFlow> e : candidates) {
+            if (checked >= 12) break;
+            String addr = e.getKey().toLowerCase(Locale.US);
+            WalletFlow f = e.getValue();
+            if (f.net() < threshold) break;
+            if (addr.equals(pair) || addr.equals(contract)) continue;
+            if (f.inCount > 25 && f.counterparties.size() > 15) continue; // exchange/hub-like token flow pattern.
+            checked++;
+            if (!isEoa(rpc, addr)) continue; // exclude routers, bridges, multisig/contracts conservatively.
+            if (f.outUsd > f.inUsd * 0.45) continue;
+            whales++;
+            combined += f.net();
+            largest = Math.max(largest, f.net());
+        }
 
-    private WhaleSignal scoreSignal(Seed seed, BinanceTicker bt, FlowData f) {
+        double required = Math.max(75_000.0, threshold * 2.4);
+        if (whales < 2 || combined < required) return null;
+
         WhaleSignal s = new WhaleSignal();
-        s.seed = seed;
-        s.binance = bt;
-        s.hour = f;
-        double score = 0;
-
-        if (f.whaleNet > 0 && f.whaleCount >= 2) score += 2.0;
-        if (f.whaleCount >= 4) score += 0.5;
-        if (f.smartNet > 0 && f.smartCount >= 2) score += 1.0;
-        if (f.topPnlNet > 0 && f.topPnlCount >= 1) score += 0.75;
-        if (f.exchangeNet < 0) score += 1.25;
-        if (f.freshNet > 0 && f.freshCount >= 5) score += 0.50;
-        if (seed.netflow > 0 && seed.buyVolume > seed.sellVolume) score += 0.50;
-        if (bt.change24 <= 5.0 && seed.priceChange1h <= 3.0) score += 0.50;
-
-        double accumulation = Math.max(0, f.whaleNet) + Math.max(0, f.smartNet) + Math.max(0, f.topPnlNet);
-        if (f.exchangeNet > Math.max(50_000.0, accumulation)) score -= 2.0;
-        if (bt.change24 > MAX_EARLY_24H_CHANGE) score -= 3.0;
-
-        s.score = score;
+        s.symbol = bt.base;
+        s.chain = token.chain;
+        s.wallets = whales;
+        s.netUsd = combined;
+        s.largestUsd = largest;
+        s.change24 = bt.change24;
+        s.source = "ERC-20 transfer netflows";
+        s.score = scoreCommon(bt, token, whales, combined, threshold);
+        s.strong = s.score >= 4.75 && whales >= 3;
         return s;
     }
 
+    private WhaleSignal analyzeSolanaTopHolders(BinanceTicker bt, DexToken token) throws Exception {
+        JSONObject root = solRpc("getTokenLargestAccounts", new JSONArray()
+                .put(token.address)
+                .put(new JSONObject().put("commitment", "confirmed")));
+        JSONObject result = root.optJSONObject("result");
+        if (result == null) return null;
+        JSONArray values = result.optJSONArray("value");
+        if (values == null || values.length() == 0) return null;
+
+        JSONObject supplyRoot = solRpc("getTokenSupply", new JSONArray()
+                .put(token.address)
+                .put(new JSONObject().put("commitment", "confirmed")));
+        JSONObject supplyResult = supplyRoot.optJSONObject("result");
+        JSONObject supplyValue = supplyResult == null ? null : supplyResult.optJSONObject("value");
+        double totalSupply = supplyValue == null ? 0 : parseDouble(supplyValue.optString("uiAmountString", "0"));
+        if (totalSupply <= 0) return null;
+
+        JSONObject current = new JSONObject();
+        Map<String, Double> currentAmount = new LinkedHashMap<>();
+        for (int i = 0; i < values.length(); i++) {
+            JSONObject a = values.optJSONObject(i);
+            if (a == null) continue;
+            String account = a.optString("address", "");
+            double amount = parseDouble(a.optString("uiAmountString", "0"));
+            if (account.isEmpty() || amount <= 0) continue;
+            current.put(account, amount);
+            currentAmount.put(account, amount);
+        }
+
+        String key = "sol_snapshot_" + token.address;
+        String oldText = prefs.getString(key, "");
+        prefs.edit().putString(key, current.toString()).apply();
+        if (oldText.isEmpty()) return null; // first observation establishes the baseline.
+
+        JSONObject old;
+        try { old = new JSONObject(oldText); } catch (Exception e) { return null; }
+        double threshold = dynamicWhaleThreshold(token.liquidityUsd);
+        List<String> changedAccounts = new ArrayList<>();
+        Map<String, Double> deltaUsdByAccount = new HashMap<>();
+
+        for (Map.Entry<String, Double> e : currentAmount.entrySet()) {
+            String account = e.getKey();
+            if (!old.has(account)) continue; // do not treat a newly-entered top-20 account as zero baseline.
+            double nowAmount = e.getValue();
+            double prevAmount = old.optDouble(account, nowAmount);
+            double share = nowAmount / totalSupply;
+            if (share > 0.12) continue; // treasury/exchange/vesting-like concentration guard.
+            double deltaUsd = (nowAmount - prevAmount) * token.priceUsd;
+            if (deltaUsd >= threshold) {
+                changedAccounts.add(account);
+                deltaUsdByAccount.put(account, deltaUsd);
+            }
+        }
+        if (changedAccounts.size() < 2) return null;
+
+        Map<String, Double> ownerNet = resolveSolanaOwners(changedAccounts, deltaUsdByAccount);
+        List<Double> ownerDeltas = new ArrayList<>(ownerNet.values());
+        ownerDeltas.sort(Collections.reverseOrder());
+        int whales = 0;
+        double combined = 0;
+        double largest = 0;
+        for (double v : ownerDeltas) {
+            if (v < threshold) continue;
+            whales++;
+            combined += v;
+            largest = Math.max(largest, v);
+        }
+
+        double required = Math.max(75_000.0, threshold * 2.4);
+        if (whales < 2 || combined < required) return null;
+
+        WhaleSignal s = new WhaleSignal();
+        s.symbol = bt.base;
+        s.chain = "solana";
+        s.wallets = whales;
+        s.netUsd = combined;
+        s.largestUsd = largest;
+        s.change24 = bt.change24;
+        s.source = "top-holder balance increases";
+        s.score = scoreCommon(bt, token, whales, combined, threshold);
+        s.strong = s.score >= 4.75 && whales >= 3;
+        return s;
+    }
+
+    private Map<String, Double> resolveSolanaOwners(List<String> accounts, Map<String, Double> deltaByAccount) throws Exception {
+        Map<String, Double> out = new HashMap<>();
+        JSONArray addresses = new JSONArray();
+        for (String a : accounts) addresses.put(a);
+        JSONArray params = new JSONArray().put(addresses)
+                .put(new JSONObject().put("encoding", "jsonParsed").put("commitment", "confirmed"));
+        JSONObject root = solRpc("getMultipleAccounts", params);
+        JSONObject result = root.optJSONObject("result");
+        JSONArray values = result == null ? null : result.optJSONArray("value");
+        if (values == null) return out;
+
+        for (int i = 0; i < values.length() && i < accounts.size(); i++) {
+            JSONObject accountObj = values.optJSONObject(i);
+            if (accountObj == null) continue;
+            JSONObject data = accountObj.optJSONObject("data");
+            JSONObject parsed = data == null ? null : data.optJSONObject("parsed");
+            JSONObject info = parsed == null ? null : parsed.optJSONObject("info");
+            String owner = info == null ? "" : info.optString("owner", "");
+            if (owner.isEmpty()) continue;
+            double delta = deltaByAccount.getOrDefault(accounts.get(i), 0.0);
+            out.put(owner, out.getOrDefault(owner, 0.0) + delta);
+        }
+        return out;
+    }
+
+    private double scoreCommon(BinanceTicker bt, DexToken token, int wallets, double combined, double threshold) {
+        double score = 2.0; // at least two independently observed large accumulators already required.
+        if (wallets >= 3) score += 0.75;
+        if (wallets >= 5) score += 0.35;
+        if (combined >= Math.max(250_000.0, threshold * 4.0)) score += 0.75;
+        if (Math.abs(bt.change24) <= 3.0) score += 0.50;
+        if (Math.abs(token.priceChange1h) <= 2.5) score += 0.25;
+        if (token.buys1h > token.sells1h * 1.10 && token.buys1h >= 8) score += 0.50;
+        if (token.liquidityUsd >= 1_000_000.0) score += 0.25;
+        return score;
+    }
+
     private void maybeAlert(WhaleSignal s) {
-        String tier = s.strong ? "strong" : "watch";
-        String key = "last_" + s.seed.symbol;
+        if (s.score < 3.5) return;
+        String key = "alert_" + s.chain + "_" + s.symbol;
         long last = prefs.getLong(key, 0L);
         String lastTier = prefs.getString(key + "_tier", "");
         long now = System.currentTimeMillis();
-
+        String tier = s.strong ? "strong" : "watch";
         boolean upgrade = s.strong && !"strong".equals(lastTier);
         if (!upgrade && now - last < ALERT_COOLDOWN_MS) return;
         prefs.edit().putLong(key, now).putString(key + "_tier", tier).apply();
 
-        String pair = s.seed.symbol + "/USDT";
         String title = s.strong
-                ? "🐋🔥 تجميع حيتان قوي — " + pair
-                : "🐋 تجميع حيتان مبكر — " + pair;
-        String body = "Whales " + money(s.hour.whaleNet) + " (" + s.hour.whaleCount + ")"
-                + " • Smart " + money(s.hour.smartNet)
-                + " • Exchange " + money(s.hour.exchangeNet)
-                + " • 24h " + String.format(Locale.US, "%+.2f%%", s.binance.change24);
-        postWhaleNotification(s.seed.symbol, title, body);
+                ? "🐋🔥 تجميع حيتان محتمل قوي — " + s.symbol + "/USDT"
+                : "🐋 تجميع حيتان محتمل — " + s.symbol + "/USDT";
+        String body = s.wallets + " محافظ مستقلة • صافي +" + money(s.netUsd)
+                + " • " + s.chain.toUpperCase(Locale.US)
+                + " • 24h " + String.format(Locale.US, "%+.2f%%", s.change24);
+        postWhaleNotification(s.symbol, title, body);
     }
 
-    private String formatSignals(List<Seed> seeds, List<WhaleSignal> signals, long nextMs) {
+    private String formatSignals(int scanned, int mapped, int onchain, List<WhaleSignal> signals, long next) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Binance Spot + On-chain Whale Intelligence\n");
-        sb.append("تم اكتشاف ").append(seeds.size()).append(" مرشح Smart-Money أولي.\n\n");
+        sb.append("فحص هذه الدورة: ").append(scanned).append(" زوج Binance Spot")
+                .append(" • تطابق عقد: ").append(mapped)
+                .append(" • On-chain مباشر: ").append(onchain).append("\n");
+        sb.append("الدورة التالية تقريبًا خلال ").append(next / 60_000L).append(" دقيقة.\n\n");
 
         if (signals.isEmpty()) {
-            sb.append("لا يوجد تجميع حيتان مؤكد الآن.\n");
-            sb.append("لن يصدر التطبيق تنبيهًا لمجرد ارتفاع الحجم أو السعر.\n");
-        } else {
-            int n = Math.min(5, signals.size());
-            for (int x = 0; x < n; x++) {
-                WhaleSignal s = signals.get(x);
-                sb.append(s.strong ? "🐋🔥 " : "🐋 ")
-                        .append(s.seed.symbol).append("/USDT")
-                        .append(" • ").append(s.seed.chain).append("\n")
-                        .append("Whales 1h: ").append(money(s.hour.whaleNet))
-                        .append(" • wallets ").append(s.hour.whaleCount).append("\n")
-                        .append("Smart Traders: ").append(money(s.hour.smartNet))
-                        .append(" • Top-PnL: ").append(money(s.hour.topPnlNet)).append("\n")
-                        .append("Exchange flow: ").append(money(s.hour.exchangeNet))
-                        .append(" • Fresh: ").append(money(s.hour.freshNet)).append("\n")
-                        .append("Binance 24h: ").append(String.format(Locale.US, "%+.2f%%", s.binance.change24))
-                        .append(" • Score ").append(String.format(Locale.US, "%.2f", s.score)).append("\n\n");
-            }
+            sb.append("لا يوجد تجميع حيتان متعدد المحافظ يستوفي الشروط الآن.\n\n")
+                    .append("البرنامج لا يعتبر زيادة الحجم أو الاختراق السعري حوتًا. يجب أن يرى صافي زيادة كبيرة فعلية في عدة محافظ مستقلة.");
+            return sb.toString();
         }
-        sb.append("الفحص التالي تقريبًا خلال ").append(Math.max(1, nextMs / 60_000L)).append(" دقيقة.\n")
-                .append("Powered by Nansen API • لا توجد أوامر تداول.");
+
+        int n = Math.min(6, signals.size());
+        for (int i = 0; i < n; i++) {
+            WhaleSignal s = signals.get(i);
+            sb.append(i + 1).append(". ").append(s.symbol).append("/USDT")
+                    .append(s.strong ? "  🐋🔥" : "  🐋")
+                    .append("\n   Chain: ").append(s.chain)
+                    .append(" • Wallets: ").append(s.wallets)
+                    .append(" • Net +").append(money(s.netUsd))
+                    .append(" • Largest +").append(money(s.largestUsd))
+                    .append("\n   24h ").append(String.format(Locale.US, "%+.2f%%", s.change24))
+                    .append(" • Score ").append(String.format(Locale.US, "%.2f", s.score))
+                    .append("\n   Source: ").append(s.source).append("\n\n");
+        }
+        sb.append("تنبيه Whale ≠ أمر شراء؛ هو رصد سلوك on-chain فقط.");
         return sb.toString();
     }
 
-    private JSONObject postNansen(String apiKey, String path, JSONObject body) throws Exception {
-        HttpsURLConnection c = (HttpsURLConnection) new URL(NANSEN_API + path).openConnection();
-        c.setConnectTimeout(10_000);
-        c.setReadTimeout(20_000);
+    private int erc20Decimals(String rpc, String token) throws Exception {
+        JSONObject call = new JSONObject().put("to", token).put("data", "0x313ce567");
+        Object r = rpcCall(rpc, "eth_call", new JSONArray().put(call).put("latest"));
+        if (!(r instanceof String)) return -1;
+        String hex = (String) r;
+        if (hex.length() <= 2) return -1;
+        return new BigInteger(strip0x(hex), 16).intValue();
+    }
+
+    private boolean isEoa(String rpc, String address) {
+        try {
+            Object r = rpcCall(rpc, "eth_getCode", new JSONArray().put(address).put("latest"));
+            if (!(r instanceof String)) return false;
+            String code = ((String) r).toLowerCase(Locale.US);
+            return "0x".equals(code) || "0x0".equals(code) || "0x00".equals(code);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private JSONArray getTransferLogs(String rpc, String token, long from, long to, int depth) throws Exception {
+        JSONObject filter = new JSONObject()
+                .put("address", token)
+                .put("fromBlock", "0x" + Long.toHexString(from))
+                .put("toBlock", "0x" + Long.toHexString(to))
+                .put("topics", new JSONArray().put(TRANSFER_TOPIC));
+        try {
+            Object r = rpcCall(rpc, "eth_getLogs", new JSONArray().put(filter));
+            return r instanceof JSONArray ? (JSONArray) r : new JSONArray();
+        } catch (Exception e) {
+            if (depth >= 4 || to - from < 250) throw e;
+            long mid = (from + to) / 2;
+            JSONArray a = getTransferLogs(rpc, token, from, mid, depth + 1);
+            JSONArray b = getTransferLogs(rpc, token, mid + 1, to, depth + 1);
+            JSONArray joined = new JSONArray();
+            for (int i = 0; i < a.length(); i++) joined.put(a.get(i));
+            for (int i = 0; i < b.length(); i++) joined.put(b.get(i));
+            return joined;
+        }
+    }
+
+    private Object rpcCall(String rpc, String method, JSONArray params) throws Exception {
+        JSONObject body = new JSONObject().put("jsonrpc", "2.0").put("id", 1)
+                .put("method", method).put("params", params);
+        JSONObject root = postJson(rpc, body);
+        if (root.has("error")) throw new Exception("RPC " + method + " • " + root.optJSONObject("error"));
+        return root.opt("result");
+    }
+
+    private JSONObject solRpc(String method, JSONArray params) throws Exception {
+        JSONObject body = new JSONObject().put("jsonrpc", "2.0").put("id", 1)
+                .put("method", method).put("params", params);
+        JSONObject root = postJson(SOLANA_RPC, body);
+        if (root.has("error")) throw new Exception("Solana " + method + " • " + root.optJSONObject("error"));
+        return root;
+    }
+
+    private JSONObject postJson(String url, JSONObject body) throws Exception {
+        HttpsURLConnection c = (HttpsURLConnection) new URL(url).openConnection();
         c.setRequestMethod("POST");
+        c.setConnectTimeout(10_000);
+        c.setReadTimeout(18_000);
         c.setDoOutput(true);
         c.setRequestProperty("Content-Type", "application/json");
         c.setRequestProperty("Accept", "application/json");
-        c.setRequestProperty("apiKey", apiKey);
-        c.setRequestProperty("User-Agent", "WhaleAccumulationRadar/2.0");
+        c.setRequestProperty("User-Agent", "FreeWhaleRadarV3/3.0");
         byte[] bytes = body.toString().getBytes(StandardCharsets.UTF_8);
         try (OutputStream os = c.getOutputStream()) { os.write(bytes); }
         int code = c.getResponseCode();
-        String text = readConnection(c, code);
+        InputStream stream = code >= 200 && code < 300 ? c.getInputStream() : c.getErrorStream();
+        String text = readStream(stream);
         c.disconnect();
-        if (code < 200 || code >= 300) {
-            String detail = text.length() > 220 ? text.substring(0, 220) : text;
-            throw new Exception("Nansen HTTP " + code + (detail.isEmpty() ? "" : " • " + detail));
-        }
+        if (code < 200 || code >= 300) throw new Exception("HTTP " + code + " • " + trimError(text));
         return new JSONObject(text);
     }
 
     private String readUrl(String url) throws Exception {
         HttpsURLConnection c = (HttpsURLConnection) new URL(url).openConnection();
-        c.setConnectTimeout(8_000);
-        c.setReadTimeout(12_000);
-        c.setRequestProperty("User-Agent", "WhaleAccumulationRadar/2.0");
+        c.setConnectTimeout(10_000);
+        c.setReadTimeout(15_000);
         c.setRequestProperty("Accept", "application/json");
+        c.setRequestProperty("User-Agent", "FreeWhaleRadarV3/3.0");
         int code = c.getResponseCode();
-        String text = readConnection(c, code);
+        InputStream stream = code >= 200 && code < 300 ? c.getInputStream() : c.getErrorStream();
+        String text = readStream(stream);
         c.disconnect();
-        if (code < 200 || code >= 300) throw new Exception("Binance HTTP " + code);
+        if (code < 200 || code >= 300) throw new Exception("HTTP " + code + " • " + trimError(text));
         return text;
     }
 
-    private String readConnection(HttpsURLConnection c, int code) throws Exception {
-        InputStream stream = code >= 200 && code < 300 ? c.getInputStream() : c.getErrorStream();
+    private String readStream(InputStream stream) throws Exception {
         if (stream == null) return "";
+        BufferedReader br = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
         StringBuilder sb = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = br.readLine()) != null) sb.append(line);
-        }
+        String line;
+        while ((line = br.readLine()) != null) sb.append(line);
+        br.close();
         return sb.toString();
-    }
-
-    private boolean eligibleBinanceSymbol(String s) {
-        if (s == null || !s.endsWith("USDT") || s.length() <= 4) return false;
-        String base = s.substring(0, s.length() - 4);
-        String[] skip = {"USDC", "FDUSD", "TUSD", "USDP", "DAI", "BUSD"};
-        for (String x : skip) if (base.equals(x)) return false;
-        return !(base.endsWith("UP") || base.endsWith("DOWN") || base.endsWith("BULL") || base.endsWith("BEAR"));
     }
 
     private void createChannels() {
         if (Build.VERSION.SDK_INT < 26) return;
         NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        NotificationChannel service = new NotificationChannel(SERVICE_CHANNEL, "Whale Radar background", NotificationManager.IMPORTANCE_LOW);
-        service.setDescription("Low-power on-chain whale monitoring");
+        NotificationChannel service = new NotificationChannel(SERVICE_CHANNEL, "Free whale radar service", NotificationManager.IMPORTANCE_LOW);
         service.setSound(null, null);
         service.enableVibration(false);
         nm.createNotificationChannel(service);
 
         NotificationChannel alerts = new NotificationChannel(ALERT_CHANNEL, "Whale accumulation alerts", NotificationManager.IMPORTANCE_HIGH);
-        alerts.setDescription("Early whale and smart-money accumulation signals");
         alerts.enableVibration(true);
-        alerts.setVibrationPattern(new long[]{0, 250, 150, 350});
+        alerts.setVibrationPattern(new long[]{0,250,150,350});
         nm.createNotificationChannel(alerts);
     }
 
@@ -426,7 +640,7 @@ public class ScannerService extends Service {
         Intent open = new Intent(this, MainActivity.class);
         PendingIntent pi = PendingIntent.getActivity(this, 1, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, SERVICE_CHANNEL) : new Notification.Builder(this);
-        return b.setContentTitle("Whale Accumulation Radar")
+        return b.setContentTitle("Free Whale Radar V3")
                 .setContentText(text)
                 .setSmallIcon(R.drawable.app_icon)
                 .setContentIntent(pi)
@@ -441,8 +655,7 @@ public class ScannerService extends Service {
 
     private void postWhaleNotification(String symbol, String title, String body) {
         Intent open = new Intent(this, MainActivity.class);
-        PendingIntent pi = PendingIntent.getActivity(this, symbol.hashCode(), open,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent pi = PendingIntent.getActivity(this, symbol.hashCode(), open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, ALERT_CHANNEL) : new Notification.Builder(this);
         Notification n = b.setContentTitle(title)
                 .setContentText(body)
@@ -450,7 +663,7 @@ public class ScannerService extends Service {
                 .setSmallIcon(R.drawable.app_icon)
                 .setContentIntent(pi)
                 .setAutoCancel(true)
-                .setColor(Color.rgb(245, 183, 43))
+                .setColor(Color.rgb(245,183,43))
                 .build();
         ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(5000 + Math.abs(symbol.hashCode() % 4000), n);
     }
@@ -462,31 +675,70 @@ public class ScannerService extends Service {
         sendBroadcast(i);
     }
 
-    private static double d(JSONObject j, String k) {
-        try {
-            Object v = j.opt(k);
-            if (v instanceof Number) return ((Number) v).doubleValue();
-            return Double.parseDouble(j.optString(k, "0"));
-        } catch (Exception e) { return 0; }
+    private boolean eligibleBinanceSymbol(String s) {
+        if (s == null || !s.endsWith("USDT") || s.length() <= 4) return false;
+        String base = s.substring(0, s.length() - 4).toUpperCase(Locale.US);
+        String[] skip = {"USDC","FDUSD","TUSD","USDP","DAI","EUR","TRY","BRL","UAH","BUSD"};
+        for (String x : skip) if (base.equals(x)) return false;
+        return !(base.endsWith("UP") || base.endsWith("DOWN") || base.endsWith("BULL") || base.endsWith("BEAR"));
     }
 
-    private static int i(JSONObject j, String k) {
-        try {
-            Object v = j.opt(k);
-            if (v instanceof Number) return ((Number) v).intValue();
-            return Integer.parseInt(j.optString(k, "0"));
-        } catch (Exception e) { return 0; }
+    private static double dynamicWhaleThreshold(double liquidity) {
+        return Math.max(BASE_WHALE_USD, Math.min(125_000.0, liquidity * 0.0025));
+    }
+
+    private static String topicAddress(String t) {
+        if (t == null) return "";
+        String x = strip0x(t);
+        if (x.length() < 40) return "";
+        return "0x" + x.substring(x.length() - 40).toLowerCase(Locale.US);
+    }
+
+    private static boolean isZero(String a) {
+        return "0x0000000000000000000000000000000000000000".equalsIgnoreCase(a);
+    }
+
+    private static BigInteger hexBig(String x) {
+        String s = strip0x(x);
+        return s.isEmpty() ? BigInteger.ZERO : new BigInteger(s, 16);
+    }
+
+    private static long hexLong(String x) {
+        String s = strip0x(x);
+        return s.isEmpty() ? 0 : new BigInteger(s, 16).longValue();
+    }
+
+    private static String strip0x(String x) {
+        if (x == null) return "";
+        return x.startsWith("0x") || x.startsWith("0X") ? x.substring(2) : x;
+    }
+
+    private static double nestedNumber(JSONObject o, String object, String field) {
+        JSONObject x = o == null ? null : o.optJSONObject(object);
+        return x == null ? 0 : x.optDouble(field, 0);
+    }
+
+    private static double d(JSONObject j, String k) {
+        try { return Double.parseDouble(j.optString(k, "0")); } catch (Exception e) { return j.optDouble(k, 0); }
+    }
+
+    private static double parseDouble(String s) {
+        try { return Double.parseDouble(s); } catch (Exception e) { return 0; }
     }
 
     private static String money(double x) {
-        String sign = x > 0 ? "+" : "";
         double a = Math.abs(x);
-        if (a >= 1_000_000) return sign + String.format(Locale.US, "%.2fM$", x / 1_000_000.0);
-        if (a >= 1_000) return sign + String.format(Locale.US, "%.1fK$", x / 1_000.0);
-        return sign + String.format(Locale.US, "%.0f$", x);
+        if (a >= 1_000_000) return String.format(Locale.US, "$%.2fM", a / 1_000_000.0);
+        if (a >= 1_000) return String.format(Locale.US, "$%.1fK", a / 1_000.0);
+        return String.format(Locale.US, "$%.0f", a);
     }
 
-    private static String safe(String x) { return x == null ? "" : x; }
+    private static String trimError(String s) {
+        if (s == null) return "";
+        return s.length() > 180 ? s.substring(0, 180) : s;
+    }
+
+    private static String safe(String s) { return s == null ? "" : s; }
 
     @Override public void onDestroy() {
         running = false;
@@ -497,24 +749,43 @@ public class ScannerService extends Service {
     @Override public IBinder onBind(Intent intent) { return null; }
 
     static class BinanceTicker {
-        String symbol, base;
-        double last, quoteVolume, change24;
+        String symbol;
+        String base;
+        double last;
+        double quoteVolume;
+        double change24;
     }
 
-    static class Seed {
-        String symbol, chain, tokenAddress;
-        double netflow, buyVolume, sellVolume, priceChange1h, liquidity, marketCap, volume, discoveryQuality;
+    static class DexToken {
+        String symbol;
+        String chain;
+        String address;
+        String pairAddress;
+        double priceUsd;
+        double liquidityUsd;
+        double priceChange1h;
+        double volume1h;
+        int buys1h;
+        int sells1h;
     }
 
-    static class FlowData {
-        double whaleNet, smartNet, topPnlNet, exchangeNet, freshNet;
-        int whaleCount, smartCount, topPnlCount, exchangeCount, freshCount;
+    static class WalletFlow {
+        double inUsd;
+        double outUsd;
+        int inCount;
+        int outCount;
+        Set<String> counterparties = new HashSet<>();
+        double net() { return inUsd - outUsd; }
     }
 
     static class WhaleSignal {
-        Seed seed;
-        BinanceTicker binance;
-        FlowData hour, day;
+        String symbol;
+        String chain;
+        String source;
+        int wallets;
+        double netUsd;
+        double largestUsd;
+        double change24;
         double score;
         boolean strong;
     }
