@@ -10,19 +10,15 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.InputType;
 import android.view.Gravity;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class MainActivity extends Activity {
     private TextView status;
     private TextView details;
-    private EditText apiKey;
 
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
@@ -46,59 +42,23 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(9,12,17));
 
         TextView title = new TextView(this);
-        title.setText("🐋 Whale Accumulation Radar");
+        title.setText("🐋 Free Whale Radar V3");
         title.setTextColor(Color.WHITE);
-        title.setTextSize(25);
+        title.setTextSize(26);
         title.setGravity(Gravity.CENTER_HORIZONTAL);
         title.setPadding(0,0,0,12);
         root.addView(title);
 
         TextView mode = new TextView(this);
-        mode.setText("ON-CHAIN • Nansen + Binance Spot / USDT\nيرصد تجميع الحيتان وSmart Money قبل الحركة السعرية الكبيرة");
+        mode.setText("FREE ON-CHAIN • Binance Spot / USDT\nPublic blockchain RPC + DEX Screener • لا يحتاج API key");
         mode.setTextColor(Color.rgb(245,183,43));
         mode.setTextSize(15);
         mode.setGravity(Gravity.CENTER_HORIZONTAL);
         mode.setPadding(0,0,0,20);
         root.addView(mode);
 
-        TextView keyLabel = new TextView(this);
-        keyLabel.setText("Nansen API Key — يُحفظ مشفرًا على الهاتف");
-        keyLabel.setTextColor(Color.rgb(170,182,198));
-        keyLabel.setTextSize(13);
-        root.addView(keyLabel);
-
-        LinearLayout keyRow = new LinearLayout(this);
-        keyRow.setOrientation(LinearLayout.HORIZONTAL);
-        apiKey = new EditText(this);
-        apiKey.setHint(SecretStore.hasNansenKey(this) ? "API key محفوظ ✓ — أدخل مفتاحًا جديدًا فقط للتغيير" : "ألصق Nansen API key هنا");
-        apiKey.setSingleLine(true);
-        apiKey.setTextColor(Color.WHITE);
-        apiKey.setHintTextColor(Color.rgb(110,122,140));
-        apiKey.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        keyRow.addView(apiKey, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
-
-        Button save = new Button(this);
-        save.setText("حفظ");
-        save.setOnClickListener(v -> {
-            String k = apiKey.getText().toString().trim();
-            if (k.isEmpty()) {
-                Toast.makeText(this, SecretStore.hasNansenKey(this) ? "المفتاح محفوظ بالفعل" : "أدخل API key أولًا", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            try {
-                SecretStore.saveNansenKey(this, k);
-                apiKey.setText("");
-                apiKey.setHint("API key محفوظ ✓");
-                Toast.makeText(this, "تم حفظ المفتاح مشفرًا", Toast.LENGTH_SHORT).show();
-            } catch (Exception e) {
-                Toast.makeText(this, "تعذر حفظ المفتاح", Toast.LENGTH_LONG).show();
-            }
-        });
-        keyRow.addView(save);
-        root.addView(keyRow);
-
         status = new TextView(this);
-        status.setText(SecretStore.hasNansenKey(this) ? "الرادار متوقف" : "أدخل Nansen API key ثم شغّل الرادار");
+        status.setText("الرادار متوقف");
         status.setTextColor(Color.rgb(230,235,242));
         status.setTextSize(18);
         status.setPadding(0,16,0,12);
@@ -111,13 +71,9 @@ public class MainActivity extends Activity {
         Button start = new Button(this);
         start.setText("تشغيل رادار الحيتان");
         start.setOnClickListener(v -> {
-            if (!SecretStore.hasNansenKey(this)) {
-                status.setText("أدخل Nansen API key أولًا");
-                return;
-            }
             Intent i = new Intent(this, ScannerService.class).setAction(ScannerService.ACTION_START);
             if (Build.VERSION.SDK_INT >= 26) startForegroundService(i); else startService(i);
-            status.setText("بدء فحص On-chain…");
+            status.setText("بدء الفحص المجاني On-chain…");
         });
         buttons.addView(start, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
 
@@ -128,7 +84,7 @@ public class MainActivity extends Activity {
         root.addView(buttons);
 
         TextView note = new TextView(this);
-        note.setText("\nهذا الإصدار لا يعطي أوامر شراء. يبحث عن: Whale net inflow + Smart Traders + Top-PnL wallets + خروج من المنصات + Fresh Wallets، ثم يتحقق أن الزوج موجود على Binance Spot وأن السعر لم ينفجر بعد.\n\nPowered by Nansen API • الفحص الهادئ يقلل استهلاك البطارية وAPI credits.");
+        note.setText("\nالهدف ليس إعطاء أمر شراء. V3 يبحث عن زيادة صافي رصيد عدة محافظ كبيرة مستقلة بينما سعر Binance Spot ما زال هادئًا. العقود وDEX pools والعناوين ذات نمط hub تُستبعد قدر الإمكان.\n\nالتغطية المباشرة المجانية: Ethereum • Base • Arbitrum • Avalanche. على Solana يقارن تغيّر كبار الحائزين بين الفحوصات. بعض الشبكات الأخرى لا تُصنّف كحيتان إذا لم تتوفر بيانات عامة موثوقة.");
         note.setTextColor(Color.rgb(145,157,175));
         note.setTextSize(13);
         note.setPadding(0,8,0,10);
