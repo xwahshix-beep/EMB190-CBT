@@ -1,29 +1,7 @@
-plugins {
-    id 'com.android.application'
-}
-
+plugins { id 'com.android.application' }
 android {
-    namespace 'com.wahshi.emb190cbt'
-    compileSdk 35
-
-    defaultConfig {
-        applicationId 'com.wahshi.emb190cbt'
-        minSdk 23
-        targetSdk 35
-        versionCode 2
-        versionName '2.0'
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            shrinkResources false
-        }
-    }
-
-    packaging {
-        resources {
-            excludes += ['META-INF/**']
-        }
-    }
+ namespace 'com.wahshi.aerofusion'
+ compileSdk 35
+ defaultConfig { applicationId 'com.wahshi.aerofusion'; minSdk 23; targetSdk 35; versionCode 3; versionName '0.2.1' }
+ buildTypes { release { minifyEnabled false; shrinkResources false } }
 }
