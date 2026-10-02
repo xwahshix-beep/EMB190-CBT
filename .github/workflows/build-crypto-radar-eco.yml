@@ -1,4 +1,4 @@
-name: Build Whale Accumulation Radar APK
+name: Build Free Whale Radar V3 APK
 
 on:
   push:
@@ -28,13 +28,13 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Build Whale Radar APK
+      - name: Build Free Whale Radar V3 APK
         working-directory: crypto-radar-lowpower
         run: gradle --no-daemon assembleDebug --stacktrace
       - name: Rename APK
-        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Whale-Accumulation-Radar.apk
+        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Free-Whale-Radar-V3.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: Whale-Accumulation-Radar-APK
-          path: Whale-Accumulation-Radar.apk
+          name: Free-Whale-Radar-V3-APK
+          path: Free-Whale-Radar-V3.apk
           retention-days: 7
