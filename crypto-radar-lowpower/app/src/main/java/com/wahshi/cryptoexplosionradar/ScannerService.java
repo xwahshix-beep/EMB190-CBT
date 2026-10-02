@@ -17,11 +17,13 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -47,6 +49,8 @@ public class ScannerService extends Service {
     private static final long HOT_MARKET_REFRESH_MS = 30_000L;
     private static final long HOT_DURATION_MS = 6 * 60_000L;
     private static final double MIN_24H_QUOTE_USDT = 1_500_000.0;
+    private static final int ROLLING_BATCH_SIZE = 100;
+    private static final String API_BASE = "https://api.binance.com";
 
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private volatile boolean running = false;
@@ -132,25 +136,22 @@ public class ScannerService extends Service {
     }
 
     private List<Candidate> scanMarket() throws Exception {
-        JSONArray a24 = new JSONArray(readUrl("https://api.binance.com/api/v3/ticker/24hr"));
-        JSONArray a1h = new JSONArray(readUrl("https://api.binance.com/api/v3/ticker?windowSize=1h&type=FULL"));
+        JSONArray a24 = new JSONArray(readUrl(API_BASE + "/api/v3/ticker/24hr"));
 
         Map<String, Ticker> m24 = new HashMap<>();
+        List<String> eligible = new ArrayList<>();
         for (int i = 0; i < a24.length(); i++) {
             JSONObject j = a24.getJSONObject(i);
             String s = j.optString("symbol", "");
             if (!eligibleSymbol(s)) continue;
             Ticker t = Ticker.from24(j);
-            if (t.quoteVolume >= MIN_24H_QUOTE_USDT) m24.put(s, t);
+            if (t.quoteVolume >= MIN_24H_QUOTE_USDT) {
+                m24.put(s, t);
+                eligible.add(s);
+            }
         }
 
-        Map<String, Ticker> m1 = new HashMap<>();
-        for (int i = 0; i < a1h.length(); i++) {
-            JSONObject j = a1h.getJSONObject(i);
-            String s = j.optString("symbol", "");
-            if (!m24.containsKey(s)) continue;
-            m1.put(s, Ticker.fromRolling(j));
-        }
+        Map<String, Ticker> m1 = loadRolling1h(eligible, m24);
 
         List<Candidate> out = new ArrayList<>();
         for (Map.Entry<String, Ticker> e : m24.entrySet()) {
@@ -207,6 +208,27 @@ public class ScannerService extends Service {
         return out;
     }
 
+    private Map<String, Ticker> loadRolling1h(List<String> symbols, Map<String, Ticker> m24) throws Exception {
+        Map<String, Ticker> out = new HashMap<>();
+        for (int start = 0; start < symbols.size(); start += ROLLING_BATCH_SIZE) {
+            int end = Math.min(start + ROLLING_BATCH_SIZE, symbols.size());
+            JSONArray names = new JSONArray();
+            for (int i = start; i < end; i++) names.put(symbols.get(i));
+
+            String encoded = URLEncoder.encode(names.toString(), StandardCharsets.UTF_8.name());
+            String url = API_BASE + "/api/v3/ticker?symbols=" + encoded + "&windowSize=1h&type=FULL&symbolStatus=TRADING";
+            JSONArray batch = new JSONArray(readUrl(url));
+
+            for (int i = 0; i < batch.length(); i++) {
+                JSONObject j = batch.getJSONObject(i);
+                String s = j.optString("symbol", "");
+                if (!m24.containsKey(s)) continue;
+                out.put(s, Ticker.fromRolling(j));
+            }
+        }
+        return out;
+    }
+
     private void confirmTopCandidates(List<Candidate> candidates, int max) {
         int count = Math.min(max, candidates.size());
         for (int i = 0; i < count; i++) {
@@ -225,7 +247,7 @@ public class ScannerService extends Service {
     }
 
     private Analysis analyze15m(String symbol) throws Exception {
-        String u = "https://api.binance.com/api/v3/klines?symbol=" + symbol + "&interval=15m&limit=50";
+        String u = API_BASE + "/api/v3/klines?symbol=" + symbol + "&interval=15m&limit=50";
         JSONArray rows = new JSONArray(readUrl(u));
         List<Bar> closed = new ArrayList<>();
         long now = System.currentTimeMillis();
@@ -334,18 +356,25 @@ public class ScannerService extends Service {
     private String readUrl(String url) throws Exception {
         HttpsURLConnection c = (HttpsURLConnection) new URL(url).openConnection();
         c.setConnectTimeout(8_000);
-        c.setReadTimeout(10_000);
-        c.setRequestProperty("User-Agent", "ExplosionRadarEco/1.2");
+        c.setReadTimeout(12_000);
+        c.setRequestProperty("User-Agent", "ExplosionRadarEco/1.2.1");
         c.setRequestProperty("Accept", "application/json");
         int code = c.getResponseCode();
-        if (code != 200) throw new Exception("Binance HTTP " + code);
-        BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream()));
+        InputStream stream = code >= 200 && code < 300 ? c.getInputStream() : c.getErrorStream();
         StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = br.readLine()) != null) sb.append(line);
-        br.close();
+        if (stream != null) {
+            BufferedReader br = new BufferedReader(new InputStreamReader(stream));
+            String line;
+            while ((line = br.readLine()) != null) sb.append(line);
+            br.close();
+        }
         c.disconnect();
-        return sb.toString();
+        String body = sb.toString();
+        if (code != 200) {
+            String detail = body.length() > 180 ? body.substring(0, 180) : body;
+            throw new Exception("Binance HTTP " + code + (detail.isEmpty() ? "" : " • " + detail));
+        }
+        return body;
     }
 
     private void createChannels() {
