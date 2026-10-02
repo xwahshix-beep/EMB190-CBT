@@ -1,4 +1,4 @@
-name: Build Crypto Explosion Radar Eco APK
+name: Build Whale Accumulation Radar APK
 
 on:
   push:
@@ -28,46 +28,13 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Apply Smart Eco fast-mode gate
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path('crypto-radar-lowpower/app/src/main/java/com/wahshi/cryptoexplosionradar/ScannerService.java')
-          s = p.read_text(encoding='utf-8')
-
-          old = '                if (!candidates.isEmpty()) hotUntil = now + HOT_DURATION_MS;'
-          new = '                if (hasStrongFastCandidate(candidates)) hotUntil = now + HOT_DURATION_MS; else hotUntil = 0L;'
-          if old not in s:
-              raise SystemExit('Expected hotUntil pattern not found')
-          s = s.replace(old, new, 1)
-
-          old = '            boolean hot = !candidates.isEmpty() || System.currentTimeMillis() < hotUntil;'
-          new = '            boolean hot = hasStrongFastCandidate(candidates) || System.currentTimeMillis() < hotUntil;'
-          if old not in s:
-              raise SystemExit('Expected hot-state pattern not found')
-          s = s.replace(old, new, 1)
-
-          marker = '    private void confirmTopCandidates(List<Candidate> candidates, int max) {'
-          helper = '''    private boolean hasStrongFastCandidate(List<Candidate> candidates) {\n        if (candidates == null || candidates.isEmpty()) return false;\n        for (Candidate c : candidates) {\n            if (c.score >= 5.0 && c.rvol >= 2.0 && c.p1 > 0.0) return true;\n        }\n        return false;\n    }\n\n'''
-          if marker not in s:
-              raise SystemExit('confirmTopCandidates marker not found')
-          s = s.replace(marker, helper + marker, 1)
-
-          old = '        sb.append("\\nيتم الآن فحص التأكيد بوتيرة أسرع مؤقتًا.");'
-          new = '        sb.append(hasStrongFastCandidate(cands) ? "\\nمرشح قوي فعّل الفحص السريع مؤقتًا." : "\\nمرشحون مبكرون فقط؛ يبقى Smart Eco على فحص 60–90 ثانية.");'
-          if old not in s:
-              raise SystemExit('Expected UI status pattern not found')
-          s = s.replace(old, new, 1)
-
-          p.write_text(s, encoding='utf-8')
-          PY
-      - name: Build Eco APK
+      - name: Build Whale Radar APK
         working-directory: crypto-radar-lowpower
         run: gradle --no-daemon assembleDebug --stacktrace
       - name: Rename APK
-        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Explosion-Radar-Smart-Eco.apk
+        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Whale-Accumulation-Radar.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: Explosion-Radar-Smart-Eco-APK
-          path: Explosion-Radar-Smart-Eco.apk
+          name: Whale-Accumulation-Radar-APK
+          path: Whale-Accumulation-Radar.apk
           retention-days: 7
