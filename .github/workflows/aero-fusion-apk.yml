@@ -1,0 +1,71 @@
+name: Build AERO FUSION APK
+
+on:
+  push:
+    branches:
+      - aero-fusion-apk
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout AERO FUSION branch
+        uses: actions/checkout@v4
+
+      - name: Reconstruct AERO FUSION Android overlay
+        shell: bash
+        run: |
+          cat aero_chunks/chunk00 aero_chunks/chunk01 aero_chunks/chunk02 aero_chunks/chunk03 aero_chunks/chunk04 aero_chunks/chunk05 aero_chunks/chunk06 | base64 --decode > /tmp/aero-fusion-overlay.zip
+          unzip -t /tmp/aero-fusion-overlay.zip
+          rm -rf app/src/main/java/com/wahshi/emb190cbt
+          rm -rf app/src/main/assets
+          unzip -o /tmp/aero-fusion-overlay.zip -d .
+          test -f app/src/main/assets/index.html
+          test -f app/src/main/assets/mobile-engine.js
+          test -f app/src/main/java/com/wahshi/aerofusion/MainActivity.java
+          test -f app/src/main/res/drawable-nodpi/aero_icon.webp
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: ''
+
+      - name: Install Android SDK 35
+        run: sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build AERO FUSION debug APK
+        run: gradle --no-daemon assembleDebug --stacktrace
+
+      - name: Verify and stage APK
+        shell: bash
+        run: |
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          mkdir -p output
+          cp "$APK" output/AERO-FUSION-0.2.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging output/AERO-FUSION-0.2.apk | head -n 5
+          ls -lh output/AERO-FUSION-0.2.apk
+
+      - name: Upload AERO FUSION APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AERO-FUSION-0.2-APK
+          path: output/AERO-FUSION-0.2.apk
+          retention-days: 14
