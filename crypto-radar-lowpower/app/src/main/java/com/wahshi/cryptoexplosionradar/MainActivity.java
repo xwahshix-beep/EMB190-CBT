@@ -10,21 +10,26 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.Gravity;
-import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
     private TextView status;
     private TextView details;
+    private EditText apiKey;
+
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
             if (!ScannerService.ACTION_UI.equals(intent.getAction())) return;
-            status.setText(intent.getStringExtra("status"));
+            String s = intent.getStringExtra("status");
             String d = intent.getStringExtra("details");
+            status.setText(s == null ? "" : s);
             details.setText(d == null ? "" : d);
         }
     };
@@ -37,30 +42,66 @@ public class MainActivity extends Activity {
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(36, 42, 36, 30);
-        root.setBackgroundColor(Color.rgb(11,14,19));
+        root.setPadding(32, 38, 32, 26);
+        root.setBackgroundColor(Color.rgb(9,12,17));
 
         TextView title = new TextView(this);
-        title.setText("🚨 Explosion Radar");
+        title.setText("🐋 Whale Accumulation Radar");
         title.setTextColor(Color.WHITE);
-        title.setTextSize(27);
+        title.setTextSize(25);
         title.setGravity(Gravity.CENTER_HORIZONTAL);
-        title.setPadding(0,0,0,16);
+        title.setPadding(0,0,0,12);
         root.addView(title);
 
         TextView mode = new TextView(this);
-        mode.setText("SMART ECO • Binance Spot / USDT\nمراقبة هادئة، وتسارع تلقائي فقط عند ظهور مرشح مبكر");
+        mode.setText("ON-CHAIN • Nansen + Binance Spot / USDT\nيرصد تجميع الحيتان وSmart Money قبل الحركة السعرية الكبيرة");
         mode.setTextColor(Color.rgb(245,183,43));
         mode.setTextSize(15);
         mode.setGravity(Gravity.CENTER_HORIZONTAL);
-        mode.setPadding(0,0,0,24);
+        mode.setPadding(0,0,0,20);
         root.addView(mode);
 
+        TextView keyLabel = new TextView(this);
+        keyLabel.setText("Nansen API Key — يُحفظ مشفرًا على الهاتف");
+        keyLabel.setTextColor(Color.rgb(170,182,198));
+        keyLabel.setTextSize(13);
+        root.addView(keyLabel);
+
+        LinearLayout keyRow = new LinearLayout(this);
+        keyRow.setOrientation(LinearLayout.HORIZONTAL);
+        apiKey = new EditText(this);
+        apiKey.setHint(SecretStore.hasNansenKey(this) ? "API key محفوظ ✓ — أدخل مفتاحًا جديدًا فقط للتغيير" : "ألصق Nansen API key هنا");
+        apiKey.setSingleLine(true);
+        apiKey.setTextColor(Color.WHITE);
+        apiKey.setHintTextColor(Color.rgb(110,122,140));
+        apiKey.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        keyRow.addView(apiKey, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+
+        Button save = new Button(this);
+        save.setText("حفظ");
+        save.setOnClickListener(v -> {
+            String k = apiKey.getText().toString().trim();
+            if (k.isEmpty()) {
+                Toast.makeText(this, SecretStore.hasNansenKey(this) ? "المفتاح محفوظ بالفعل" : "أدخل API key أولًا", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            try {
+                SecretStore.saveNansenKey(this, k);
+                apiKey.setText("");
+                apiKey.setHint("API key محفوظ ✓");
+                Toast.makeText(this, "تم حفظ المفتاح مشفرًا", Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                Toast.makeText(this, "تعذر حفظ المفتاح", Toast.LENGTH_LONG).show();
+            }
+        });
+        keyRow.addView(save);
+        root.addView(keyRow);
+
         status = new TextView(this);
-        status.setText("الرادار متوقف");
+        status.setText(SecretStore.hasNansenKey(this) ? "الرادار متوقف" : "أدخل Nansen API key ثم شغّل الرادار");
         status.setTextColor(Color.rgb(230,235,242));
         status.setTextSize(18);
-        status.setPadding(0,14,0,14);
+        status.setPadding(0,16,0,12);
         root.addView(status);
 
         LinearLayout buttons = new LinearLayout(this);
@@ -68,11 +109,15 @@ public class MainActivity extends Activity {
         buttons.setGravity(Gravity.CENTER);
 
         Button start = new Button(this);
-        start.setText("تشغيل الرادار");
+        start.setText("تشغيل رادار الحيتان");
         start.setOnClickListener(v -> {
+            if (!SecretStore.hasNansenKey(this)) {
+                status.setText("أدخل Nansen API key أولًا");
+                return;
+            }
             Intent i = new Intent(this, ScannerService.class).setAction(ScannerService.ACTION_START);
             if (Build.VERSION.SDK_INT >= 26) startForegroundService(i); else startService(i);
-            status.setText("بدء Smart Eco…");
+            status.setText("بدء فحص On-chain…");
         });
         buttons.addView(start, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
 
@@ -83,16 +128,16 @@ public class MainActivity extends Activity {
         root.addView(buttons);
 
         TextView note = new TextView(this);
-        note.setText("\nالاستهلاك المنخفض هو الوضع الافتراضي: في الهدوء فحص كل 60–90 ثانية، وعند ظهور Early Hunt ينتقل مؤقتًا إلى 15 ثانية. لا ينفذ أي صفقات.");
+        note.setText("\nهذا الإصدار لا يعطي أوامر شراء. يبحث عن: Whale net inflow + Smart Traders + Top-PnL wallets + خروج من المنصات + Fresh Wallets، ثم يتحقق أن الزوج موجود على Binance Spot وأن السعر لم ينفجر بعد.\n\nPowered by Nansen API • الفحص الهادئ يقلل استهلاك البطارية وAPI credits.");
         note.setTextColor(Color.rgb(145,157,175));
-        note.setTextSize(14);
-        note.setPadding(0,12,0,10);
+        note.setTextSize(13);
+        note.setPadding(0,8,0,10);
         root.addView(note);
 
         details = new TextView(this);
         details.setText("في انتظار التشغيل…");
         details.setTextColor(Color.rgb(220,225,232));
-        details.setTextSize(15);
+        details.setTextSize(14);
         details.setLineSpacing(5,1.0f);
 
         ScrollView scroll = new ScrollView(this);
