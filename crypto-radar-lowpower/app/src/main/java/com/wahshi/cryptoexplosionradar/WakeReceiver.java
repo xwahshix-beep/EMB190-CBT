@@ -11,7 +11,7 @@ public class WakeReceiver extends BroadcastReceiver {
         SharedPreferences prefs = context.getSharedPreferences("free_whale_radar_v3", Context.MODE_PRIVATE);
         if (!prefs.getBoolean("radar_enabled", false)) return;
 
-        Intent service = new Intent(context, ScannerService.class).setAction(ScannerService.ACTION_WAKE);
+        Intent service = new Intent(context, ScannerService.class).setAction(ScannerService.ACTION_TICK);
         try {
             if (Build.VERSION.SDK_INT >= 26) context.startForegroundService(service);
             else context.startService(service);
