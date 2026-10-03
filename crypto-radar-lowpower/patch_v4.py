@@ -25,7 +25,7 @@ if old_oncreate not in s:
 s = s.replace(old_oncreate, new_oncreate, 1)
 
 old_startcmd = '''    @Override public int onStartCommand(Intent intent, int flags, int startId) {\n        String action = intent == null ? null : intent.getAction();\n        if (ACTION_STOP.equals(action)) {\n            stopScanner();\n            return START_NOT_STICKY;\n        }\n        startScanner();\n        return START_STICKY;\n    }\n'''
-new_startcmd = '''    @Override public int onStartCommand(Intent intent, int flags, int startId) {\n        String action = intent == null ? null : intent.getAction();\n        if (ACTION_STOP.equals(action)) {\n            stopScanner();\n            return START_NOT_STICKY;\n        }\n        if (ACTION_TICK.equals(action)) {\n            if (!running) startScanner();\n            triggerCycle();\n            return START_STICKY;\n        }\n        startScanner();\n        return START_STICKY;\n    }\n'''
+new_startcmd = '''    @Override public int onStartCommand(Intent intent, int flags, int startId) {\n        String action = intent == null ? null : intent.getAction();\n        if (ACTION_STOP.equals(action)) {\n            stopScanner();\n            return START_NOT_STICKY;\n        }\n        if (ACTION_TICK.equals(action)) {\n            if (!prefs.getBoolean("radar_enabled", false)) {\n                stopSelf();\n                return START_NOT_STICKY;\n            }\n            if (!running) startScanner();\n            triggerCycle();\n            return START_STICKY;\n        }\n        if (intent == null && !prefs.getBoolean("radar_enabled", false)) {\n            stopSelf();\n            return START_NOT_STICKY;\n        }\n        startScanner();\n        return START_STICKY;\n    }\n'''
 if old_startcmd not in s:
     raise SystemExit('onStartCommand anchor not found')
 s = s.replace(old_startcmd, new_startcmd, 1)
@@ -33,7 +33,7 @@ s = s.replace(old_startcmd, new_startcmd, 1)
 # Persist user-enabled state and use an OS wake-up alarm instead of an in-process timer.
 s = s.replace(
     '        running = true;\n        startForeground(SERVICE_NOTIFICATION_ID, buildServiceNotification("Free Whale Radar يعمل • On-chain"));',
-    '        running = true;\n        prefs.edit().putBoolean("radar_enabled", true).putBoolean("service_alive", true).apply();\n        startForeground(SERVICE_NOTIFICATION_ID, buildServiceNotification("Free Whale Radar يعمل • On-chain"));',
+    '        running = true;\n        prefs.edit().putBoolean("radar_enabled", true).putBoolean("service_alive", true).apply();\n        startForeground(SERVICE_NOTIFICATION_ID, buildServiceNotification("Whale + Catalyst Radar V4.1 يعمل • Background wake"));',
     1
 )
 
@@ -44,7 +44,7 @@ if old_stop not in s:
 s = s.replace(old_stop, new_stop, 1)
 
 old_schedule = '''    private void scheduleNext(long delayMs) {\n        if (!running) return;\n        executor.schedule(this::runCycleSafe, delayMs, TimeUnit.MILLISECONDS);\n    }\n'''
-new_schedule = '''    private synchronized void scheduleNext(long delayMs) {\n        if (!running || alarmManager == null || tickIntent == null) return;\n        long when = SystemClock.elapsedRealtime() + Math.max(1_000L, delayMs);\n        alarmManager.cancel(tickIntent);\n        if (Build.VERSION.SDK_INT >= 23) {\n            alarmManager.setAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, when, tickIntent);\n        } else {\n            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, when, tickIntent);\n        }\n    }\n\n    private synchronized void triggerCycle() {\n        if (!running || cycleInFlight) return;\n        cycleInFlight = true;\n        executor.execute(() -> {\n            try {\n                runCycleSafe();\n            } finally {\n                cycleInFlight = false;\n            }\n        });\n    }\n'''
+new_schedule = '''    private synchronized void scheduleNext(long delayMs) {\n        if (!running || alarmManager == null || tickIntent == null) return;\n        long when = SystemClock.elapsedRealtime() + Math.max(1_000L, delayMs);\n        alarmManager.cancel(tickIntent);\n        if (Build.VERSION.SDK_INT >= 23) {\n            alarmManager.setAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, when, tickIntent);\n        } else {\n            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, when, tickIntent);\n        }\n        prefs.edit().putLong("next_wake_elapsed", when).apply();\n    }\n\n    private synchronized void triggerCycle() {\n        if (!running || cycleInFlight) return;\n        cycleInFlight = true;\n        executor.execute(() -> {\n            try {\n                runCycleSafe();\n            } finally {\n                cycleInFlight = false;\n            }\n        });\n    }\n'''
 if old_schedule not in s:
     raise SystemExit('scheduleNext anchor not found')
 s = s.replace(old_schedule, new_schedule, 1)
@@ -58,7 +58,7 @@ method = r'''    private void runCycleSafe() {
         boolean wakeHeld = false;
         try {
             if (cycleWakeLock != null && !cycleWakeLock.isHeld()) {
-                cycleWakeLock.acquire(6 * 60_000L);
+                cycleWakeLock.acquire(3 * 60_000L);
                 wakeHeld = true;
             }
 
@@ -133,6 +133,7 @@ method = r'''    private void runCycleSafe() {
                     + "\n\n" + catalyst.summary
                     + "\n\n⚡ Catalyst scan: كل ~5 دقائق • 🐋 Whale scan التالي: ~" + minsToWhale + " دقيقة"
                     + "\n✅ Background wake mode: ACTIVE";
+            prefs.edit().putLong("last_scan_at", System.currentTimeMillis()).apply();
             sendUi(status, details);
             updateServiceNotification(status + " • Background ACTIVE");
         } catch (Exception e) {
@@ -149,7 +150,7 @@ method = r'''    private void runCycleSafe() {
 s = s[:start] + method + s[end:]
 
 old_send = '''    private void sendUi(String status, String details) {\n        Intent i = new Intent(ACTION_UI).setPackage(getPackageName());\n        i.putExtra("status", status);\n        i.putExtra("details", details);\n        sendBroadcast(i);\n    }\n'''
-new_send = '''    private void sendUi(String status, String details) {\n        long now = System.currentTimeMillis();\n        if (prefs != null) {\n            prefs.edit()\n                    .putString("ui_status", safe(status))\n                    .putString("ui_details", safe(details))\n                    .putLong("ui_updated_at", now)\n                    .putBoolean("service_alive", running)\n                    .apply();\n        }\n        Intent i = new Intent(ACTION_UI).setPackage(getPackageName());\n        i.putExtra("status", status);\n        i.putExtra("details", details);\n        i.putExtra("updated_at", now);\n        sendBroadcast(i);\n    }\n'''
+new_send = '''    private void sendUi(String status, String details) {\n        long now = System.currentTimeMillis();\n        if (prefs != null) {\n            prefs.edit()\n                    .putString("ui_status", safe(status))\n                    .putString("ui_details", safe(details))\n                    .putString("last_status", safe(status))\n                    .putString("last_details", safe(details))\n                    .putLong("ui_updated_at", now)\n                    .putLong("last_update_at", now)\n                    .putBoolean("service_alive", running)\n                    .apply();\n        }\n        Intent i = new Intent(ACTION_UI).setPackage(getPackageName());\n        i.putExtra("status", status);\n        i.putExtra("details", details);\n        i.putExtra("updated_at", now);\n        i.putExtra("last_scan_at", prefs == null ? 0L : prefs.getLong("last_scan_at", 0L));\n        sendBroadcast(i);\n    }\n'''
 if old_send not in s:
     raise SystemExit('sendUi anchor not found')
 s = s.replace(old_send, new_send, 1)
