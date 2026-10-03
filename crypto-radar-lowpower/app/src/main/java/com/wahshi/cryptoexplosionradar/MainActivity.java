@@ -17,9 +17,14 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class MainActivity extends Activity {
     private TextView status;
     private TextView details;
+    private TextView lastScan;
 
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
@@ -28,6 +33,7 @@ public class MainActivity extends Activity {
             String d = intent.getStringExtra("details");
             status.setText(s == null ? "" : s);
             details.setText(d == null ? "" : d);
+            refreshLastScanLabel();
         }
     };
 
@@ -51,7 +57,7 @@ public class MainActivity extends Activity {
         root.addView(title);
 
         TextView mode = new TextView(this);
-        mode.setText("FREE • Binance Spot / USDT\nOn-chain whales + official Binance catalysts • Background hardened");
+        mode.setText("FREE • Binance Spot / USDT\nOn-chain whales + official Binance catalysts • Background Wake");
         mode.setTextColor(Color.rgb(245,183,43));
         mode.setTextSize(14);
         mode.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -62,8 +68,15 @@ public class MainActivity extends Activity {
         status.setText("الرادار متوقف");
         status.setTextColor(Color.rgb(230,235,242));
         status.setTextSize(18);
-        status.setPadding(0,16,0,12);
+        status.setPadding(0,16,0,6);
         root.addView(status);
+
+        lastScan = new TextView(this);
+        lastScan.setText("آخر فحص مكتمل: —");
+        lastScan.setTextColor(Color.rgb(118,210,154));
+        lastScan.setTextSize(13);
+        lastScan.setPadding(0,0,0,12);
+        root.addView(lastScan);
 
         LinearLayout buttons = new LinearLayout(this);
         buttons.setOrientation(LinearLayout.HORIZONTAL);
@@ -74,7 +87,8 @@ public class MainActivity extends Activity {
         start.setOnClickListener(v -> {
             Intent i = new Intent(this, ScannerService.class).setAction(ScannerService.ACTION_START);
             if (Build.VERSION.SDK_INT >= 26) startForegroundService(i); else startService(i);
-            status.setText("بدء Whale + Catalyst Radar…");
+            status.setText("بدء Whale + Catalyst Radar V4.1…");
+            lastScan.setText("مراقبة الخلفية قيد التفعيل…");
         });
         buttons.addView(start, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
 
@@ -85,7 +99,7 @@ public class MainActivity extends Activity {
         root.addView(buttons);
 
         TextView note = new TextView(this);
-        note.setText("\n🐋 WHALE RADAR: يرصد صافي زيادة كبيرة في عدة محافظ مستقلة على البلوكشين بينما السعر ما زال هادئًا.\n\n⚡ CATALYST RADAR: يراقب الإعلانات الرسمية العامة من Binance ويصنف Listing / Migration / Mainnet / Airdrop / Burn / Delisting وغيرها.\n\n🐋⚡ عند اجتماع التجميع والمحـفز لنفس العملة يصدر تنبيه موحّد. لا يعطي التطبيق أمر شراء.\n\nCatalyst scan كل 5 دقائق تقريبًا، وWhale scan الثقيل كل 20 دقيقة. V4.1 يحفظ آخر حالة ويعيد تشغيل الخدمة عند إزالة التطبيق من Recent apps أو بعد إعادة تشغيل الجهاز إذا كان الرادار مفعّلًا.");
+        note.setText("\n🐋 WHALE RADAR: يرصد صافي زيادة كبيرة في عدة محافظ مستقلة على البلوكشين بينما السعر ما زال هادئًا.\n\n⚡ CATALYST RADAR: يراقب الإعلانات الرسمية العامة من Binance ويصنف Listing / Migration / Mainnet / Airdrop / Burn / Delisting وغيرها.\n\n🌙 BACKGROUND WAKE: يستخدم AlarmManager لإيقاظ الفحص أثناء Doze، مع WakeLock قصير فقط أثناء الفحص لتقليل استهلاك البطارية.\n\n🐋⚡ عند اجتماع التجميع والمحـفز لنفس العملة يصدر تنبيه موحّد. لا يعطي التطبيق أمر شراء.");
         note.setTextColor(Color.rgb(145,157,175));
         note.setTextSize(13);
         note.setPadding(0,8,0,10);
@@ -101,41 +115,43 @@ public class MainActivity extends Activity {
         scroll.addView(details);
         root.addView(scroll, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1));
         setContentView(root);
-
-        restoreLastState();
     }
 
-    private void restoreLastState() {
-        SharedPreferences p = getSharedPreferences("free_whale_radar_v3", MODE_PRIVATE);
-        boolean enabled = p.getBoolean("radar_enabled", false);
-        String lastStatus = p.getString("ui_status", "");
-        String lastDetails = p.getString("ui_details", "");
-        long updated = p.getLong("ui_updated_at", 0L);
+    private SharedPreferences prefs() {
+        return getSharedPreferences("free_whale_radar_v3", MODE_PRIVATE);
+    }
 
-        if (!enabled) {
-            status.setText("الرادار متوقف");
-            if (!lastDetails.isEmpty()) details.setText(lastDetails);
+    private void restoreSavedState() {
+        SharedPreferences p = prefs();
+        boolean enabled = p.getBoolean("radar_enabled", false);
+        String savedStatus = p.getString("last_status", p.getString("ui_status", ""));
+        String savedDetails = p.getString("last_details", p.getString("ui_details", ""));
+        if (!savedStatus.isEmpty()) status.setText(savedStatus);
+        else status.setText(enabled ? "🐋⚡ الرادار مفعّل في الخلفية" : "الرادار متوقف");
+        if (!savedDetails.isEmpty()) details.setText(savedDetails);
+        refreshLastScanLabel();
+    }
+
+    private void refreshLastScanLabel() {
+        SharedPreferences p = prefs();
+        boolean enabled = p.getBoolean("radar_enabled", false);
+        long t = p.getLong("last_scan_at", 0L);
+        if (t <= 0L) {
+            lastScan.setText(enabled ? "الخلفية مفعّلة • لم يكتمل أول فحص بعد" : "آخر فحص مكتمل: —");
             return;
         }
-
-        long ageMin = updated <= 0 ? -1 : Math.max(0L, (System.currentTimeMillis() - updated) / 60_000L);
-        if (!lastStatus.isEmpty()) status.setText(lastStatus);
-        else status.setText("🐋⚡ الرادار مفعّل في الخلفية");
-
-        String suffix;
-        if (ageMin < 0) suffix = "\n\nآخر تحديث: في انتظار أول دورة";
-        else if (ageMin > 15) suffix = "\n\n⚠️ آخر تحديث قبل " + ageMin + " دقيقة — إذا استمر التأخير اضغط تشغيل الرادار مرة واحدة.";
-        else suffix = "\n\n✅ آخر تحديث قبل " + ageMin + " دقيقة • Background active";
-
-        details.setText((lastDetails.isEmpty() ? "الخدمة مفعلة في الخلفية." : lastDetails) + suffix);
+        String when = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date(t));
+        long ageMin = Math.max(0L, (System.currentTimeMillis() - t) / 60_000L);
+        String health = enabled && ageMin <= 15 ? "🟢 الخلفية فعالة" : enabled ? "🟠 الخلفية متأخرة" : "⚪ الرادار متوقف";
+        lastScan.setText(health + " • آخر فحص: " + when + " • منذ " + ageMin + " د");
     }
 
     @Override protected void onStart() {
         super.onStart();
-        restoreLastState();
         IntentFilter f = new IntentFilter(ScannerService.ACTION_UI);
         if (Build.VERSION.SDK_INT >= 33) registerReceiver(receiver, f, Context.RECEIVER_NOT_EXPORTED);
         else registerReceiver(receiver, f);
+        restoreSavedState();
     }
 
     @Override protected void onStop() {
