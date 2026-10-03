@@ -1,4 +1,4 @@
-name: Build Whale Catalyst Radar V4 APK
+name: Build Whale Catalyst Radar V4.1 APK
 
 on:
   push:
@@ -28,16 +28,16 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Integrate Whale plus Catalyst engine
+      - name: Integrate Whale plus Catalyst V4.1 background engine
         working-directory: crypto-radar-lowpower
         run: python3 patch_v4.py
-      - name: Build Whale Catalyst Radar V4 APK
+      - name: Build Whale Catalyst Radar V4.1 APK
         working-directory: crypto-radar-lowpower
         run: gradle --no-daemon assembleDebug --stacktrace
       - name: Rename APK
-        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Whale-Catalyst-Radar-V4.apk
+        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Whale-Catalyst-Radar-V4.1.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: Whale-Catalyst-Radar-V4-APK
-          path: Whale-Catalyst-Radar-V4.apk
+          name: Whale-Catalyst-Radar-V4.1-APK
+          path: Whale-Catalyst-Radar-V4.1.apk
           retention-days: 7
