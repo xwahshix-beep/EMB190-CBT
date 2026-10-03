@@ -3,11 +3,51 @@ from pathlib import Path
 p = Path('app/src/main/java/com/wahshi/cryptoexplosionradar/ScannerService.java')
 s = p.read_text(encoding='utf-8')
 
+# Imports needed for OS wake-up scheduling and bounded CPU wake lock.
+s = s.replace('import android.app.Notification;\n', 'import android.app.AlarmManager;\nimport android.app.Notification;\n', 1)
+s = s.replace('import android.os.Build;\n', 'import android.os.Build;\nimport android.os.PowerManager;\nimport android.os.SystemClock;\n', 1)
+
+# Alarm action delivered directly back to the running foreground service.
+s = s.replace('    public static final String ACTION_STOP = "com.wahshi.cryptoexplosionradar.STOP";\n',
+              '    public static final String ACTION_STOP = "com.wahshi.cryptoexplosionradar.STOP";\n'
+              '    public static final String ACTION_TICK = "com.wahshi.cryptoexplosionradar.TICK";\n', 1)
+
 field_anchor = '    private SharedPreferences prefs;\n'
-fields = '''    private SharedPreferences prefs;\n    private volatile long lastWhaleScanAt = 0L;\n    private volatile List<WhaleSignal> cachedWhaleSignals = new ArrayList<>();\n    private volatile int lastWhaleScanned = 0;\n    private volatile int lastWhaleMapped = 0;\n    private volatile int lastWhaleOnChain = 0;\n'''
+fields = '''    private SharedPreferences prefs;\n    private AlarmManager alarmManager;\n    private PendingIntent tickIntent;\n    private PowerManager.WakeLock cycleWakeLock;\n    private volatile boolean cycleInFlight = false;\n    private volatile long lastWhaleScanAt = 0L;\n    private volatile List<WhaleSignal> cachedWhaleSignals = new ArrayList<>();\n    private volatile int lastWhaleScanned = 0;\n    private volatile int lastWhaleMapped = 0;\n    private volatile int lastWhaleOnChain = 0;\n'''
 if field_anchor not in s:
     raise SystemExit('SharedPreferences anchor not found')
 s = s.replace(field_anchor, fields, 1)
+
+old_oncreate = '''    @Override public void onCreate() {\n        super.onCreate();\n        prefs = getSharedPreferences("free_whale_radar_v3", MODE_PRIVATE);\n        createChannels();\n    }\n'''
+new_oncreate = '''    @Override public void onCreate() {\n        super.onCreate();\n        prefs = getSharedPreferences("free_whale_radar_v3", MODE_PRIVATE);\n        createChannels();\n        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);\n        Intent tick = new Intent(this, ScannerService.class).setAction(ACTION_TICK);\n        tickIntent = PendingIntent.getService(this, 4202, tick, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);\n        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);\n        if (pm != null) {\n            cycleWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WhaleCatalystRadar:scan");\n            cycleWakeLock.setReferenceCounted(false);\n        }\n    }\n'''
+if old_oncreate not in s:
+    raise SystemExit('onCreate anchor not found')
+s = s.replace(old_oncreate, new_oncreate, 1)
+
+old_startcmd = '''    @Override public int onStartCommand(Intent intent, int flags, int startId) {\n        String action = intent == null ? null : intent.getAction();\n        if (ACTION_STOP.equals(action)) {\n            stopScanner();\n            return START_NOT_STICKY;\n        }\n        startScanner();\n        return START_STICKY;\n    }\n'''
+new_startcmd = '''    @Override public int onStartCommand(Intent intent, int flags, int startId) {\n        String action = intent == null ? null : intent.getAction();\n        if (ACTION_STOP.equals(action)) {\n            stopScanner();\n            return START_NOT_STICKY;\n        }\n        if (ACTION_TICK.equals(action)) {\n            if (!running) startScanner();\n            triggerCycle();\n            return START_STICKY;\n        }\n        startScanner();\n        return START_STICKY;\n    }\n'''
+if old_startcmd not in s:
+    raise SystemExit('onStartCommand anchor not found')
+s = s.replace(old_startcmd, new_startcmd, 1)
+
+# Persist user-enabled state and use an OS wake-up alarm instead of an in-process timer.
+s = s.replace(
+    '        running = true;\n        startForeground(SERVICE_NOTIFICATION_ID, buildServiceNotification("Free Whale Radar يعمل • On-chain"));',
+    '        running = true;\n        prefs.edit().putBoolean("radar_enabled", true).putBoolean("service_alive", true).apply();\n        startForeground(SERVICE_NOTIFICATION_ID, buildServiceNotification("Free Whale Radar يعمل • On-chain"));',
+    1
+)
+
+old_stop = '''    private synchronized void stopScanner() {\n        running = false;\n        sendUi("الرادار متوقف", "لن تتم مراقبة حركة الحيتان حتى تشغيله من جديد.");\n        if (Build.VERSION.SDK_INT >= 24) stopForeground(STOP_FOREGROUND_REMOVE); else stopForeground(true);\n        stopSelf();\n    }\n'''
+new_stop = '''    private synchronized void stopScanner() {\n        running = false;\n        prefs.edit().putBoolean("radar_enabled", false).putBoolean("service_alive", false).apply();\n        if (alarmManager != null && tickIntent != null) alarmManager.cancel(tickIntent);\n        if (cycleWakeLock != null && cycleWakeLock.isHeld()) cycleWakeLock.release();\n        sendUi("الرادار متوقف", "تم إيقاف Whale + Catalyst Radar بواسطة المستخدم.");\n        if (Build.VERSION.SDK_INT >= 24) stopForeground(STOP_FOREGROUND_REMOVE); else stopForeground(true);\n        stopSelf();\n    }\n'''
+if old_stop not in s:
+    raise SystemExit('stopScanner anchor not found')
+s = s.replace(old_stop, new_stop, 1)
+
+old_schedule = '''    private void scheduleNext(long delayMs) {\n        if (!running) return;\n        executor.schedule(this::runCycleSafe, delayMs, TimeUnit.MILLISECONDS);\n    }\n'''
+new_schedule = '''    private synchronized void scheduleNext(long delayMs) {\n        if (!running || alarmManager == null || tickIntent == null) return;\n        long when = SystemClock.elapsedRealtime() + Math.max(1_000L, delayMs);\n        alarmManager.cancel(tickIntent);\n        if (Build.VERSION.SDK_INT >= 23) {\n            alarmManager.setAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, when, tickIntent);\n        } else {\n            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, when, tickIntent);\n        }\n    }\n\n    private synchronized void triggerCycle() {\n        if (!running || cycleInFlight) return;\n        cycleInFlight = true;\n        executor.execute(() -> {\n            try {\n                runCycleSafe();\n            } finally {\n                cycleInFlight = false;\n            }\n        });\n    }\n'''
+if old_schedule not in s:
+    raise SystemExit('scheduleNext anchor not found')
+s = s.replace(old_schedule, new_schedule, 1)
 
 start = s.index('    private void runCycleSafe() {')
 end = s.index('    private List<BinanceTicker> loadBinanceSpotTickers()', start)
@@ -15,7 +55,13 @@ method = r'''    private void runCycleSafe() {
         if (!running) return;
         final long CATALYST_INTERVAL_MS = 5 * 60_000L;
         long next = CATALYST_INTERVAL_MS;
+        boolean wakeHeld = false;
         try {
+            if (cycleWakeLock != null && !cycleWakeLock.isHeld()) {
+                cycleWakeLock.acquire(6 * 60_000L);
+                wakeHeld = true;
+            }
+
             long now = System.currentTimeMillis();
             List<BinanceTicker> all = loadBinanceSpotTickers();
 
@@ -85,14 +131,16 @@ method = r'''    private void runCycleSafe() {
             long minsToWhale = Math.max(1L, (whaleCadence - Math.max(0L, System.currentTimeMillis() - lastWhaleScanAt)) / 60_000L);
             String details = whaleDetails
                     + "\n\n" + catalyst.summary
-                    + "\n\n⚡ Catalyst scan: كل ~5 دقائق • 🐋 Whale scan التالي: ~" + minsToWhale + " دقيقة";
+                    + "\n\n⚡ Catalyst scan: كل ~5 دقائق • 🐋 Whale scan التالي: ~" + minsToWhale + " دقيقة"
+                    + "\n✅ Background wake mode: ACTIVE";
             sendUi(status, details);
-            updateServiceNotification(status + " • Catalyst ~5m");
+            updateServiceNotification(status + " • Background ACTIVE");
         } catch (Exception e) {
             next = 5 * 60_000L;
             sendUi("Whale + Catalyst Radar • خطأ مؤقت", "سيعيد المحاولة تلقائيًا.\n" + safe(e.getMessage()));
             updateServiceNotification("Whale + Catalyst Radar • إعادة محاولة ~5m");
         } finally {
+            if (wakeHeld && cycleWakeLock != null && cycleWakeLock.isHeld()) cycleWakeLock.release();
             scheduleNext(next);
         }
     }
@@ -100,36 +148,14 @@ method = r'''    private void runCycleSafe() {
 '''
 s = s[:start] + method + s[end:]
 
-# Background reliability: persist state, survive task removal, and allow restart receiver.
-s = s.replace('import android.app.Notification;\n', 'import android.app.AlarmManager;\nimport android.app.Notification;\n', 1)
-s = s.replace('import android.os.IBinder;\n', 'import android.os.IBinder;\nimport android.os.SystemClock;\n', 1)
-
-s = s.replace(
-    '        running = true;\n        startForeground(SERVICE_NOTIFICATION_ID, buildServiceNotification("Free Whale Radar يعمل • On-chain"));',
-    '        running = true;\n        prefs.edit().putBoolean("radar_enabled", true).putBoolean("service_alive", true).apply();\n        startForeground(SERVICE_NOTIFICATION_ID, buildServiceNotification("Free Whale Radar يعمل • On-chain"));',
-    1
-)
-
-s = s.replace(
-    '        running = false;\n        sendUi("الرادار متوقف", "لن تتم مراقبة حركة الحيتان حتى تشغيله من جديد.");',
-    '        running = false;\n        prefs.edit().putBoolean("radar_enabled", false).putBoolean("service_alive", false).apply();\n        sendUi("الرادار متوقف", "لن تتم مراقبة حركة الحيتان حتى تشغيله من جديد.");',
-    1
-)
-
 old_send = '''    private void sendUi(String status, String details) {\n        Intent i = new Intent(ACTION_UI).setPackage(getPackageName());\n        i.putExtra("status", status);\n        i.putExtra("details", details);\n        sendBroadcast(i);\n    }\n'''
-new_send = '''    private void sendUi(String status, String details) {\n        long now = System.currentTimeMillis();\n        if (prefs != null) {\n            prefs.edit()\n                    .putString("ui_status", status == null ? "" : status)\n                    .putString("ui_details", details == null ? "" : details)\n                    .putLong("ui_updated_at", now)\n                    .putBoolean("service_alive", running)\n                    .apply();\n        }\n        Intent i = new Intent(ACTION_UI).setPackage(getPackageName());\n        i.putExtra("status", status);\n        i.putExtra("details", details);\n        i.putExtra("updated_at", now);\n        sendBroadcast(i);\n    }\n'''
+new_send = '''    private void sendUi(String status, String details) {\n        long now = System.currentTimeMillis();\n        if (prefs != null) {\n            prefs.edit()\n                    .putString("ui_status", safe(status))\n                    .putString("ui_details", safe(details))\n                    .putLong("ui_updated_at", now)\n                    .putBoolean("service_alive", running)\n                    .apply();\n        }\n        Intent i = new Intent(ACTION_UI).setPackage(getPackageName());\n        i.putExtra("status", status);\n        i.putExtra("details", details);\n        i.putExtra("updated_at", now);\n        sendBroadcast(i);\n    }\n'''
 if old_send not in s:
     raise SystemExit('sendUi anchor not found')
 s = s.replace(old_send, new_send, 1)
-
-old_destroy = '''    @Override public void onDestroy() {\n        running = false;\n        executor.shutdownNow();\n        super.onDestroy();\n    }\n'''
-new_destroy = '''    @Override public void onTaskRemoved(Intent rootIntent) {\n        scheduleSelfRestart();\n        super.onTaskRemoved(rootIntent);\n    }\n\n    private void scheduleSelfRestart() {\n        if (prefs == null || !prefs.getBoolean("radar_enabled", false)) return;\n        try {\n            Intent restart = new Intent(this, RestartReceiver.class).setAction(RestartReceiver.ACTION_RESTART);\n            PendingIntent pi = PendingIntent.getBroadcast(this, 811, restart,\n                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);\n            AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);\n            if (am != null) {\n                am.setAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP,\n                        SystemClock.elapsedRealtime() + 15_000L, pi);\n            }\n        } catch (Exception ignored) {}\n    }\n\n    @Override public void onDestroy() {\n        running = false;\n        if (prefs != null) prefs.edit().putBoolean("service_alive", false).apply();\n        scheduleSelfRestart();\n        executor.shutdownNow();\n        super.onDestroy();\n    }\n'''
-if old_destroy not in s:
-    raise SystemExit('onDestroy anchor not found')
-s = s.replace(old_destroy, new_destroy, 1)
 
 s = s.replace('Free Whale Radar يعمل • On-chain', 'Whale + Catalyst Radar V4.1 يعمل', 1)
 s = s.replace('🐋 Free Whale Radar يعمل', '🐋⚡ Whale + Catalyst Radar V4.1', 1)
 s = s.replace('Free Whale Radar V3', 'Whale + Catalyst Radar V4.1')
 p.write_text(s, encoding='utf-8')
-print('V4.1 integration/background patch applied')
+print('V4.1 integration + background wake patch applied')
