@@ -42,17 +42,17 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(9,12,17));
 
         TextView title = new TextView(this);
-        title.setText("🐋 Free Whale Radar V3");
+        title.setText("🐋⚡ Whale + Catalyst Radar V4");
         title.setTextColor(Color.WHITE);
-        title.setTextSize(26);
+        title.setTextSize(24);
         title.setGravity(Gravity.CENTER_HORIZONTAL);
         title.setPadding(0,0,0,12);
         root.addView(title);
 
         TextView mode = new TextView(this);
-        mode.setText("FREE ON-CHAIN • Binance Spot / USDT\nPublic blockchain RPC + DEX Screener • لا يحتاج API key");
+        mode.setText("FREE • Binance Spot / USDT\nOn-chain whales + official Binance catalysts • لا يحتاج API key");
         mode.setTextColor(Color.rgb(245,183,43));
-        mode.setTextSize(15);
+        mode.setTextSize(14);
         mode.setGravity(Gravity.CENTER_HORIZONTAL);
         mode.setPadding(0,0,0,20);
         root.addView(mode);
@@ -69,11 +69,11 @@ public class MainActivity extends Activity {
         buttons.setGravity(Gravity.CENTER);
 
         Button start = new Button(this);
-        start.setText("تشغيل رادار الحيتان");
+        start.setText("تشغيل الرادار");
         start.setOnClickListener(v -> {
             Intent i = new Intent(this, ScannerService.class).setAction(ScannerService.ACTION_START);
             if (Build.VERSION.SDK_INT >= 26) startForegroundService(i); else startService(i);
-            status.setText("بدء الفحص المجاني On-chain…");
+            status.setText("بدء Whale + Catalyst Radar…");
         });
         buttons.addView(start, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
 
@@ -84,7 +84,7 @@ public class MainActivity extends Activity {
         root.addView(buttons);
 
         TextView note = new TextView(this);
-        note.setText("\nالهدف ليس إعطاء أمر شراء. V3 يبحث عن زيادة صافي رصيد عدة محافظ كبيرة مستقلة بينما سعر Binance Spot ما زال هادئًا. العقود وDEX pools والعناوين ذات نمط hub تُستبعد قدر الإمكان.\n\nالتغطية المباشرة المجانية: Ethereum • Base • Arbitrum • Avalanche. على Solana يقارن تغيّر كبار الحائزين بين الفحوصات. بعض الشبكات الأخرى لا تُصنّف كحيتان إذا لم تتوفر بيانات عامة موثوقة.");
+        note.setText("\n🐋 WHALE RADAR: يرصد صافي زيادة كبيرة في عدة محافظ مستقلة على البلوكشين بينما السعر ما زال هادئًا.\n\n⚡ CATALYST RADAR: يراقب الإعلانات الرسمية العامة من Binance ويصنف Listing / Migration / Mainnet / Airdrop / Burn / Delisting وغيرها.\n\n🐋⚡ عند اجتماع التجميع والمحـفز لنفس العملة يصدر تنبيه موحّد. لا يعطي التطبيق أمر شراء.\n\nCatalyst scan كل 5 دقائق تقريبًا، وWhale scan الثقيل كل 20 دقيقة لتقليل البطارية والحرارة.");
         note.setTextColor(Color.rgb(145,157,175));
         note.setTextSize(13);
         note.setPadding(0,8,0,10);
