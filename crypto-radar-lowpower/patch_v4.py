@@ -1,0 +1,106 @@
+from pathlib import Path
+
+p = Path('app/src/main/java/com/wahshi/cryptoexplosionradar/ScannerService.java')
+s = p.read_text(encoding='utf-8')
+
+field_anchor = '    private SharedPreferences prefs;\n'
+fields = '''    private SharedPreferences prefs;\n    private volatile long lastWhaleScanAt = 0L;\n    private volatile List<WhaleSignal> cachedWhaleSignals = new ArrayList<>();\n    private volatile int lastWhaleScanned = 0;\n    private volatile int lastWhaleMapped = 0;\n    private volatile int lastWhaleOnChain = 0;\n'''
+if field_anchor not in s:
+    raise SystemExit('SharedPreferences anchor not found')
+s = s.replace(field_anchor, fields, 1)
+
+start = s.index('    private void runCycleSafe() {')
+end = s.index('    private List<BinanceTicker> loadBinanceSpotTickers()', start)
+method = r'''    private void runCycleSafe() {
+        if (!running) return;
+        final long CATALYST_INTERVAL_MS = 5 * 60_000L;
+        long next = CATALYST_INTERVAL_MS;
+        try {
+            long now = System.currentTimeMillis();
+            List<BinanceTicker> all = loadBinanceSpotTickers();
+
+            boolean existingWhaleWatch = false;
+            for (WhaleSignal w : cachedWhaleSignals) {
+                if (w.score >= 4.25) { existingWhaleWatch = true; break; }
+            }
+            long whaleCadence = existingWhaleWatch ? WATCH_INTERVAL_MS : NORMAL_INTERVAL_MS;
+            boolean whaleDue = cachedWhaleSignals.isEmpty() || lastWhaleScanAt == 0L || now - lastWhaleScanAt >= whaleCadence;
+
+            List<WhaleSignal> signals = cachedWhaleSignals;
+            if (whaleDue) {
+                List<BinanceTicker> batch = selectBatch(all);
+                List<WhaleSignal> fresh = new ArrayList<>();
+                int mapped = 0;
+                int directOnChain = 0;
+
+                for (BinanceTicker bt : batch) {
+                    if (!running) break;
+                    try {
+                        DexToken token = resolveDexToken(bt);
+                        if (token == null) continue;
+                        mapped++;
+
+                        WhaleSignal ws = null;
+                        if ("solana".equals(token.chain)) {
+                            directOnChain++;
+                            ws = analyzeSolanaTopHolders(bt, token);
+                        } else if (EVM_RPC.containsKey(token.chain)) {
+                            directOnChain++;
+                            ws = analyzeEvmTransfers(bt, token);
+                        }
+                        if (ws != null) fresh.add(ws);
+                    } catch (Exception ignored) {
+                        // Public RPC endpoints are best-effort; isolate failures per token.
+                    }
+                }
+
+                fresh.sort((a, b) -> Double.compare(b.score, a.score));
+                cachedWhaleSignals = fresh;
+                signals = fresh;
+                lastWhaleScanAt = now;
+                lastWhaleScanned = batch.size();
+                lastWhaleMapped = mapped;
+                lastWhaleOnChain = directOnChain;
+            }
+
+            boolean whaleWatch = false;
+            for (WhaleSignal w : signals) {
+                if (w.score >= 4.25) { whaleWatch = true; break; }
+            }
+            whaleCadence = whaleWatch ? WATCH_INTERVAL_MS : NORMAL_INTERVAL_MS;
+
+            CatalystEngine.ScanResult catalyst = CatalystEngine.scan(this, all, signals, prefs);
+
+            for (WhaleSignal w : signals) {
+                if (!catalyst.combinedSymbols.contains(w.symbol)) maybeAlert(w);
+            }
+
+            String status;
+            if (!catalyst.combinedSymbols.isEmpty()) status = "🐋⚡ Double Signal • حيتان + محفز";
+            else if (catalyst.hot) status = "⚡ Catalyst Watch • حدث جديد";
+            else if (whaleWatch) status = "🐋 Whale Watch • تجميع محتمل";
+            else status = "Whale + Catalyst Radar • مراقبة هادئة";
+
+            String whaleDetails = formatSignals(lastWhaleScanned, lastWhaleMapped, lastWhaleOnChain, signals, whaleCadence);
+            long minsToWhale = Math.max(1L, (whaleCadence - Math.max(0L, System.currentTimeMillis() - lastWhaleScanAt)) / 60_000L);
+            String details = whaleDetails
+                    + "\n\n" + catalyst.summary
+                    + "\n\n⚡ Catalyst scan: كل ~5 دقائق • 🐋 Whale scan التالي: ~" + minsToWhale + " دقيقة";
+            sendUi(status, details);
+            updateServiceNotification(status + " • Catalyst ~5m");
+        } catch (Exception e) {
+            next = 5 * 60_000L;
+            sendUi("Whale + Catalyst Radar • خطأ مؤقت", "سيعيد المحاولة تلقائيًا.\n" + safe(e.getMessage()));
+            updateServiceNotification("Whale + Catalyst Radar • إعادة محاولة ~5m");
+        } finally {
+            scheduleNext(next);
+        }
+    }
+
+'''
+s = s[:start] + method + s[end:]
+s = s.replace('Free Whale Radar يعمل • On-chain', 'Whale + Catalyst Radar V4 يعمل', 1)
+s = s.replace('🐋 Free Whale Radar يعمل', '🐋⚡ Whale + Catalyst Radar V4', 1)
+s = s.replace('Free Whale Radar V3', 'Whale + Catalyst Radar V4')
+p.write_text(s, encoding='utf-8')
+print('V4 integration patch applied')
