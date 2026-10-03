@@ -34,6 +34,11 @@
         </service>
 
         <receiver
+            android:name=".WakeReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
+        <receiver
             android:name=".RestartReceiver"
             android:enabled="true"
             android:exported="true">
