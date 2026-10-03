@@ -99,8 +99,37 @@ method = r'''    private void runCycleSafe() {
 
 '''
 s = s[:start] + method + s[end:]
-s = s.replace('Free Whale Radar يعمل • On-chain', 'Whale + Catalyst Radar V4 يعمل', 1)
-s = s.replace('🐋 Free Whale Radar يعمل', '🐋⚡ Whale + Catalyst Radar V4', 1)
-s = s.replace('Free Whale Radar V3', 'Whale + Catalyst Radar V4')
+
+# Background reliability: persist state, survive task removal, and allow restart receiver.
+s = s.replace('import android.app.Notification;\n', 'import android.app.AlarmManager;\nimport android.app.Notification;\n', 1)
+s = s.replace('import android.os.IBinder;\n', 'import android.os.IBinder;\nimport android.os.SystemClock;\n', 1)
+
+s = s.replace(
+    '        running = true;\n        startForeground(SERVICE_NOTIFICATION_ID, buildServiceNotification("Free Whale Radar يعمل • On-chain"));',
+    '        running = true;\n        prefs.edit().putBoolean("radar_enabled", true).putBoolean("service_alive", true).apply();\n        startForeground(SERVICE_NOTIFICATION_ID, buildServiceNotification("Free Whale Radar يعمل • On-chain"));',
+    1
+)
+
+s = s.replace(
+    '        running = false;\n        sendUi("الرادار متوقف", "لن تتم مراقبة حركة الحيتان حتى تشغيله من جديد.");',
+    '        running = false;\n        prefs.edit().putBoolean("radar_enabled", false).putBoolean("service_alive", false).apply();\n        sendUi("الرادار متوقف", "لن تتم مراقبة حركة الحيتان حتى تشغيله من جديد.");',
+    1
+)
+
+old_send = '''    private void sendUi(String status, String details) {\n        Intent i = new Intent(ACTION_UI).setPackage(getPackageName());\n        i.putExtra("status", status);\n        i.putExtra("details", details);\n        sendBroadcast(i);\n    }\n'''
+new_send = '''    private void sendUi(String status, String details) {\n        long now = System.currentTimeMillis();\n        if (prefs != null) {\n            prefs.edit()\n                    .putString("ui_status", status == null ? "" : status)\n                    .putString("ui_details", details == null ? "" : details)\n                    .putLong("ui_updated_at", now)\n                    .putBoolean("service_alive", running)\n                    .apply();\n        }\n        Intent i = new Intent(ACTION_UI).setPackage(getPackageName());\n        i.putExtra("status", status);\n        i.putExtra("details", details);\n        i.putExtra("updated_at", now);\n        sendBroadcast(i);\n    }\n'''
+if old_send not in s:
+    raise SystemExit('sendUi anchor not found')
+s = s.replace(old_send, new_send, 1)
+
+old_destroy = '''    @Override public void onDestroy() {\n        running = false;\n        executor.shutdownNow();\n        super.onDestroy();\n    }\n'''
+new_destroy = '''    @Override public void onTaskRemoved(Intent rootIntent) {\n        scheduleSelfRestart();\n        super.onTaskRemoved(rootIntent);\n    }\n\n    private void scheduleSelfRestart() {\n        if (prefs == null || !prefs.getBoolean("radar_enabled", false)) return;\n        try {\n            Intent restart = new Intent(this, RestartReceiver.class).setAction(RestartReceiver.ACTION_RESTART);\n            PendingIntent pi = PendingIntent.getBroadcast(this, 811, restart,\n                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);\n            AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);\n            if (am != null) {\n                am.setAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP,\n                        SystemClock.elapsedRealtime() + 15_000L, pi);\n            }\n        } catch (Exception ignored) {}\n    }\n\n    @Override public void onDestroy() {\n        running = false;\n        if (prefs != null) prefs.edit().putBoolean("service_alive", false).apply();\n        scheduleSelfRestart();\n        executor.shutdownNow();\n        super.onDestroy();\n    }\n'''
+if old_destroy not in s:
+    raise SystemExit('onDestroy anchor not found')
+s = s.replace(old_destroy, new_destroy, 1)
+
+s = s.replace('Free Whale Radar يعمل • On-chain', 'Whale + Catalyst Radar V4.1 يعمل', 1)
+s = s.replace('🐋 Free Whale Radar يعمل', '🐋⚡ Whale + Catalyst Radar V4.1', 1)
+s = s.replace('Free Whale Radar V3', 'Whale + Catalyst Radar V4.1')
 p.write_text(s, encoding='utf-8')
-print('V4 integration patch applied')
+print('V4.1 integration/background patch applied')
