@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
@@ -42,7 +43,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(9,12,17));
 
         TextView title = new TextView(this);
-        title.setText("🐋⚡ Whale + Catalyst Radar V4");
+        title.setText("🐋⚡ Whale + Catalyst Radar V4.1");
         title.setTextColor(Color.WHITE);
         title.setTextSize(24);
         title.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -50,7 +51,7 @@ public class MainActivity extends Activity {
         root.addView(title);
 
         TextView mode = new TextView(this);
-        mode.setText("FREE • Binance Spot / USDT\nOn-chain whales + official Binance catalysts • لا يحتاج API key");
+        mode.setText("FREE • Binance Spot / USDT\nOn-chain whales + official Binance catalysts • Background hardened");
         mode.setTextColor(Color.rgb(245,183,43));
         mode.setTextSize(14);
         mode.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -84,7 +85,7 @@ public class MainActivity extends Activity {
         root.addView(buttons);
 
         TextView note = new TextView(this);
-        note.setText("\n🐋 WHALE RADAR: يرصد صافي زيادة كبيرة في عدة محافظ مستقلة على البلوكشين بينما السعر ما زال هادئًا.\n\n⚡ CATALYST RADAR: يراقب الإعلانات الرسمية العامة من Binance ويصنف Listing / Migration / Mainnet / Airdrop / Burn / Delisting وغيرها.\n\n🐋⚡ عند اجتماع التجميع والمحـفز لنفس العملة يصدر تنبيه موحّد. لا يعطي التطبيق أمر شراء.\n\nCatalyst scan كل 5 دقائق تقريبًا، وWhale scan الثقيل كل 20 دقيقة لتقليل البطارية والحرارة.");
+        note.setText("\n🐋 WHALE RADAR: يرصد صافي زيادة كبيرة في عدة محافظ مستقلة على البلوكشين بينما السعر ما زال هادئًا.\n\n⚡ CATALYST RADAR: يراقب الإعلانات الرسمية العامة من Binance ويصنف Listing / Migration / Mainnet / Airdrop / Burn / Delisting وغيرها.\n\n🐋⚡ عند اجتماع التجميع والمحـفز لنفس العملة يصدر تنبيه موحّد. لا يعطي التطبيق أمر شراء.\n\nCatalyst scan كل 5 دقائق تقريبًا، وWhale scan الثقيل كل 20 دقيقة. V4.1 يحفظ آخر حالة ويعيد تشغيل الخدمة عند إزالة التطبيق من Recent apps أو بعد إعادة تشغيل الجهاز إذا كان الرادار مفعّلًا.");
         note.setTextColor(Color.rgb(145,157,175));
         note.setTextSize(13);
         note.setPadding(0,8,0,10);
@@ -100,10 +101,38 @@ public class MainActivity extends Activity {
         scroll.addView(details);
         root.addView(scroll, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1));
         setContentView(root);
+
+        restoreLastState();
+    }
+
+    private void restoreLastState() {
+        SharedPreferences p = getSharedPreferences("free_whale_radar_v3", MODE_PRIVATE);
+        boolean enabled = p.getBoolean("radar_enabled", false);
+        String lastStatus = p.getString("ui_status", "");
+        String lastDetails = p.getString("ui_details", "");
+        long updated = p.getLong("ui_updated_at", 0L);
+
+        if (!enabled) {
+            status.setText("الرادار متوقف");
+            if (!lastDetails.isEmpty()) details.setText(lastDetails);
+            return;
+        }
+
+        long ageMin = updated <= 0 ? -1 : Math.max(0L, (System.currentTimeMillis() - updated) / 60_000L);
+        if (!lastStatus.isEmpty()) status.setText(lastStatus);
+        else status.setText("🐋⚡ الرادار مفعّل في الخلفية");
+
+        String suffix;
+        if (ageMin < 0) suffix = "\n\nآخر تحديث: في انتظار أول دورة";
+        else if (ageMin > 15) suffix = "\n\n⚠️ آخر تحديث قبل " + ageMin + " دقيقة — إذا استمر التأخير اضغط تشغيل الرادار مرة واحدة.";
+        else suffix = "\n\n✅ آخر تحديث قبل " + ageMin + " دقيقة • Background active";
+
+        details.setText((lastDetails.isEmpty() ? "الخدمة مفعلة في الخلفية." : lastDetails) + suffix);
     }
 
     @Override protected void onStart() {
         super.onStart();
+        restoreLastState();
         IntentFilter f = new IntentFilter(ScannerService.ACTION_UI);
         if (Build.VERSION.SDK_INT >= 33) registerReceiver(receiver, f, Context.RECEIVER_NOT_EXPORTED);
         else registerReceiver(receiver, f);
