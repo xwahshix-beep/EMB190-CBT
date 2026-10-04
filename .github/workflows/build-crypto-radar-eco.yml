@@ -1,4 +1,4 @@
-name: Build Whale Catalyst Radar V4.1 APK
+name: Build Hybrid Explosion Radar V4.2 APK
 
 on:
   push:
@@ -28,16 +28,19 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Integrate Whale Catalyst V4.1 background engine
+      - name: Integrate V4.1 background wake foundation
         working-directory: crypto-radar-lowpower
         run: python3 patch_v4.py
-      - name: Build Whale Catalyst Radar V4.1 APK
+      - name: Integrate V4.2 Hybrid Early Hunt engine
+        working-directory: crypto-radar-lowpower
+        run: python3 patch_v42.py
+      - name: Build Hybrid Explosion Radar V4.2 APK
         working-directory: crypto-radar-lowpower
         run: gradle --no-daemon assembleDebug --stacktrace
       - name: Rename APK
-        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Whale-Catalyst-Radar-V4.1.apk
+        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Hybrid-Explosion-Radar-V4.2.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: Whale-Catalyst-Radar-V4.1-APK
-          path: Whale-Catalyst-Radar-V4.1.apk
+          name: Hybrid-Explosion-Radar-V4.2-APK
+          path: Hybrid-Explosion-Radar-V4.2.apk
           retention-days: 7
