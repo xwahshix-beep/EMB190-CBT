@@ -1,4 +1,4 @@
-name: Build Explosion Radar V4.3.1 APK
+name: Build Explosion Radar V4.4 APK
 
 on:
   push:
@@ -52,13 +52,16 @@ jobs:
       - name: Apply V4.3.1 BUY and EXIT push alerts
         working-directory: crypto-radar-lowpower
         run: python3 patch_v431.py
-      - name: Build Explosion Radar V4.3.1 APK
+      - name: Apply V4.4 manual Trade Manager
+        working-directory: crypto-radar-lowpower
+        run: python3 patch_v44.py
+      - name: Build Explosion Radar V4.4 APK
         working-directory: crypto-radar-lowpower
         run: gradle --no-daemon assembleDebug --stacktrace
       - name: Rename APK
-        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Explosion-Radar-V4.3.1.apk
+        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Explosion-Radar-V4.4.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: Explosion-Radar-V4.3.1-APK
-          path: Explosion-Radar-V4.3.1.apk
+          name: Explosion-Radar-V4.4-APK
+          path: Explosion-Radar-V4.4.apk
           retention-days: 7
