@@ -1,4 +1,4 @@
-name: Build Hybrid Explosion Radar V4.2 APK
+name: Build Hybrid Explosion Radar V4.2.1 APK
 
 on:
   push:
@@ -34,13 +34,16 @@ jobs:
       - name: Integrate V4.2 Hybrid Early Hunt engine
         working-directory: crypto-radar-lowpower
         run: python3 patch_v42.py
-      - name: Build Hybrid Explosion Radar V4.2 APK
+      - name: Apply V4.2.1 candidate-first dashboard
+        working-directory: crypto-radar-lowpower
+        run: python3 patch_ui_v421.py
+      - name: Build Hybrid Explosion Radar V4.2.1 APK
         working-directory: crypto-radar-lowpower
         run: gradle --no-daemon assembleDebug --stacktrace
       - name: Rename APK
-        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Hybrid-Explosion-Radar-V4.2.apk
+        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Hybrid-Explosion-Radar-V4.2.1.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: Hybrid-Explosion-Radar-V4.2-APK
-          path: Hybrid-Explosion-Radar-V4.2.apk
+          name: Hybrid-Explosion-Radar-V4.2.1-APK
+          path: Hybrid-Explosion-Radar-V4.2.1.apk
           retention-days: 7
