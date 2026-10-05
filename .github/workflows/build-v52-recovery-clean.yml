@@ -1,0 +1,85 @@
+name: V5.2 Recovery Clean Builder
+
+on:
+  push:
+    branches:
+      - crypto-scanner-apk-build
+    paths:
+      - '.github/workflows/build-v52-recovery-clean.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Android 35 packages
+        run: sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Reconstruct stable V4.4 application
+        working-directory: crypto-radar-lowpower
+        run: |
+          python3 patch_v4.py
+          python3 patch_v42.py
+          python3 patch_ui_v421.py
+          python3 patch_v422.py
+          python3 patch_v423.py
+          python3 patch_v424.py
+          python3 patch_v43.py
+          python3 patch_v431.py
+          python3 patch_v44.py
+
+      - name: Apply V5.2 notification-only recovery patch
+        working-directory: crypto-radar-lowpower
+        run: python3 patch_v5.py
+
+      - name: Confirm discovery engine was not replaced by V5.1
+        working-directory: crypto-radar-lowpower
+        run: |
+          test -f app/src/main/java/com/wahshi/cryptoexplosionradar/HybridEngine.java
+          grep -q "HybridEngine" app/src/main/java/com/wahshi/cryptoexplosionradar/HybridEngine.java
+          ! grep -q "EarlyWhaleEngine.scan" app/src/main/java/com/wahshi/cryptoexplosionradar/HybridEngine.java
+
+      - name: Assemble APK
+        working-directory: crypto-radar-lowpower
+        run: gradle --no-daemon assembleDebug
+
+      - name: Package and verify
+        run: |
+          cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Explosion-Radar-V5.2-Recovery.apk
+          test -s Explosion-Radar-V5.2-Recovery.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging Explosion-Radar-V5.2-Recovery.apk | tee apk-metadata.txt
+          grep -q "versionName='5.2-recovery'" apk-metadata.txt
+          grep -q "application-icon" apk-metadata.txt
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose Explosion-Radar-V5.2-Recovery.apk
+          sha256sum Explosion-Radar-V5.2-Recovery.apk > Explosion-Radar-V5.2-Recovery.apk.sha256
+
+      - name: Upload V5.2 APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Explosion-Radar-V5.2-Recovery-APK
+          path: |
+            Explosion-Radar-V5.2-Recovery.apk
+            Explosion-Radar-V5.2-Recovery.apk.sha256
+            apk-metadata.txt
+          retention-days: 7
