@@ -1,4 +1,4 @@
-name: Build Explosion Radar V4.4 APK
+name: Build Explosion Radar V5 APK
 
 on:
   push:
@@ -55,13 +55,32 @@ jobs:
       - name: Apply V4.4 manual Trade Manager
         working-directory: crypto-radar-lowpower
         run: python3 patch_v44.py
-      - name: Build Explosion Radar V4.4 APK
+      - name: Apply V5 Early Whale Engine
+        working-directory: crypto-radar-lowpower
+        run: python3 patch_v5.py
+      - name: Test Early Whale behavior
+        working-directory: crypto-radar-lowpower
+        run: |
+          mkdir -p /tmp/whale-tests
+          javac -d /tmp/whale-tests app/src/main/java/com/wahshi/cryptoexplosionradar/EarlyWhaleMath.java tests/EarlyWhaleMathTest.java
+          java -cp /tmp/whale-tests com.wahshi.cryptoexplosionradar.EarlyWhaleMathTest
+      - name: Build Explosion Radar V5 APK
         working-directory: crypto-radar-lowpower
         run: gradle --no-daemon assembleDebug --stacktrace
       - name: Rename APK
-        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Explosion-Radar-V4.4.apk
+        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Explosion-Radar-V5.apk
+      - name: Verify APK metadata and signature
+        run: |
+          test -s Explosion-Radar-V5.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging Explosion-Radar-V5.apk | tee apk-metadata.txt
+          grep -q "versionName='5.0-early-whale'" apk-metadata.txt
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose Explosion-Radar-V5.apk
+          sha256sum Explosion-Radar-V5.apk > Explosion-Radar-V5.apk.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: Explosion-Radar-V4.4-APK
-          path: Explosion-Radar-V4.4.apk
+          name: Explosion-Radar-V5-APK
+          path: |
+            Explosion-Radar-V5.apk
+            Explosion-Radar-V5.apk.sha256
+            apk-metadata.txt
           retention-days: 7
