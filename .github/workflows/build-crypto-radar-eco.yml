@@ -75,3 +75,4 @@ jobs:
             Explosion-Radar-V5.2-Recovery.apk.sha256
             apk-metadata.txt
           retention-days: 7
+# clean-build-trigger-v52-20261006
