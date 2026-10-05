@@ -1,4 +1,4 @@
-name: Build Explosion Radar V5.1 APK
+name: Build Explosion Radar V5.2 Recovery APK
 
 on:
   push:
@@ -7,10 +7,8 @@ on:
       - 'crypto-radar-lowpower/**'
       - '.github/workflows/build-crypto-radar-eco.yml'
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,66 +19,59 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
-      - name: Install Android SDK 35
-        run: sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+      - uses: android-actions/setup-android@v4
+      - run: sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Integrate V4.1 background wake foundation
+      - name: V4.1 foundation
         working-directory: crypto-radar-lowpower
         run: python3 patch_v4.py
-      - name: Integrate V4.2 Hybrid Early Hunt engine
+      - name: V4.2 Hybrid Early Hunt
         working-directory: crypto-radar-lowpower
         run: python3 patch_v42.py
-      - name: Apply V4.2.1 candidate-first dashboard
+      - name: V4.2.1 dashboard
         working-directory: crypto-radar-lowpower
         run: python3 patch_ui_v421.py
-      - name: Apply V4.2.2 explicit BUY display
+      - name: V4.2.2 BUY display
         working-directory: crypto-radar-lowpower
         run: python3 patch_v422.py
-      - name: Apply V4.2.3 live signal revalidation
+      - name: V4.2.3 revalidation
         working-directory: crypto-radar-lowpower
         run: python3 patch_v423.py
-      - name: Apply V4.2.4 simple radar interface
+      - name: V4.2.4 interface
         working-directory: crypto-radar-lowpower
         run: python3 patch_v424.py
-      - name: Apply V4.3 Exit Manager
+      - name: V4.3 Exit Manager
         working-directory: crypto-radar-lowpower
         run: python3 patch_v43.py
-      - name: Apply V4.3.1 BUY and EXIT push alerts
+      - name: V4.3.1 alerts base
         working-directory: crypto-radar-lowpower
         run: python3 patch_v431.py
-      - name: Apply V4.4 manual Trade Manager
+      - name: V4.4 Trade Manager
         working-directory: crypto-radar-lowpower
         run: python3 patch_v44.py
-      - name: Apply V5.1 Early Whale + notification lock
+      - name: V5.2 Recovery lock only
         working-directory: crypto-radar-lowpower
         run: python3 patch_v5.py
-      - name: Test Early Whale behavior
-        working-directory: crypto-radar-lowpower
-        run: |
-          mkdir -p /tmp/whale-tests
-          javac -d /tmp/whale-tests app/src/main/java/com/wahshi/cryptoexplosionradar/EarlyWhaleMath.java tests/EarlyWhaleMathTest.java
-          java -cp /tmp/whale-tests com.wahshi.cryptoexplosionradar.EarlyWhaleMathTest
-      - name: Build Explosion Radar V5.1 APK
+      - name: Build V5.2 Recovery
         working-directory: crypto-radar-lowpower
         run: gradle --no-daemon assembleDebug --stacktrace
       - name: Rename APK
-        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Explosion-Radar-V5.1.apk
-      - name: Verify APK metadata and signature
+        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Explosion-Radar-V5.2-Recovery.apk
+      - name: Verify APK icon metadata signature
         run: |
-          test -s Explosion-Radar-V5.1.apk
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging Explosion-Radar-V5.1.apk | tee apk-metadata.txt
-          grep -q "versionName='5.1-watchlist-lock'" apk-metadata.txt
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose Explosion-Radar-V5.1.apk
-          sha256sum Explosion-Radar-V5.1.apk > Explosion-Radar-V5.1.apk.sha256
+          test -s Explosion-Radar-V5.2-Recovery.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging Explosion-Radar-V5.2-Recovery.apk | tee apk-metadata.txt
+          grep -q "versionName='5.2-recovery'" apk-metadata.txt
+          grep -q "application-icon" apk-metadata.txt
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose Explosion-Radar-V5.2-Recovery.apk
+          sha256sum Explosion-Radar-V5.2-Recovery.apk > Explosion-Radar-V5.2-Recovery.apk.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: Explosion-Radar-V5.1-APK
+          name: Explosion-Radar-V5.2-Recovery-APK
           path: |
-            Explosion-Radar-V5.1.apk
-            Explosion-Radar-V5.1.apk.sha256
+            Explosion-Radar-V5.2-Recovery.apk
+            Explosion-Radar-V5.2-Recovery.apk.sha256
             apk-metadata.txt
           retention-days: 7
