@@ -18,12 +18,12 @@ public final class OpportunityAlerts {
    boolean permitted=nm.areNotificationsEnabled()&&actual!=null&&actual.getImportance()!=NotificationManager.IMPORTANCE_NONE;
    String key="buy_push_sent_"+symbol;long now=System.currentTimeMillis();
    if(!BuyAlertPolicy.eligible(prefs.getBoolean("radar_enabled",false),permitted,true,price,low,high,now,quoteAt,signalAt,prefs.getLong(key,0)))return false;
-   String body="نطاق الشراء: "+fmt(low)+" – "+fmt(high)+" USDT\nالسعر عند التنبيه: "+fmt(price)+"\nوقت الإشارة: "+new java.text.SimpleDateFormat("HH:mm:ss",Locale.getDefault()).format(new java.util.Date(signalAt))+"\nوقت الإرسال: "+new java.text.SimpleDateFormat("HH:mm:ss",Locale.getDefault()).format(new java.util.Date(now))+"\nتحقق من السعر الحالي قبل الدخول.";
+   String body="نطاق الشراء: "+fmt(low)+" – "+fmt(high)+" USDT\nالسعر عند التنبيه: "+fmt(price)+"\nوقت الإشارة: "+new java.text.SimpleDateFormat("HH:mm:ss",Locale.getDefault()).format(new java.util.Date(signalAt))+"\nوقت الإرسال: "+new java.text.SimpleDateFormat("HH:mm:ss",Locale.getDefault()).format(new java.util.Date(now))+"\nصلاحية تأكيد الشمعة حتى: "+new java.text.SimpleDateFormat("HH:mm:ss",Locale.getDefault()).format(new java.util.Date(signalAt+75000))+"\nقد تزول الإشارة مبكرًا إذا تغيرت شروطها. تحقق من السعر الحالي قبل الدخول.";
    Intent open=new Intent(context,MainActivity.class).setAction("buy:"+symbol);
    PendingIntent pi=PendingIntent.getActivity(context,0,open,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
    Notification n=new Notification.Builder(context,CHANNEL).setSmallIcon(R.drawable.app_icon)
     .setContentTitle("🟢 فرصة شراء — "+symbol).setContentText(body).setStyle(new Notification.BigTextStyle().bigText(body))
-    .setContentIntent(pi).setAutoCancel(true).setTimeoutAfter(60000).setColor(Color.rgb(89,220,135)).build();
+    .setContentIntent(pi).setAutoCancel(true).setTimeoutAfter(Math.max(1,signalAt+75000-now)).setColor(Color.rgb(89,220,135)).build();
    try{
     if(!prefs.getBoolean("radar_enabled",false))return false;
     nm.notify("buy:"+symbol,32000,n);

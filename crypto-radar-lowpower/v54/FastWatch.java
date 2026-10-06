@@ -51,10 +51,12 @@ public final class FastWatch {
    String label=state.equals("BUY")?"🟢 شراء":state.equals("WATCH")?"🐋 مراقبة مبكرة":state.equals("TOO_LATE")?"🟡 انتظار — فات نطاق الدخول":state.equals("EXIT")?"🔴 خروج":state.equals("HOLD")?"🔵 احتفاظ":"🟡 انتظار";
    String detail="⭐ "+s+"\n"+label+"\nالسعر: "+price+(state.equals("BUY")?"\nنطاق الشراء: "+(resistance*1.001)+" – "+(window.entryHigh()):"");
    if(guardReason!=null&&entry<=0)detail+="\n"+guardReason;
+   else if(entry<=0&&state.equals("WAIT"))detail+="\nشروط الحجم أو ضغط الشراء أو اتجاه 3 و5 دقائق غير مكتملة؛ الانتظار ليس بيعًا.";
+   if(entry>0)detail+="\nسعر المتابعة: "+entry+"\nوقف الحماية: "+Double.longBitsToDouble(p.getLong("follow_stop_"+s,0));
    synchronized(FollowGate.LOCK){
     if(!FollowGate.valid(p,s,generation))return;
     String prev=p.getString("fast_alert_state","");long lastAlert=p.getLong("fast_alert_at",0);
-    p.edit().putString("fast_state",state).putString("fast_detail",detail).putLong("fast_at",System.currentTimeMillis()).apply();
+    p.edit().putString("fast_state",state).putString("fast_detail",detail).putLong("fast_at",System.currentTimeMillis()).putLong("fast_buy_until",state.equals("BUY")?window.closedAt+75000:0).apply();
     if(state.equals("BUY")) OpportunityAlerts.send(c,p,s,price,resistance*1.001,window.entryHigh(),System.currentTimeMillis(),window.closedAt,window);
     if((state.equals("WATCH")||state.equals("EXIT"))&&!state.equals(prev)&&(state.equals("EXIT")||System.currentTimeMillis()-lastAlert>60000)){
      NotificationManager nm=(NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -64,7 +66,7 @@ public final class FastWatch {
      p.edit().putString("fast_alert_state",state).putLong("fast_alert_at",System.currentTimeMillis()).apply();
     }
    }
-  }catch(Exception e){synchronized(FollowGate.LOCK){if(FollowGate.valid(p,s,generation))p.edit().putString("fast_state","DATA").putString("fast_detail","⭐ "+s+"\n🟡 انتظار — تعذر تحديث البيانات").apply();}}
+  }catch(Exception e){synchronized(FollowGate.LOCK){if(FollowGate.valid(p,s,generation))p.edit().putString("fast_state","DATA").putString("fast_detail","⭐ "+s+"\n⏳ تعذر تحديث البيانات؛ هذا ليس تنبيه بيع").apply();}}
  }
  private static String read(String path)throws Exception{
   HttpsURLConnection c=(HttpsURLConnection)new URL("https://api.binance.com"+path).openConnection();c.setConnectTimeout(2500);c.setReadTimeout(3000);

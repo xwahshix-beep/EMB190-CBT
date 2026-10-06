@@ -35,12 +35,13 @@ public class MainActivity extends Activity {
     private TextView health;
     private Button startButton;
     private TextView details;
+    private TextView followStatus;
+    private long quoteRequest;
 
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
             if (!ScannerService.ACTION_UI.equals(intent.getAction())) return;
-            String d = intent.getStringExtra("details");
-            if (d != null && !d.isEmpty()) details.setText(styleDetails(d));
+            renderDetails();
             refreshHealth();
         }
     };
@@ -58,7 +59,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(9, 12, 17));
 
         TextView title = new TextView(this);
-        title.setText("🎯 Explosion Radar V5.4");
+        title.setText("🎯 Explosion Radar V5.4.1");
         title.setTextColor(Color.WHITE);
         title.setTextSize(27);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
@@ -127,6 +128,13 @@ public class MainActivity extends Activity {
         listTitle.setPadding(dp(4), dp(18), 0, dp(8));
         root.addView(listTitle);
 
+        followStatus = new TextView(this);
+        followStatus.setTextColor(Color.rgb(245,183,43));
+        followStatus.setTextSize(14);
+        followStatus.setPadding(dp(4),dp(6),dp(4),dp(10));
+        followStatus.setOnClickListener(v -> chooseFollowToStop());
+        root.addView(followStatus);
+
         details = new TextView(this);
         details.setText("لا توجد بيانات بعد");
         details.setTextColor(Color.rgb(235, 239, 245));
@@ -185,33 +193,88 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void feedback(String message) {
+        android.widget.Toast.makeText(this,message,android.widget.Toast.LENGTH_LONG).show();
+    }
+    private String symbolOf(EditText field) {
+        String symbol=field.getText().toString().trim().toUpperCase(Locale.US).replace("/", "");
+        if(!symbol.endsWith("USDT"))symbol+="USDT";
+        if(!symbol.matches("[A-Z0-9]{2,20}USDT")) {field.setError("أدخل رمز العملة مثل BTC أو BTCUSDT");return null;}
+        return symbol;
+    }
     private void chooseBuyToFollow() {
         EditText coin=new EditText(this);coin.setSingleLine(true);coin.setHint("BTCUSDT");
-        new AlertDialog.Builder(this).setTitle("⭐ العملة المختارة").setMessage("تنبيهات الشراء تشمل جميع العملات المفحوصة. اختر مراقبة لهذه العملة، أو سعر الشراء إذا اشتريتها.")
-        .setView(coin).setNegativeButton("إلغاء",null)
-        .setNeutralButton("سعر الشراء",(d,w)->{String sym=coin.getText().toString().trim().toUpperCase(java.util.Locale.US).replace("/","");if(!sym.endsWith("USDT"))sym+="USDT";if(sym.matches("[A-Z0-9]{2,20}USDT"))askEntry(sym);})
-        .setPositiveButton("مراقبة",(d,w)->{String sym=coin.getText().toString().trim().toUpperCase(java.util.Locale.US).replace("/","");if(!sym.endsWith("USDT"))sym+="USDT";if(sym.matches("[A-Z0-9]{2,20}USDT"))FollowGate.select(this,prefs(),sym,0);}).show();
+        coin.setText(FollowGate.active(prefs()));
+        AlertDialog dialog=new AlertDialog.Builder(this).setTitle("⭐ العملة المختارة")
+            .setMessage("مراقبة: متابعة الإشارات. الشراء الآن: جلب سعر العرض من Binance وتسجيله لمتابعة الصفقة داخل الرادار فقط؛ لا ينفذ أمر شراء في حسابك.")
+            .setView(coin).setNegativeButton("إلغاء",(d,w)->feedback("تم إلغاء العملية"))
+            .setNeutralButton("الشراء الآن",null).setPositiveButton("مراقبة",null).create();
+        dialog.setOnCancelListener(d -> feedback("تم إلغاء العملية"));
+        dialog.setOnShowListener(d -> {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                String sym=symbolOf(coin);if(sym==null)return;
+                quoteRequest++;FollowGate.select(this,prefs(),sym,0);ensureRunning();renderDetails();
+                dialog.dismiss();feedback("تمت إضافة "+sym+" للمراقبة");
+            });
+            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(v -> {
+                String sym=symbolOf(coin);if(sym==null)return;dialog.dismiss();followCurrent(sym);
+            });
+        });
+        dialog.show();
     }
-
-    private void askEntry(String label) {
-        final String symbol=label.replace("/", "");
-        EditText e=new EditText(this); e.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL); e.setHint("سعر شرائك الفعلي");
-        new AlertDialog.Builder(this).setTitle("⭐ "+symbol).setMessage("أدخل سعر الشراء. سيبدأ التطبيق بمتابعة الصفقة وتنبيه الخروج لهذه العملة فقط.")
-                .setView(e).setNegativeButton("إلغاء",null).setNeutralButton("السعر الحالي",(d,w)->followCurrent(symbol))
-                .setPositiveButton("متابعة",(d,w)->{ try { double x=Double.parseDouble(e.getText().toString()); startFollow(symbol,x); } catch(Exception ex){} }).show();
+    private void ensureRunning() {
+        if(prefs().getBoolean("radar_enabled",false))return;
+        Intent i=new Intent(this,ScannerService.class).setAction(ScannerService.ACTION_START);
+        if(Build.VERSION.SDK_INT>=26)startForegroundService(i);else startService(i);
+        updateStartButton(true);
     }
-
-    private void followCurrent(String symbol) { new Thread(() -> { try { double x=TradeManager.currentPrice(symbol); runOnUiThread(()->startFollow(symbol,x)); } catch(Exception ignored){} }).start(); }
-    private void startFollow(String symbol,double entry) {
-        if(!Double.isFinite(entry)||entry<=0)return;
-        FollowGate.select(this,prefs(),symbol,entry);
-        new AlertDialog.Builder(this).setMessage("بدأت متابعة "+symbol+" فقط.\nسعر الدخول: "+entry).setPositiveButton("حسنًا",null).show();
+    private void followCurrent(String symbol) {
+        final long request=++quoteRequest;
+        final long generation=prefs().getLong("follow_generation",0);
+        AlertDialog loading=new AlertDialog.Builder(this).setTitle("الشراء الآن — "+symbol)
+            .setMessage("جارٍ جلب سعر العرض مباشرة من Binance…\nسيُسجّل للمتابعة فقط، وقد يختلف عن سعر تنفيذك الفعلي.")
+            .setNegativeButton("إلغاء",(d,w)->{quoteRequest++;feedback("تم إلغاء جلب السعر؛ لم تُسجّل صفقة");}).create();
+        loading.setOnCancelListener(d -> {quoteRequest++;feedback("تم إلغاء جلب السعر؛ لم تُسجّل صفقة");});
+        loading.show();
+        new Thread(() -> {
+            try {
+                long started=android.os.SystemClock.elapsedRealtime();
+                org.json.JSONObject q=new org.json.JSONObject(MarketHttp.read("https://api.binance.com/api/v3/ticker/bookTicker?symbol="+symbol));
+                double price=q.getDouble("askPrice"),bid=q.getDouble("bidPrice");
+                if(!symbol.equals(q.getString("symbol"))||!Double.isFinite(price+bid)||bid<=0||price<bid)
+                    throw new java.io.IOException("سعر غير صالح");
+                runOnUiThread(() -> {
+                    if(isFinishing()||isDestroyed()||request!=quoteRequest)return;
+                    loading.dismiss();
+                    if(generation!=prefs().getLong("follow_generation",0)) {feedback("تغيرت المتابعة؛ لم يتم تسجيل السعر");return;}
+                    if(android.os.SystemClock.elapsedRealtime()-started>10000) {feedback("تأخر وصول السعر؛ أعد المحاولة");return;}
+                    FollowGate.select(this,prefs(),symbol,price);ensureRunning();renderDetails();
+                    new AlertDialog.Builder(this).setTitle("تم تسجيل سعر المتابعة")
+                        .setMessage(symbol+"\nسعر العرض: "+price+" USDT\nوقت الجلب: "+new SimpleDateFormat("HH:mm:ss",Locale.getDefault()).format(new Date())+"\nبدأت متابعة الصفقة وتنبيهات الخروج. لم يُنفّذ شراء في Binance.")
+                        .setPositiveButton("حسنًا",null).show();
+                });
+            } catch(Exception error) {
+                runOnUiThread(() -> {
+                    if(isFinishing()||isDestroyed()||request!=quoteRequest)return;
+                    loading.dismiss();
+                    new AlertDialog.Builder(this).setTitle("تعذر جلب السعر")
+                        .setMessage("لم تُسجّل صفقة. تحقق من اتصالك ورمز العملة وتوفر الزوج على Binance ثم أعد المحاولة.")
+                        .setNegativeButton("إلغاء",(d,w)->feedback("تم إلغاء العملية"))
+                        .setPositiveButton("إعادة المحاولة",(d,w)->followCurrent(symbol)).show();
+                });
+            }
+        },"entry-quote").start();
     }
     private void chooseFollowToStop() {
-        String raw=prefs().getString("follow_symbols",""); if(raw==null||raw.trim().isEmpty())return;
-        String[] a=raw.split(","); new AlertDialog.Builder(this).setTitle("إيقاف المتابعة").setItems(a,(d,w)->stopFollow(a[w])).show();
+        String symbol=FollowGate.active(prefs());
+        if(symbol.isEmpty()){feedback("لا توجد عملة قيد المتابعة");return;}
+        new AlertDialog.Builder(this).setTitle("إلغاء متابعة "+symbol)
+            .setMessage("سيتم إيقاف مراقبة هذه العملة ومتابعة صفقتها داخل الرادار. تنبيهات فرص السوق تبقى مفعّلة.")
+            .setNegativeButton("رجوع",null).setPositiveButton("إلغاء المتابعة",(d,w)->stopFollow(symbol)).show();
     }
-    private void stopFollow(String symbol) { FollowGate.select(this,prefs(),"",0); }
+    private void stopFollow(String symbol) {
+        quoteRequest++;FollowGate.select(this,prefs(),"",0);renderDetails();feedback("تم إلغاء متابعة "+symbol);
+    }
 
     private SharedPreferences prefs() {
         return getSharedPreferences("free_whale_radar_v3", MODE_PRIVATE);
@@ -219,26 +282,37 @@ public class MainActivity extends Activity {
 
     private final android.os.Handler fastUiHandler=new android.os.Handler(android.os.Looper.getMainLooper());
     private final Runnable fastUiRefresh=new Runnable(){public void run(){
-        SharedPreferences p=prefs();String v=p.getString("fast_detail","");
-        if(!FollowGate.active(p).isEmpty()&&!v.isEmpty()) {
-            if(!p.getBoolean("radar_enabled",false)||System.currentTimeMillis()-p.getLong("fast_at",0)>60000) v="⭐ "+FollowGate.active(p)+"\n🟡 انتظار — البيانات غير محدثة";
-            details.setText(styleDetails(v));
-        }
-        if(FollowGate.active(p).isEmpty()) {
-            long expiry=p.getLong("market_buy_display_until",0);
-            if(!p.getBoolean("radar_enabled",false)||expiry<=System.currentTimeMillis()) {
-                String current=details.getText().toString();
-                if(current.contains("🟢 شراء"))details.setText(styleDetails(current.replace("🟢 شراء","🟡 انتظار — يلزم تأكيد جديد")));
-            }
-        }
-        fastUiHandler.postDelayed(this,2000);
+        renderDetails();refreshHealth();fastUiHandler.postDelayed(this,2000);
     }};
+    private void renderDetails() {
+        SharedPreferences p=prefs();String symbol=FollowGate.active(p);
+        long now=System.currentTimeMillis();boolean enabled=p.getBoolean("radar_enabled",false);
+        String text;
+        if(!symbol.isEmpty()) {
+            double entry=Double.longBitsToDouble(p.getLong("follow_entry_"+symbol,0));
+            followStatus.setText("⭐ "+symbol+(entry>0?" • صفقة مسجلة بسعر "+entry:" • مراقبة")+"\nاضغط هنا لإلغاء المتابعة");
+            text=p.getString("fast_detail","");
+            if(text.isEmpty())text="⭐ "+symbol+"\nجارٍ بدء المتابعة وجلب البيانات…";
+            else if(!enabled||now-p.getLong("fast_at",0)>60000)
+                text="⭐ "+symbol+"\n⏳ "+(enabled?"بيانات المتابعة غير محدثة؛ جارٍ التحقق":"الرادار متوقف")+"\nهذا ليس تنبيه بيع.";
+            else text=SignalDisplay.one(text,p.getLong("fast_buy_until",0),now,true);
+        } else {
+            followStatus.setText("اضغط على قائمة الفرص لاختيار عملة ومتابعتها");
+            text=p.getString("last_details",p.getString("ui_details","لا توجد بيانات بعد"));
+            java.util.Map<String,Long> expiries=new java.util.HashMap<>();
+            try {
+                org.json.JSONObject o=new org.json.JSONObject(p.getString("market_buy_expiries","{}"));
+                java.util.Iterator<String> keys=o.keys();while(keys.hasNext()){String key=keys.next();expiries.put(key,o.getLong(key));}
+            } catch(Exception ignored){}
+            text=SignalDisplay.market(text,expiries,now,enabled);
+        }
+        details.setText(styleDetails(text));
+    }
     @Override protected void onResume(){super.onResume();fastUiHandler.removeCallbacks(fastUiRefresh);fastUiHandler.post(fastUiRefresh);}
     @Override protected void onPause(){fastUiHandler.removeCallbacks(fastUiRefresh);super.onPause();}
     private void restoreSavedState() {
         SharedPreferences p = prefs();
-        String savedDetails = p.getString("last_details", p.getString("ui_details", ""));
-        if (savedDetails != null && !savedDetails.isEmpty()) details.setText(styleDetails(savedDetails));
+        renderDetails();
         refreshHealth();
     }
 
@@ -302,6 +376,8 @@ public class MainActivity extends Activity {
         else registerReceiver(receiver, f);
         restoreSavedState();
     }
+
+    @Override protected void onDestroy() { quoteRequest++;super.onDestroy(); }
 
     @Override protected void onStop() {
         try { unregisterReceiver(receiver); } catch (Exception ignored) {}

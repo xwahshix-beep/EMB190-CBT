@@ -299,9 +299,9 @@ public final class HybridEngine {
             }
         }
         buyCount = activeCount;
-        long displayUntil=Long.MAX_VALUE;
-        for(Candidate c:candidates)if("ACTIVE".equals(c.liveState))displayUntil=Math.min(displayUntil,c.liveSignalAt+75000);
-        prefs.edit().putLong("market_buy_display_until",displayUntil==Long.MAX_VALUE?0:displayUntil).apply();
+        JSONObject expiries=new JSONObject();
+        for(Candidate c:candidates)if("ACTIVE".equals(c.liveState))expiries.put(c.symbol,c.liveSignalAt+75000);
+        prefs.edit().putString("market_buy_expiries",expiries.toString()).remove("market_buy_display_until").apply();
 
         // Priority: ACTIVE -> WAIT/RETEST -> INVALIDATED -> ARMED -> Early Hunt.
         candidates.sort((a, b) -> {
