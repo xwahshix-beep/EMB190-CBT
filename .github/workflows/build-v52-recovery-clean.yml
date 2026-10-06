@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   apk:
+    if: github.ref != 'refs/heads/crypto-scanner-apk-build'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

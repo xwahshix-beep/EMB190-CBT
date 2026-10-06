@@ -1,0 +1,97 @@
+name: Build Explosion Radar V5.3 APK
+
+on:
+  push:
+    branches: [ crypto-scanner-apk-build ]
+    paths:
+      - 'crypto-radar-lowpower/**'
+      - '.github/workflows/build-v53.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: explosion-radar-crypto-scanner-apk-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/crypto-scanner-apk-build'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+      - name: Install Android SDK 35
+        run: sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Integrate V4.1 background wake foundation
+        working-directory: crypto-radar-lowpower
+        run: python3 patch_v4.py
+      - name: Integrate V4.2 Hybrid Early Hunt engine
+        working-directory: crypto-radar-lowpower
+        run: python3 patch_v42.py
+      - name: Apply V4.2.1 candidate-first dashboard
+        working-directory: crypto-radar-lowpower
+        run: python3 patch_ui_v421.py
+      - name: Apply V4.2.2 explicit BUY display
+        working-directory: crypto-radar-lowpower
+        run: python3 patch_v422.py
+      - name: Apply V4.2.3 live signal revalidation
+        working-directory: crypto-radar-lowpower
+        run: python3 patch_v423.py
+      - name: Apply V4.2.4 simple radar interface
+        working-directory: crypto-radar-lowpower
+        run: python3 patch_v424.py
+      - name: Apply V4.3 Exit Manager
+        working-directory: crypto-radar-lowpower
+        run: python3 patch_v43.py
+      - name: Apply V4.3.1 BUY and EXIT push alerts
+        working-directory: crypto-radar-lowpower
+        run: python3 patch_v431.py
+      - name: Apply V4.4 manual Trade Manager
+        working-directory: crypto-radar-lowpower
+        run: python3 patch_v44.py
+      - name: Apply V5.3 Early Whale Engine
+        working-directory: crypto-radar-lowpower
+        run: python3 patch_v50_base.py
+      - name: Apply isolated selected coin watch
+        working-directory: crypto-radar-lowpower
+        run: python3 patch_v53.py
+      - name: Test Early Whale behavior
+        working-directory: crypto-radar-lowpower
+        run: |
+          mkdir -p /tmp/whale-tests
+          javac -d /tmp/whale-tests app/src/main/java/com/wahshi/cryptoexplosionradar/EarlyWhaleMath.java tests/EarlyWhaleMathTest.java
+          java -cp /tmp/whale-tests com.wahshi.cryptoexplosionradar.EarlyWhaleMathTest
+          javac -d /tmp/whale-tests app/src/main/java/com/wahshi/cryptoexplosionradar/WatchPolicy.java tests/WatchPolicyTest.java
+          java -cp /tmp/whale-tests com.wahshi.cryptoexplosionradar.WatchPolicyTest
+      - name: Build Explosion Radar V5.3 APK
+        working-directory: crypto-radar-lowpower
+        run: gradle --no-daemon assembleDebug --stacktrace
+      - name: Rename APK
+        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Explosion-Radar-V5.3.apk
+      - name: Verify APK metadata and signature
+        run: |
+          test -s Explosion-Radar-V5.3.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging Explosion-Radar-V5.3.apk | tee apk-metadata.txt
+          grep -q "application-icon" apk-metadata.txt
+          grep -q "versionName='5.3-early-watch'" apk-metadata.txt
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose Explosion-Radar-V5.3.apk
+          sha256sum Explosion-Radar-V5.3.apk > Explosion-Radar-V5.3.apk.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Explosion-Radar-V5.3-APK
+          path: |
+            Explosion-Radar-V5.3.apk
+            Explosion-Radar-V5.3.apk.sha256
+            apk-metadata.txt
+          retention-days: 7
