@@ -41,7 +41,7 @@ s=method(s,'    private void chooseBuyToFollow()', '''    private void chooseBuy
 s=method(s,'    private void startFollow(','''    private void startFollow(String symbol,double entry) {
         if(!Double.isFinite(entry)||entry<=0)return;
         FollowGate.select(this,prefs(),symbol,entry);
-        new AlertDialog.Builder(this).setMessage("بدأت متابعة "+symbol+" فقط.\nسعر الدخول: "+entry).setPositiveButton("حسنًا",null).show();
+        new AlertDialog.Builder(this).setMessage("بدأت متابعة "+symbol+" فقط.\\nسعر الدخول: "+entry).setPositiveButton("حسنًا",null).show();
     }''')
 s=method(s,'    private void stopFollow(','''    private void stopFollow(String symbol) { FollowGate.select(this,prefs(),"",0); }''')
 s=s.replace('سيبدأ التطبيق بإرسال احتفاظ أو خروج لهذه العملة فقط.','سيبدأ التطبيق بمتابعة الصفقة وتنبيه الخروج لهذه العملة فقط.')
