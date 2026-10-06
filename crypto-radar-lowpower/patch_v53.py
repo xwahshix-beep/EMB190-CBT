@@ -49,7 +49,10 @@ s=s.replace('سيبدأ التطبيق بإرسال احتفاظ أو خروج �
 s=s.replace('    private void restoreSavedState() {','''    private final android.os.Handler fastUiHandler=new android.os.Handler(android.os.Looper.getMainLooper());
     private final Runnable fastUiRefresh=new Runnable(){public void run(){
         SharedPreferences p=prefs();String v=p.getString("fast_detail","");
-        if(!FollowGate.active(p).isEmpty()&&!v.isEmpty()) details.setText(styleDetails(v));
+        if(!FollowGate.active(p).isEmpty()&&!v.isEmpty()) {
+            if(!p.getBoolean("radar_enabled",false)||System.currentTimeMillis()-p.getLong("fast_at",0)>60000) v="⭐ "+FollowGate.active(p)+"\\n🟡 انتظار — البيانات غير محدثة";
+            details.setText(styleDetails(v));
+        }
         fastUiHandler.postDelayed(this,2000);
     }};
     @Override protected void onResume(){super.onResume();fastUiHandler.removeCallbacks(fastUiRefresh);fastUiHandler.post(fastUiRefresh);}
