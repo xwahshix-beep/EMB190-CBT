@@ -202,6 +202,33 @@ if anchor2 not in m: raise SystemExit('V4.4 prefs anchor missing')
 m=m.replace(anchor2,methods+anchor2,1)
 p.write_text(m,encoding='utf-8')
 
+# BUY quality guard: keep early discovery sensitive, but block BUY against a clearly weak 15m structure.
+# This changes only WATCH -> BUY confirmation; it does not remove candidates from Early Hunt.
+hp = base/'HybridEngine.java'
+hs = hp.read_text(encoding='utf-8')
+old_buy = '''                boolean confirmedBuy = (retestBuy || breakoutBuy)
+                        && c.p24 <= 10.0
+                        && !c.catalystNegative;
+'''
+new_buy = '''                // V4.4.1: BUY needs local trigger plus 15m trend quality.
+                // Early Hunt / ARMED remain untouched, so detection stays early.
+                boolean trend15Healthy = a.lastClose >= a.ema20
+                        && a.ema20 >= a.ema50
+                        && a.macdHist >= 0.0;
+                boolean trend15Recovering = a.lastClose >= a.ema20
+                        && a.macdHist > a.prevMacdHist
+                        && a.rsi >= 48.0;
+                boolean buyTrendGate = trend15Healthy || trend15Recovering;
+                boolean confirmedBuy = (retestBuy || breakoutBuy)
+                        && buyTrendGate
+                        && c.p24 <= 10.0
+                        && !c.catalystNegative;
+'''
+if old_buy not in hs:
+    raise SystemExit('V4.4.1 BUY gate anchor missing')
+hs = hs.replace(old_buy, new_buy, 1)
+hp.write_text(hs, encoding='utf-8')
+
 # Version.
 g=Path('app/build.gradle'); x=g.read_text(encoding='utf-8'); x=re.sub(r'versionCode\s+\d+','versionCode 11',x,count=1); x=re.sub(r'versionName\s+"[^"]+"','versionName "4.4-trade-manager"',x,count=1); g.write_text(x,encoding='utf-8')
 print('V4.4 applied: manual Follow Trade -> HOLD/EXIT notifications only for selected trades')
