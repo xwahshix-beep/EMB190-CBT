@@ -35,6 +35,7 @@ public class MainActivity extends Activity {
     private TextView health;
     private Button startButton;
     private TextView details;
+    private TextView savedSignals;
     private TextView followStatus;
     private Button retryFollow;
     private long quoteRequest;
@@ -60,7 +61,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(9, 12, 17));
 
         TextView title = new TextView(this);
-        title.setText("🎯 Explosion Radar V5.4.2");
+        title.setText("🎯 Explosion Radar V5.4.3");
         title.setTextColor(Color.WHITE);
         title.setTextSize(27);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
@@ -122,7 +123,7 @@ public class MainActivity extends Activity {
         root.addView(controls);
 
         TextView listTitle = new TextView(this);
-        listTitle.setText("الفرص الآن");
+        listTitle.setText("الرادار والإشارات");
         listTitle.setTextColor(Color.WHITE);
         listTitle.setTextSize(21);
         listTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
@@ -152,7 +153,20 @@ public class MainActivity extends Activity {
 
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
-        scroll.addView(details);
+        LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);
+        TextView savedTitle=new TextView(this);savedTitle.setText("📌 إشارات الشراء المحفوظة");
+        savedTitle.setTextColor(Color.rgb(245,183,43));savedTitle.setTypeface(Typeface.DEFAULT,Typeface.BOLD);savedTitle.setTextSize(20);
+        savedTitle.setPadding(dp(4),dp(10),dp(4),dp(8));content.addView(savedTitle);
+        TextView hint=new TextView(this);hint.setText("أحدث إشارة لكل عملة • تبقى بعد تغيّر قائمة الفرص\nاضغط على السجل لاختيار عملة ومتابعتها");
+        hint.setTextColor(Color.rgb(160,172,190));hint.setTextSize(13);hint.setPadding(dp(4),0,dp(4),dp(10));content.addView(hint);
+        savedSignals=new TextView(this);savedSignals.setTextColor(Color.rgb(235,239,245));savedSignals.setTextSize(17);
+        savedSignals.setLineSpacing(dp(4),1.05f);savedSignals.setPadding(dp(16),dp(16),dp(16),dp(16));
+        savedSignals.setBackground(roundRect(Color.rgb(20,25,34),18));
+        savedSignals.setOnClickListener(v -> chooseSavedSignal());content.addView(savedSignals);
+        TextView currentTitle=new TextView(this);currentTitle.setText("الفرص الآن / العملة المتابعة");
+        currentTitle.setTextColor(Color.WHITE);currentTitle.setTextSize(20);currentTitle.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
+        currentTitle.setPadding(dp(4),dp(22),dp(4),dp(8));content.addView(currentTitle);
+        content.addView(details);scroll.addView(content);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, 0, 1);
         root.addView(scroll, lp);
@@ -207,9 +221,15 @@ public class MainActivity extends Activity {
         if(!symbol.matches("[A-Z0-9]{2,20}USDT")) {field.setError("أدخل رمز العملة مثل BTC أو BTCUSDT");return null;}
         return symbol;
     }
-    private void chooseBuyToFollow() {
+    private void chooseSavedSignal(){
+        String[] symbols=SignalChecks.historySymbols(prefs());
+        if(symbols.length==0){feedback("ستُحفظ أول إشارة شراء مؤكدة هنا تلقائيًا");return;}
+        new AlertDialog.Builder(this).setTitle("اختر إشارة محفوظة").setItems(symbols,(d,w)->chooseBuyToFollow(symbols[w])).setNegativeButton("إلغاء",null).show();
+    }
+    private void chooseBuyToFollow() {chooseBuyToFollow(FollowGate.active(prefs()));}
+    private void chooseBuyToFollow(String selectedSymbol) {
         EditText coin=new EditText(this);coin.setSingleLine(true);coin.setHint("BTCUSDT");
-        coin.setText(FollowGate.active(prefs()));
+        coin.setText(selectedSymbol);
         AlertDialog dialog=new AlertDialog.Builder(this).setTitle("⭐ العملة المختارة")
             .setMessage("مراقبة: متابعة الإشارات. الشراء الآن: جلب سعر العرض من Binance وتسجيله لمتابعة الصفقة داخل الرادار فقط؛ لا ينفذ أمر شراء في حسابك.")
             .setView(coin).setNegativeButton("إلغاء",(d,w)->feedback("تم إلغاء العملية"))
@@ -312,6 +332,7 @@ public class MainActivity extends Activity {
             text=SignalDisplay.market(text,expiries,now,enabled);
         }
         details.setText(styleDetails(text));
+        savedSignals.setText(styleDetails(SignalChecks.history(p)));
     }
     @Override protected void onResume(){super.onResume();fastUiHandler.removeCallbacks(fastUiRefresh);fastUiHandler.post(fastUiRefresh);}
     @Override protected void onPause(){fastUiHandler.removeCallbacks(fastUiRefresh);super.onPause();}

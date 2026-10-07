@@ -3,6 +3,15 @@ import android.content.SharedPreferences;
 import org.json.JSONObject;
 public final class SignalChecks {
  private static final Object LOCK=new Object();
+ private static final String JOURNAL="confirmed_signal_journal_v543";
+ private static JSONObject journal(SharedPreferences p){try{return new JSONObject(p.getString(JOURNAL,"{}"));}catch(Exception ignored){return new JSONObject();}}
+ public static String history(SharedPreferences p){synchronized(LOCK){return SignalJournal.render(journal(p),System.currentTimeMillis(),p.getBoolean("radar_enabled",false));}}
+ public static String[] historySymbols(SharedPreferences p){synchronized(LOCK){java.util.List<JSONObject> rows=SignalJournal.rows(journal(p));String[] names=new String[rows.size()];for(int i=0;i<names.length;i++)names[i]=rows.get(i).optString("symbol");return names;}}
+ private static void updateHistoryState(SharedPreferences p,String symbol,BuyStability.State state){
+  if(state.phase.equals("BUY")||state.phase.equals("PENDING"))return;
+  try{JSONObject book=journal(p);JSONObject row=book.optJSONObject(symbol);if(row==null||!"BUY".equals(row.optString("state")))return;SignalJournal.end(book,symbol,state.phase,state.reason,System.currentTimeMillis());p.edit().putString(JOURNAL,book.toString()).commit();}catch(Exception e){android.util.Log.e("SignalHistory","History update failed",e);}
+ }
+
  public static final class Result {public boolean buy;public double price;public long quoteAt,until;public String reason;}
  private static BuyStability.State read(SharedPreferences p,String symbol){
   BuyStability.State s=new BuyStability.State();
@@ -13,6 +22,7 @@ public final class SignalChecks {
   synchronized(LOCK){
    BuyStability.State s=BuyStability.observe(read(p,symbol),valid,until,System.currentTimeMillis(),reason);
    try{JSONObject o=new JSONObject();o.put("phase",s.phase).put("reason",s.reason).put("firstAt",s.firstAt).put("until",s.until).put("cooldownUntil",s.cooldownUntil);p.edit().putString("stable_signal_"+symbol,o.toString()).apply();}catch(Exception ignored){}
+   updateHistoryState(p,symbol,s);
    return s;
   }
  }
@@ -51,7 +61,18 @@ public final class SignalChecks {
     s=observe(p,symbol,valid,window.closedAt+75000,reason==null?"فشل التحقق الثاني من نطاق السعر أو فارق السعر":reason);
    }catch(Exception ex){s=observe(p,symbol,false,0,"تعذر التحقق الثاني من السعر");}
   }
-  out.buy=s.phase.equals("BUY")&&System.currentTimeMillis()<s.until;out.until=s.until;out.reason=s.reason;
+  synchronized(LOCK){
+   s=read(p,symbol);
+   out.buy=s.phase.equals("BUY")&&System.currentTimeMillis()<s.until;out.until=s.until;out.reason=s.reason;
+   if(out.buy){
+    JSONObject book=journal(p);
+    SignalJournal.record(book,symbol,s.firstAt,out.price,window.entryLow(),window.entryHigh(),window.closedAt,s.until,System.currentTimeMillis());
+    // Persist before either the dashboard or phone notification can publish BUY.
+    if(!p.edit().putString(JOURNAL,book.toString()).commit()){
+     out.buy=false;out.reason=reject(p,symbol,"تعذر حفظ سجل الإشارة");
+    }
+   }
+  }
   return out;
  }
 }
