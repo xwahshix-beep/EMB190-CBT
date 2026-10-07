@@ -61,7 +61,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(9, 12, 17));
 
         TextView title = new TextView(this);
-        title.setText("🎯 Explosion Radar V5.4.3");
+        title.setText("🎯 Explosion Radar V5.4.4");
         title.setTextColor(Color.WHITE);
         title.setTextSize(27);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
@@ -320,6 +320,7 @@ public class MainActivity extends Activity {
             text=FollowView.render(symbol,text,p.getLong("fast_attempt_at",0),now,enabled);
             text=SignalChecks.decorate(p,text);
             text=SignalDisplay.one(text,p.getLong("fast_buy_until",0),now,enabled);
+            text=SignalChecks.followDisplay(p,symbol,text);
         } else {
             followStatus.setText("اضغط على قائمة الفرص لاختيار عملة ومتابعتها");
             text=p.getString("last_details",p.getString("ui_details","لا توجد بيانات بعد"));

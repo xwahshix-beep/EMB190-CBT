@@ -1,23 +1,24 @@
 package com.wahshi.cryptoexplosionradar;
-/** Debounces entry activation; never keeps an invalid BUY visible. */
+/** Data freshness is separate from technical cancellation and position exits. */
 public final class BuyStability {
- public static final long CONFIRM_MS=3000,MIN_REMAINING_MS=30000,COOLDOWN_MS=60000;
- public static final class State {public String phase="WAIT",reason="";public long firstAt,until,cooldownUntil;}
+ public static final long CONFIRM_MS=0,COOLDOWN_MS=60000,FRESH_MS=45000;
+ public static final class State {public String phase="WAIT",reason="";public long firstAt,until,cooldownUntil;public boolean established;}
+ public static boolean acceptsOwner(String owner,String source,State s){return owner.isEmpty()||owner.equals(source)||!(s.established||s.phase.equals("PENDING"));}
+ public static boolean dataIssue(String reason){
+  return reason!=null&&(reason.contains("بيانات")||reason.contains("تعذر")||reason.contains("محدثة")||reason.contains("صلاحية")||reason.contains("متوقف"));
+ }
  public static State observe(State s,boolean valid,long proposedUntil,long now,String reason){
   if(s==null)s=new State();
-  if(s.phase.equals("BUY")&&now>=s.until){s.phase="EXPIRED";s.reason="انتهت صلاحية فرصة الشراء";s.cooldownUntil=now+COOLDOWN_MS;}
+  if(s.phase.equals("BUY")&&now>=s.until){s.phase="DATA";s.reason="جارٍ تحديث بيانات الإشارة؛ لم تُلغَ فنيًا";}
   if(now<s.cooldownUntil)return s;
   if(!valid){
-   if(s.phase.equals("BUY")){s.phase="CANCELLED";s.cooldownUntil=now+COOLDOWN_MS;s.reason="أُلغيت فرصة الدخول: "+reason;}
+   if(dataIssue(reason)){s.phase="DATA";s.reason="جارٍ تحديث البيانات: "+reason;return s;}
+   if(s.established){s.phase="CANCELLED";s.cooldownUntil=now+COOLDOWN_MS;s.reason="أُلغيت فرصة الدخول: "+reason;s.established=false;}
    else {s.phase="WAIT";s.reason=reason;s.firstAt=0;}
    return s;
   }
-  if(s.phase.equals("BUY")){s.until=Math.min(s.until,proposedUntil);return s;}
-  if(proposedUntil-now<MIN_REMAINING_MS){s.phase="WAIT";s.reason="تأكيد الشمعة قارب الانتهاء؛ انتظار تأكيد جديد";s.firstAt=0;return s;}
-  if(!s.phase.equals("PENDING")||now-s.firstAt>15000||now<s.firstAt){s.phase="PENDING";s.firstAt=now;s.until=proposedUntil;s.reason="جارٍ التحقق الثاني من السعر";return s;}
-  s.until=Math.min(s.until,proposedUntil);
-  if(s.until-now<MIN_REMAINING_MS){s.phase="WAIT";s.reason="تأكيد الشمعة قارب الانتهاء";s.firstAt=0;return s;}
-  if(now-s.firstAt>=CONFIRM_MS){s.phase="BUY";s.reason="اجتاز تأكيد السعر مرتين";}
-  return s;
+  if(s.established){s.phase="BUY";s.until=now+FRESH_MS;s.reason="الشروط متحققة عند آخر فحص";return s;}
+  if(!s.phase.equals("PENDING")||now-s.firstAt>15000||now<s.firstAt){s.phase="PENDING";s.firstAt=now;s.until=now+FRESH_MS;s.reason="جارٍ التحقق الثاني من السعر";return s;}
+  s.phase="BUY";s.established=true;s.until=now+FRESH_MS;s.reason="اجتاز تحققَي السعر";return s;
  }
 }

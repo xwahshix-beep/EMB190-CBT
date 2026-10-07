@@ -262,7 +262,7 @@ public final class HybridEngine {
             if(!prefs.getBoolean("radar_enabled",false))break;
             if(!c.liveSignal || c.analysis==null || c.catalystNegative
                     || !BuyAlertPolicy.validRange(c.entryLow,c.entryHigh))continue;
-            if(checked-c.liveSignalAt>75000){c.liveState="WAIT";c.waitReason="انتهت صلاحية تأكيد الدقيقة";continue;}
+            if(checked-c.liveSignalAt>75000){c.liveState="WAIT";c.waitReason="بيانات الدقيقة تحتاج تحديثًا";continue;}
             // Revalidate UI state as well, even when notification cooldown is active.
             try {
                 long quoteAt=System.currentTimeMillis();

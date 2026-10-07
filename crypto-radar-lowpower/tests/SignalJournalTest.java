@@ -9,7 +9,7 @@ public final class SignalJournalTest {
   SignalJournal.record(book,"ZECUSDT",1000,1335,1334,1339,600,80000,8000);
   JSONObject z=book.getJSONObject("ZECUSDT");
   check(book.length()==1&&z.getDouble("price")==1334.62,"rechecks do not duplicate or change initial price");
-  check(z.getLong("recordedAt")==4000&&z.getLong("until")==76000,"time and expiry not silently extended");
+  check(z.getLong("recordedAt")==4000&&z.getLong("until")==80000,"original confirmation time preserved, data freshness renewed");
   for(int i=0;i<12;i++)SignalJournal.record(book,"COIN"+i+"USDT",2000+i,10,9,11,500,76000,9000+i);
   check(SignalJournal.render(book,10000,true).contains("ZEC/USDT"),"ZEC remains after more than seven new candidates");
   check(SignalJournal.render(book,80000,true).contains("ZEC/USDT"),"expiry does not remove ZEC");

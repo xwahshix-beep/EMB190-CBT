@@ -19,11 +19,11 @@ public final class FastWatch {
    synchronized(FollowGate.LOCK){if(!FollowGate.valid(prefs,symbol,generation))return;}
    if(result.state.equals("BUY")){
     try{
-     SignalChecks.Result stable=SignalChecks.confirm(prefs,symbol,result.window,result.price,result.quoteAt);
+     SignalChecks.Result stable=SignalChecks.confirm(prefs,symbol,result.window,result.price,result.quoteAt,"selected");
      result.price=stable.price;result.quoteAt=stable.quoteAt;result.reason=stable.reason;stableUntil=stable.until;
      if(!stable.buy)result.state="WAIT";
-    }catch(Exception ex){result.state="WAIT";result.reason=SignalChecks.reject(prefs,symbol,"تعذر تأكيد السعر");}
-   }else result.reason=SignalChecks.reject(prefs,symbol,result.reason);
+    }catch(Exception ex){result.state="WAIT";result.reason=SignalChecks.reject(prefs,symbol,"تعذر تأكيد السعر","selected");}
+   }else result.reason=SignalChecks.reject(prefs,symbol,result.reason,"selected");
   }
   synchronized(FollowGate.LOCK){
    if(!FollowGate.valid(prefs,symbol,generation))return;

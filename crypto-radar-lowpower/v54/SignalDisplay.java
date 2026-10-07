@@ -6,9 +6,9 @@ public final class SignalDisplay {
  public static String one(String text,long until,long now,boolean running) {
   if(!text.contains("🟢 شراء"))return text;
   if(!running)return text.replace("🟢 شراء","⏸ الرادار متوقف — الإشارة غير محدثة");
-  if(until<=now)return text.replace("🟢 شراء","⏳ انتهت صلاحية تأكيد الشراء — يلزم تحديث؛ ليست إشارة بيع");
+  if(until<=now)return text.replace("🟢 شراء","⏳ جارٍ تحديث بيانات الإشارة؛ لم تُلغَ فنيًا");
   long seconds=(until-now+999)/1000;
-  return text.replace("🟢 شراء","🟢 شراء — صلاحية التأكيد المتبقية "+seconds+" ث\nقد تتغير الإشارة قبل ذلك إذا تغير السعر أو الشروط.");
+  return text.replace("🟢 شراء","🟢 شراء — تحديث البيانات خلال "+seconds+" ث\nقد تتغير الإشارة قبل ذلك إذا تغير السعر أو الشروط.");
  }
  public static String market(String text,Map<String,Long> expiries,long now,boolean running) {
   String[] blocks=text.split("\n────────────────\n\n",-1);

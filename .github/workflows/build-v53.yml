@@ -1,4 +1,4 @@
-name: Build Explosion Radar V5.4.3 APK
+name: Build Explosion Radar V5.4.4 APK
 
 on:
   push:
@@ -72,7 +72,7 @@ jobs:
       - name: Enable V5.3.2 global BUY alerts
         working-directory: crypto-radar-lowpower
         run: python3 patch_v532.py
-      - name: Apply V5.4.3 minute confirmation and shared guard
+      - name: Apply V5.4.4 minute confirmation and shared guard
         working-directory: crypto-radar-lowpower
         run: python3 patch_v54.py
       - name: Test Early Whale behavior
@@ -107,24 +107,24 @@ jobs:
         run: |
           javac -cp /tmp/json.jar -d /tmp/whale-tests app/src/main/java/com/wahshi/cryptoexplosionradar/SignalJournal.java tests/SignalJournalTest.java
           java -cp /tmp/json.jar:/tmp/whale-tests com.wahshi.cryptoexplosionradar.SignalJournalTest
-      - name: Build Explosion Radar V5.4.3 APK
+      - name: Build Explosion Radar V5.4.4 APK
         working-directory: crypto-radar-lowpower
         run: gradle --no-daemon assembleDebug --stacktrace
       - name: Rename APK
-        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Explosion-Radar-V5.4.3.apk
+        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Explosion-Radar-V5.4.4.apk
       - name: Verify APK metadata and signature
         run: |
-          test -s Explosion-Radar-V5.4.3.apk
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging Explosion-Radar-V5.4.3.apk | tee apk-metadata.txt
+          test -s Explosion-Radar-V5.4.4.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging Explosion-Radar-V5.4.4.apk | tee apk-metadata.txt
           grep -q "application-icon" apk-metadata.txt
-          grep -q "versionName='5.4.3-persistent-signals'" apk-metadata.txt
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose Explosion-Radar-V5.4.3.apk
-          sha256sum Explosion-Radar-V5.4.3.apk > Explosion-Radar-V5.4.3.apk.sha256
+          grep -q "versionName='5.4.4-live-validity'" apk-metadata.txt
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose Explosion-Radar-V5.4.4.apk
+          sha256sum Explosion-Radar-V5.4.4.apk > Explosion-Radar-V5.4.4.apk.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: Explosion-Radar-V5.4.3-APK
+          name: Explosion-Radar-V5.4.4-APK
           path: |
-            Explosion-Radar-V5.4.3.apk
-            Explosion-Radar-V5.4.3.apk.sha256
+            Explosion-Radar-V5.4.4.apk
+            Explosion-Radar-V5.4.4.apk.sha256
             apk-metadata.txt
           retention-days: 7

@@ -11,13 +11,13 @@ public final class SignalJournal {
     .put("low",low).put("high",high).put("signalAt",signalAt).put("recordedAt",now).put("until",until);
    book.put(symbol,row);
   }
-  // Preserve the first confirmation price/time and never extend its expiry.
-  row.put("until",Math.min(row.getLong("until"),until)).put("checkedAt",now).put("state","BUY").put("reason","اكتملت شروط الشراء عند آخر فحص");
+  // Preserve the original entry price/time; renew only the verified-data timestamp.
+  row.put("until",until).put("checkedAt",now).put("state","BUY").put("reason","اكتملت شروط الشراء عند آخر فحص");
   return book;
  }
  public static JSONObject end(JSONObject book,String symbol,String state,String reason,long now)throws Exception{
   JSONObject row=book.optJSONObject(symbol);if(row==null)return book;
-  if(!"BUY".equals(row.optString("state")))return book;
+  if(!("BUY".equals(row.optString("state"))||"DATA".equals(row.optString("state"))))return book;
   row.put("state",state).put("reason",reason).put("endedAt",now);return book;
  }
  public static List<JSONObject> rows(JSONObject book){
@@ -28,7 +28,7 @@ public final class SignalJournal {
  public static String state(JSONObject row,long now,boolean running){
   String state=row.optString("state");
   if(!state.equals("BUY"))return "⚪ "+row.optString("reason","انتهت الإشارة");
-  if(now>=row.optLong("until"))return "⚪ انتهت صلاحية تأكيد الدخول؛ ليست إشارة بيع";
+  if(now>=row.optLong("until"))return "⏳ جارٍ تحديث بيانات الإشارة؛ لم تُلغَ فنيًا";
   if(!running)return "⏸ الرادار متوقف؛ يلزم تحديث الحالة";
   if(now-row.optLong("checkedAt")>15000)return "⏳ يلزم تحديث الحالة؛ إشارة الشراء السابقة محفوظة";
   return "🟢 شراء مؤكّد عند آخر فحص؛ تحقق من السعر الحالي";

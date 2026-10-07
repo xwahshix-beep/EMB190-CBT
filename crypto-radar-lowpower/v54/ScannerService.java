@@ -304,7 +304,7 @@ public class ScannerService extends Service {
         } finally {
             if(cycleWakeLock!=null&&cycleWakeLock.isHeld())cycleWakeLock.release();
             long elapsed=System.currentTimeMillis()-started;
-            scheduleNext(Math.max(MarketHttp.retryDelay(),Math.max(5000,30000-elapsed)));
+            scheduleNext(Math.max(MarketHttp.retryDelay(),Math.max(5000,15000-elapsed)));
         }
     }
 
