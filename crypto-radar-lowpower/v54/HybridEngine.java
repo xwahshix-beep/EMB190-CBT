@@ -285,7 +285,7 @@ public final class HybridEngine {
             } catch(Exception ignored) {c.liveState="WAIT";c.waitReason="تعذر التحقق من السعر الحالي";}
         }
 
-        for(Candidate c:candidates)if(c.analysis!=null&&!"ACTIVE".equals(c.liveState))c.waitReason=SignalChecks.reject(prefs,c.symbol,c.waitReason);
+        for(Candidate c:candidates)if(c.analysis!=null&&!"ACTIVE".equals(c.liveState)){c.waitReason=SignalChecks.reject(prefs,c.symbol,c.waitReason);SignalChecks.cancelEnded(context,prefs,c.symbol);}
         int activeCount = 0;
         int waitCount = 0;
         int invalidatedCount = 0;

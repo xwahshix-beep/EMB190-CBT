@@ -16,6 +16,10 @@ public final class SignalChecks {
    return s;
   }
  }
+ public static boolean isActive(SharedPreferences p,String symbol){synchronized(LOCK){BuyStability.State s=read(p,symbol);return s.phase.equals("BUY")&&System.currentTimeMillis()<s.until;}}
+ public static void cancelEnded(android.content.Context context,SharedPreferences p,String symbol){
+  if(!isActive(p,symbol))((android.app.NotificationManager)context.getSystemService(android.content.Context.NOTIFICATION_SERVICE)).cancel("buy:"+symbol,32000);
+ }
  public static long expires(SharedPreferences p,String symbol){synchronized(LOCK){return read(p,symbol).until;}}
  public static String decorate(SharedPreferences p,String text){
   String[] blocks=text.split("\n────────────────\n\n",-1);
@@ -43,7 +47,7 @@ public final class SignalChecks {
     double bid=q.getDouble("bidPrice"),ask=q.getDouble("askPrice");out.quoteAt=System.currentTimeMillis();
     if(!symbol.equals(q.getString("symbol"))||!Double.isFinite(bid+ask)||bid<=0||ask<bid)throw new Exception("سعر غير صالح");
     out.price=ask;reason=window.reason(ask,out.quoteAt);
-    valid=reason==null&&ask>=window.entryLow()&&ask<=window.entryHigh()&&(ask-bid)/bid*10000<=15;
+    valid=p.getBoolean("radar_enabled",false)&&reason==null&&ask>=window.entryLow()&&ask<=window.entryHigh()&&(ask-bid)/bid*10000<=15;
     s=observe(p,symbol,valid,window.closedAt+75000,reason==null?"فشل التحقق الثاني من نطاق السعر أو فارق السعر":reason);
    }catch(Exception ex){s=observe(p,symbol,false,0,"تعذر التحقق الثاني من السعر");}
   }

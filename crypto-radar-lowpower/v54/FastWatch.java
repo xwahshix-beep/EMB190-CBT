@@ -40,6 +40,7 @@ public final class FastWatch {
    if(entry>0&&result.fresh(now))edit.putLong("follow_stop_"+symbol,Double.doubleToLongBits(result.stop));
    if(result.state.equals("EXIT"))edit.putString("fast_exit_state","EXIT");
    edit.apply();
+   if(entry<=0)SignalChecks.cancelEnded(context,prefs,symbol);
    // Notification permission errors must not erase successful market data.
    try{
     if(result.state.equals("BUY"))OpportunityAlerts.send(context,prefs,symbol,result.price,result.window.entryLow(),result.window.entryHigh(),result.quoteAt,result.window.closedAt,result.window);

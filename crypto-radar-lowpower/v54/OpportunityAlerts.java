@@ -25,7 +25,7 @@ public final class OpportunityAlerts {
     .setContentTitle("🟢 فرصة شراء — "+symbol).setContentText(body).setStyle(new Notification.BigTextStyle().bigText(body))
     .setContentIntent(pi).setAutoCancel(true).setTimeoutAfter(Math.max(1,Math.min(signalAt+75000,SignalChecks.expires(prefs,symbol))-now)).setColor(Color.rgb(89,220,135)).build();
    try{
-    if(!prefs.getBoolean("radar_enabled",false))return false;
+    if(!prefs.getBoolean("radar_enabled",false)||!SignalChecks.isActive(prefs,symbol))return false;
     nm.notify("buy:"+symbol,32000,n);
     prefs.edit().putLong(key,now).apply();
     return true;
