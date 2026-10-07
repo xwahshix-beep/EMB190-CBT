@@ -36,6 +36,7 @@ public class MainActivity extends Activity {
     private Button startButton;
     private TextView details;
     private TextView followStatus;
+    private Button retryFollow;
     private long quoteRequest;
 
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -59,7 +60,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(9, 12, 17));
 
         TextView title = new TextView(this);
-        title.setText("🎯 Explosion Radar V5.4.1");
+        title.setText("🎯 Explosion Radar V5.4.2");
         title.setTextColor(Color.WHITE);
         title.setTextSize(27);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
@@ -134,6 +135,10 @@ public class MainActivity extends Activity {
         followStatus.setPadding(dp(4),dp(6),dp(4),dp(10));
         followStatus.setOnClickListener(v -> chooseFollowToStop());
         root.addView(followStatus);
+        retryFollow=new Button(this);retryFollow.setText("↻ تحديث المتابعة");
+        retryFollow.setTextColor(Color.WHITE);retryFollow.setBackground(roundRect(Color.rgb(65,70,80),12));
+        retryFollow.setOnClickListener(v -> {ensureRunning();feedback("تم طلب تحديث المتابعة");});
+        root.addView(retryFollow);
 
         details = new TextView(this);
         details.setText("لا توجد بيانات بعد");
@@ -223,8 +228,7 @@ public class MainActivity extends Activity {
         dialog.show();
     }
     private void ensureRunning() {
-        if(prefs().getBoolean("radar_enabled",false))return;
-        Intent i=new Intent(this,ScannerService.class).setAction(ScannerService.ACTION_START);
+        Intent i=new Intent(this,ScannerService.class).setAction(ScannerService.ACTION_REFRESH_FOLLOW);
         if(Build.VERSION.SDK_INT>=26)startForegroundService(i);else startService(i);
         updateStartButton(true);
     }
@@ -288,14 +292,14 @@ public class MainActivity extends Activity {
         SharedPreferences p=prefs();String symbol=FollowGate.active(p);
         long now=System.currentTimeMillis();boolean enabled=p.getBoolean("radar_enabled",false);
         String text;
+        retryFollow.setVisibility(symbol.isEmpty()?android.view.View.GONE:android.view.View.VISIBLE);
         if(!symbol.isEmpty()) {
             double entry=Double.longBitsToDouble(p.getLong("follow_entry_"+symbol,0));
             followStatus.setText("⭐ "+symbol+(entry>0?" • صفقة مسجلة بسعر "+entry:" • مراقبة")+"\nاضغط هنا لإلغاء المتابعة");
             text=p.getString("fast_detail","");
-            if(text.isEmpty())text="⭐ "+symbol+"\nجارٍ بدء المتابعة وجلب البيانات…";
-            else if(!enabled||now-p.getLong("fast_at",0)>60000)
-                text="⭐ "+symbol+"\n⏳ "+(enabled?"بيانات المتابعة غير محدثة؛ جارٍ التحقق":"الرادار متوقف")+"\nهذا ليس تنبيه بيع.";
-            else text=SignalDisplay.one(text,p.getLong("fast_buy_until",0),now,true);
+            text=FollowView.render(symbol,text,p.getLong("fast_attempt_at",0),now,enabled);
+            text=SignalChecks.decorate(p,text);
+            text=SignalDisplay.one(text,p.getLong("fast_buy_until",0),now,enabled);
         } else {
             followStatus.setText("اضغط على قائمة الفرص لاختيار عملة ومتابعتها");
             text=p.getString("last_details",p.getString("ui_details","لا توجد بيانات بعد"));
@@ -304,6 +308,7 @@ public class MainActivity extends Activity {
                 org.json.JSONObject o=new org.json.JSONObject(p.getString("market_buy_expiries","{}"));
                 java.util.Iterator<String> keys=o.keys();while(keys.hasNext()){String key=keys.next();expiries.put(key,o.getLong(key));}
             } catch(Exception ignored){}
+            text=SignalChecks.decorate(p,text);
             text=SignalDisplay.market(text,expiries,now,enabled);
         }
         details.setText(styleDetails(text));

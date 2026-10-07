@@ -23,7 +23,7 @@ public final class OpportunityAlerts {
    PendingIntent pi=PendingIntent.getActivity(context,0,open,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
    Notification n=new Notification.Builder(context,CHANNEL).setSmallIcon(R.drawable.app_icon)
     .setContentTitle("🟢 فرصة شراء — "+symbol).setContentText(body).setStyle(new Notification.BigTextStyle().bigText(body))
-    .setContentIntent(pi).setAutoCancel(true).setTimeoutAfter(Math.max(1,signalAt+75000-now)).setColor(Color.rgb(89,220,135)).build();
+    .setContentIntent(pi).setAutoCancel(true).setTimeoutAfter(Math.max(1,Math.min(signalAt+75000,SignalChecks.expires(prefs,symbol))-now)).setColor(Color.rgb(89,220,135)).build();
    try{
     if(!prefs.getBoolean("radar_enabled",false))return false;
     nm.notify("buy:"+symbol,32000,n);

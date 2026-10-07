@@ -276,12 +276,16 @@ public final class HybridEngine {
                 classifyLiveState(c);
                 classifyManagement(c);
                 if("ACTIVE".equals(c.liveState)) {
-                    c.waitReason="تأكيد دقيقة — السعر داخل نطاق الاختراق";
-                    OpportunityAlerts.send(context,prefs,c.symbol,c.lastPrice,c.entryLow,c.entryHigh,quoteAt,c.liveSignalAt,c.analysis.window);
+                    SignalChecks.Result stable=SignalChecks.confirm(prefs,c.symbol,c.analysis.window,c.lastPrice,quoteAt);
+                    c.lastPrice=stable.price;c.waitReason=stable.reason;
+                    if(!stable.buy){c.liveState="WAIT";c.tradeTriggered=false;continue;}
+                    c.displayUntil=stable.until;
+                    OpportunityAlerts.send(context,prefs,c.symbol,c.lastPrice,c.entryLow,c.entryHigh,stable.quoteAt,c.liveSignalAt,c.analysis.window);
                 } else c.waitReason=c.lastPrice>c.entryHigh?"فات نطاق الدخول":"انتظار دخول السعر في النطاق";
             } catch(Exception ignored) {c.liveState="WAIT";c.waitReason="تعذر التحقق من السعر الحالي";}
         }
 
+        for(Candidate c:candidates)if(c.analysis!=null&&!"ACTIVE".equals(c.liveState))c.waitReason=SignalChecks.reject(prefs,c.symbol,c.waitReason);
         int activeCount = 0;
         int waitCount = 0;
         int invalidatedCount = 0;
@@ -300,7 +304,7 @@ public final class HybridEngine {
         }
         buyCount = activeCount;
         JSONObject expiries=new JSONObject();
-        for(Candidate c:candidates)if("ACTIVE".equals(c.liveState))expiries.put(c.symbol,c.liveSignalAt+75000);
+        for(Candidate c:candidates)if("ACTIVE".equals(c.liveState))expiries.put(c.symbol,c.displayUntil);
         prefs.edit().putString("market_buy_expiries",expiries.toString()).remove("market_buy_display_until").apply();
 
         // Priority: ACTIVE -> WAIT/RETEST -> INVALIDATED -> ARMED -> Early Hunt.
@@ -818,6 +822,7 @@ public final class HybridEngine {
         String liveState = "";
         String managementState = "";
         long liveSignalAt;
+        long displayUntil;
         double lastPrice;
         double totalScore;
         double target1;

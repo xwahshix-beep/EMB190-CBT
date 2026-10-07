@@ -1,4 +1,4 @@
-name: Build Explosion Radar V5.4.1 APK
+name: Build Explosion Radar V5.4.2 APK
 
 on:
   push:
@@ -72,7 +72,7 @@ jobs:
       - name: Enable V5.3.2 global BUY alerts
         working-directory: crypto-radar-lowpower
         run: python3 patch_v532.py
-      - name: Apply V5.4.1 minute confirmation and shared guard
+      - name: Apply V5.4.2 minute confirmation and shared guard
         working-directory: crypto-radar-lowpower
         run: python3 patch_v54.py
       - name: Test Early Whale behavior
@@ -95,24 +95,31 @@ jobs:
         run: |
           javac -d /tmp/whale-tests app/src/main/java/com/wahshi/cryptoexplosionradar/SignalDisplay.java tests/SignalDisplayTest.java
           java -cp /tmp/whale-tests com.wahshi.cryptoexplosionradar.SignalDisplayTest
-      - name: Build Explosion Radar V5.4.1 APK
+      - name: Test follow failures and signal transitions
+        working-directory: crypto-radar-lowpower
+        run: |
+          javac -cp /tmp/json.jar:/tmp/whale-tests -d /tmp/whale-tests app/src/main/java/com/wahshi/cryptoexplosionradar/FollowEngine.java app/src/main/java/com/wahshi/cryptoexplosionradar/FollowView.java tests/FollowEngineTest.java
+          java -cp /tmp/json.jar:/tmp/whale-tests com.wahshi.cryptoexplosionradar.FollowEngineTest
+          javac -d /tmp/whale-tests app/src/main/java/com/wahshi/cryptoexplosionradar/BuyStability.java tests/BuyStabilityTest.java
+          java -cp /tmp/whale-tests com.wahshi.cryptoexplosionradar.BuyStabilityTest
+      - name: Build Explosion Radar V5.4.2 APK
         working-directory: crypto-radar-lowpower
         run: gradle --no-daemon assembleDebug --stacktrace
       - name: Rename APK
-        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Explosion-Radar-V5.4.1.apk
+        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Explosion-Radar-V5.4.2.apk
       - name: Verify APK metadata and signature
         run: |
-          test -s Explosion-Radar-V5.4.1.apk
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging Explosion-Radar-V5.4.1.apk | tee apk-metadata.txt
+          test -s Explosion-Radar-V5.4.2.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging Explosion-Radar-V5.4.2.apk | tee apk-metadata.txt
           grep -q "application-icon" apk-metadata.txt
-          grep -q "versionName='5.4.1-follow-feedback'" apk-metadata.txt
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose Explosion-Radar-V5.4.1.apk
-          sha256sum Explosion-Radar-V5.4.1.apk > Explosion-Radar-V5.4.1.apk.sha256
+          grep -q "versionName='5.4.2-signal-stability'" apk-metadata.txt
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose Explosion-Radar-V5.4.2.apk
+          sha256sum Explosion-Radar-V5.4.2.apk > Explosion-Radar-V5.4.2.apk.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: Explosion-Radar-V5.4.1-APK
+          name: Explosion-Radar-V5.4.2-APK
           path: |
-            Explosion-Radar-V5.4.1.apk
-            Explosion-Radar-V5.4.1.apk.sha256
+            Explosion-Radar-V5.4.2.apk
+            Explosion-Radar-V5.4.2.apk.sha256
             apk-metadata.txt
           retention-days: 7

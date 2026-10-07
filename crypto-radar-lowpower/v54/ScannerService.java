@@ -98,7 +98,23 @@ public class ScannerService extends Service {
     private volatile int lastWhaleMapped = 0;
     private volatile int lastWhaleOnChain = 0;
 
+    public static final String ACTION_REFRESH_FOLLOW="com.wahshi.cryptoexplosionradar.REFRESH_FOLLOW";
     private java.util.concurrent.ScheduledExecutorService fastWorker;
+    private java.util.concurrent.ScheduledFuture<?> fastTask;
+    private long lastFollowRequest;
+    private synchronized void scheduleFollow(long delay){
+        if(fastWorker==null||fastWorker.isShutdown())fastWorker=java.util.concurrent.Executors.newSingleThreadScheduledExecutor();
+        if(fastTask!=null)fastTask.cancel(false);
+        fastTask=fastWorker.scheduleWithFixedDelay(() -> {
+            if(!running)return;
+            try{FastWatch.scan(this,prefs);}
+            catch(Exception failure){
+                // Keep the periodic worker alive; a later attempt may recover.
+                android.util.Log.e("FollowWatch","Follow scan failed",failure);
+            }
+        },delay,15,java.util.concurrent.TimeUnit.SECONDS);
+    }
+
     @Override public void onCreate() {
         super.onCreate();
         prefs = getSharedPreferences("free_whale_radar_v3", MODE_PRIVATE);
@@ -118,6 +134,14 @@ public class ScannerService extends Service {
         if (ACTION_STOP.equals(action)) {
             stopScanner();
             return START_NOT_STICKY;
+        }
+        if(ACTION_REFRESH_FOLLOW.equals(action)){
+            boolean wasRunning=running;
+            if(!running)startScanner();
+            long now=android.os.SystemClock.elapsedRealtime();
+            if(wasRunning&&now-lastFollowRequest>=2000)scheduleFollow(0);
+            lastFollowRequest=now;
+            return START_STICKY;
         }
         if (ACTION_TICK.equals(action)) {
             if (!prefs.getBoolean("radar_enabled", false)) {
@@ -142,12 +166,7 @@ public class ScannerService extends Service {
         prefs.edit().putBoolean("radar_enabled", true).putBoolean("service_alive", true).apply();
         startForeground(SERVICE_NOTIFICATION_ID, buildServiceNotification("Hybrid Explosion Radar V4.2.3 يعمل • Background wake"));
         sendUi("🐋⚡ Hybrid Explosion Radar V4.2.3", "أول فحص مجاني On-chain خلال ثوانٍ…");
-        if(fastWorker==null || fastWorker.isShutdown()) {
-            fastWorker=java.util.concurrent.Executors.newSingleThreadScheduledExecutor();
-            fastWorker.scheduleWithFixedDelay(() -> {
-                if(running) { FastWatch.scan(this,prefs); }
-            },0,15,java.util.concurrent.TimeUnit.SECONDS);
-        }
+        scheduleFollow(0);
         scheduleNext(2_000L);
     }
 
