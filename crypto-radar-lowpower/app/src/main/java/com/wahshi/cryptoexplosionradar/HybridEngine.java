@@ -22,9 +22,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -38,8 +40,16 @@ public final class HybridEngine {
     private static final int MAX_CONFIRM = 8;
     private static final long BUY_COOLDOWN_MS = 6L * 60L * 60L * 1000L;
     private static final long CATALYST_MEMORY_MS = 6L * 60L * 60L * 1000L;
+    private static final long LIVE_SIGNAL_TTL_MS = 6L * 60L * 60L * 1000L;
+    private static final long INVALIDATED_VISIBLE_MS = 30L * 60L * 1000L;
 
     private HybridEngine() {}
+    private static volatile EarlyWhaleEngine.Result earlyCache=new EarlyWhaleEngine.Result();
+    private static volatile long earlyCacheAt;
+    public static void refreshEarly(List<String> symbols,SharedPreferences prefs) {
+        earlyCache=EarlyWhaleEngine.scan(symbols,prefs,path -> MarketHttp.read(API+path));
+        earlyCacheAt=System.currentTimeMillis();
+    }
 
     public static ScanResult scan(Context context,
                                   List<ScannerService.WhaleSignal> whales,
@@ -70,6 +80,14 @@ public final class HybridEngine {
         List<String> eligible = new ArrayList<>(day.keySet());
         Map<String, HourTicker> hour = loadRolling1h(eligible);
 
+        eligible.sort((a,b) -> {
+            HourTicker ha=hour.get(a), hb=hour.get(b);
+            double ra=ha==null?0:ha.quoteVolume/(day.get(a).quoteVolume/24);
+            double rb=hb==null?0:hb.quoteVolume/(day.get(b).quoteVolume/24);
+            return Double.compare(rb,ra);
+        });
+        EarlyWhaleEngine.Result early = System.currentTimeMillis()-earlyCacheAt<300000
+                ? earlyCache : new EarlyWhaleEngine.Result();
         List<Candidate> candidates = new ArrayList<>();
         for (String symbol : eligible) {
             DayTicker d = day.get(symbol);
@@ -78,8 +96,8 @@ public final class HybridEngine {
 
             double p24 = d.changePct();
             double p1 = h.changePct();
-            if (p24 < -8.0 || p24 > 10.0) continue;
-            if (p1 < -1.8 || p1 > 5.5) continue;
+            if ((p24 < -8.0 || p24 > 10.0) && !SignalChecks.isActive(prefs,symbol)) continue;
+            if ((p1 < -1.8 || p1 > 5.5) && !SignalChecks.isActive(prefs,symbol)) continue;
 
             double avgHourlyQ = d.quoteVolume / 24.0;
             double avgHourlyN = d.trades / 24.0;
@@ -135,12 +153,15 @@ public final class HybridEngine {
                 reasons.add("Catalyst -");
             }
 
-            boolean hasFlow = rvol >= 1.25 || tradeAccel >= 1.25 || whale != null || catPos;
-            if (score >= 2.35 && hasFlow) {
+            EarlyWhaleEngine.Evidence flow = early.evidence.get(symbol);
+            if (flow != null) { score += flow.score; reasons.add(flow.label()); }
+            boolean hasFlow = rvol >= 1.25 || tradeAccel >= 1.25 || whale != null || catPos || flow != null;
+            if (score >= 1.0 || hasFlow || SignalChecks.isActive(prefs,symbol)) {
                 Candidate c = new Candidate();
                 c.symbol = symbol;
                 c.base = base;
                 c.score = score;
+                c.lastPrice = d.last;
                 c.rvol = rvol;
                 c.tradeAccel = tradeAccel;
                 c.p1 = p1;
@@ -148,6 +169,7 @@ public final class HybridEngine {
                 c.spread = spread;
                 c.nearHigh = nearHigh;
                 c.whale = whale;
+                c.earlyWhale = flow;
                 c.catalystPositive = catPos;
                 c.catalystNegative = catNeg;
                 c.reasons = reasons;
@@ -155,52 +177,155 @@ public final class HybridEngine {
             }
         }
 
-        candidates.sort((a, b) -> Double.compare(b.score, a.score));
-        int confirmN = Math.min(MAX_CONFIRM, candidates.size());
+        candidates.sort((a, b) -> {int active=Boolean.compare(SignalChecks.isActive(prefs,b.symbol),SignalChecks.isActive(prefs,a.symbol));return active!=0?active:Double.compare(b.score,a.score);});
+        // Keep four leaders and rotate four other liquid candidates; scoring thresholds remain below.
+        List<Candidate> work=new ArrayList<>();
+        int leaders=Math.min(4,candidates.size());
+        work.addAll(candidates.subList(0,leaders));
+        List<Candidate> rest=new ArrayList<>(candidates.subList(leaders,candidates.size()));
+        rest.sort((x,y)->x.symbol.compareTo(y.symbol));
+        if(!rest.isEmpty()) {
+            int cursor=Math.floorMod(prefs.getInt("minute_cursor",0),rest.size());
+            int batch=Math.min(4,rest.size());
+            for(int i=0;i<batch;i++)work.add(rest.get((cursor+i)%rest.size()));
+            prefs.edit().putInt("minute_cursor",(cursor+batch)%rest.size()).apply();
+        }
+        int confirmN=work.size();
+        long deadline=System.currentTimeMillis()+30000;
+        int checkedCount=0,failedCount=0;
         int buyCount = 0;
         int armedCount = 0;
 
         for (int i = 0; i < confirmN; i++) {
-            Candidate c = candidates.get(i);
+            Candidate c = work.get(i);
+            if(System.currentTimeMillis()>deadline||!prefs.getBoolean("radar_enabled",false))break;
             try {
-                Analysis a = analyze15m(c.symbol);
+                Analysis a = analyze1m(c.symbol);
                 c.analysis = a;
-                if (a == null) continue;
+                if (a == null) {c.waitReason="بيانات الدقيقة غير مكتملة";failedCount++;continue;}
+                checkedCount++;
+                c.lastPrice=a.lastClose;
+                c.checkedAt=System.currentTimeMillis();
+                c.waitReason=a.window.reason(a.lastClose,c.checkedAt);
+                if(c.waitReason!=null) {c.armed=true;armedCount++;continue;}
+                c.waitReason="انتظار تأكيد الاختراق والحجم";
                 c.armed = isArmed(c, a);
                 if (c.armed) armedCount++;
 
                 double total = c.score + a.score;
-                boolean retestBuy = a.retest
-                        && total >= 6.3
-                        && a.rvol >= 1.30
-                        && a.takerBuyRatio >= 0.50;
-                boolean breakoutBuy = a.breakout
-                        && total >= 7.2
-                        && a.rvol >= 1.70
-                        && a.takerBuyRatio >= 0.55
-                        && a.tests >= 2;
-
-                if ((retestBuy || breakoutBuy) && c.p24 <= 10.0 && !c.catalystNegative) {
-                    if (maybeBuyAlert(context, prefs, c, a, total)) buyCount++;
+                boolean confirmedBuy = a.pre.state.equals("BUY") && !c.catalystNegative;
+                c.armed=a.pre.state.equals("WATCH");
+                c.waitReason=a.pre.detail();
+                if (confirmedBuy) {
+                    c.buyConfirmed = true;
+                    c.totalScore = total;
+                    c.entryLow = a.window.entryLow();
+                    c.entryHigh = a.window.entryHigh();
+                    if (!BuyAlertPolicy.validRange(c.entryLow,c.entryHigh)) continue;
+                    c.invalidation = a.invalidation;
+                    c.liveSignal=true;
+                    c.liveSignalAt=a.window.closedAt;
+                    c.waitReason="انتظار دخول السعر في النطاق";
+                    classifyLiveState(c);
+                    if ("ACTIVE".equals(c.liveState)) {
+                        c.tradeTriggered = true;
+                        prefs.edit().putBoolean("live_triggered_" + c.symbol, true).apply();
+                        buyCount++;
+                        maybeBuyAlert(context, prefs, c, a, total);
+                    }
+                    classifyManagement(c);
                 }
-            } catch (Exception ignored) {
-                // A single symbol must never abort the market-wide scan.
+            } catch (Exception ex) {
+                failedCount++;c.waitReason="تعذر تحديث بيانات الدقيقة";
             }
         }
+
+        // Never restore a legacy 15m BUY or renew its timestamp.
+        prefs.edit().remove("hybrid_live_symbols").apply();
+
+        // Notify on active, recently confirmed signals across the scanned universe.
+        // Revalidate the quote after slow optional market layers have completed.
+        for (Candidate c : candidates) {
+            long checked=System.currentTimeMillis();
+            if(!prefs.getBoolean("radar_enabled",false))break;
+            if(!c.liveSignal || c.analysis==null || c.catalystNegative
+                    || !BuyAlertPolicy.validRange(c.entryLow,c.entryHigh))continue;
+            if(checked-c.liveSignalAt>75000){c.liveState="WAIT";c.waitReason="بيانات الدقيقة تحتاج تحديثًا";continue;}
+            // Revalidate UI state as well, even when notification cooldown is active.
+            try {
+                long quoteAt=System.currentTimeMillis();
+                JSONObject quote=new JSONObject(readEarlyUrl(API+"/api/v3/ticker/bookTicker?symbol="+c.symbol));
+                double bid=quote.getDouble("bidPrice"),ask=quote.getDouble("askPrice");
+                if(!Double.isFinite(bid+ask)||bid<=0||ask<bid)throw new Exception("invalid quote");
+                c.lastPrice=ask;
+                String reason=c.analysis.window.reason(ask,System.currentTimeMillis());
+                if(reason==null && (ask-bid)/bid*10000>15)reason="انتظار — فارق السعر مرتفع";
+                if(reason!=null){c.liveState="WAIT";c.tradeTriggered=false;c.waitReason=reason;continue;}
+                classifyLiveState(c);
+                classifyManagement(c);
+                if("ACTIVE".equals(c.liveState)) {
+                    SignalChecks.Result stable=SignalChecks.confirm(prefs,c.symbol,c.analysis.window,c.lastPrice,quoteAt);
+                    c.lastPrice=stable.price;c.waitReason=stable.reason;
+                    if(!stable.buy){c.liveState="WAIT";c.tradeTriggered=false;continue;}
+                    c.displayUntil=stable.until;
+                    OpportunityAlerts.send(context,prefs,c.symbol,c.lastPrice,c.entryLow,c.entryHigh,stable.quoteAt,c.liveSignalAt,c.analysis.window);
+                } else c.waitReason=c.lastPrice>c.entryHigh?"فات نطاق الدخول":"انتظار دخول السعر في النطاق";
+            } catch(Exception ignored) {c.liveState="WAIT";c.waitReason="تعذر التحقق من السعر الحالي";}
+        }
+
+        for(Candidate c:candidates)if(c.analysis!=null&&!"ACTIVE".equals(c.liveState)){c.waitReason=SignalChecks.reject(prefs,c.symbol,c.waitReason);SignalChecks.cancelEnded(context,prefs,c.symbol);}
+        int activeCount = 0;
+        int waitCount = 0;
+        int invalidatedCount = 0;
+        List<String> activeSymbols = new ArrayList<>();
+        List<String> waitSymbols = new ArrayList<>();
+        List<String> invalidatedSymbols = new ArrayList<>();
+        for (Candidate c : candidates) {
+            if (!c.liveSignal) continue;
+            if ("ACTIVE".equals(c.liveState)) {
+                activeCount++; activeSymbols.add(c.base + "/USDT");
+            } else if ("WAIT".equals(c.liveState)) {
+                waitCount++; waitSymbols.add(c.base + "/USDT");
+            } else if ("INVALIDATED".equals(c.liveState)) {
+                invalidatedCount++; invalidatedSymbols.add(c.base + "/USDT");
+            }
+        }
+        buyCount = activeCount;
+        JSONObject expiries=new JSONObject();
+        for(Candidate c:candidates)if("ACTIVE".equals(c.liveState))expiries.put(c.symbol,c.displayUntil);
+        prefs.edit().putString("market_buy_expiries",expiries.toString()).remove("market_buy_display_until").apply();
+
+        // Priority: ACTIVE -> WAIT/RETEST -> INVALIDATED -> ARMED -> Early Hunt.
+        candidates.sort((a, b) -> {
+            int pa = livePriority(a);
+            int pb = livePriority(b);
+            if (pa != pb) return Integer.compare(pa, pb);
+            if (a.armed != b.armed) return a.armed ? -1 : 1;
+            return Double.compare(b.score, a.score);
+        });
 
         ScanResult out = new ScanResult();
         out.candidates = candidates;
         out.armedCount = armedCount;
-        out.buyCount = buyCount;
-        out.hot = armedCount > 0;
-        out.status = buyCount > 0
-                ? "🚨 BUY confirmed • Hybrid V4.2"
+        out.buyCount = activeCount;
+        out.waitCount = waitCount;
+        out.invalidatedCount = invalidatedCount;
+        out.buySymbols = activeSymbols;
+        out.hot = armedCount > 0 || activeCount > 0 || waitCount > 0;
+        out.status = activeCount > 0
+                ? "🚨 BUY ACTIVE: " + join(activeSymbols, " • ")
+                : waitCount > 0
+                ? "⏳ WAIT / RETEST: " + join(waitSymbols, " • ")
+                : invalidatedCount > 0
+                ? "❌ INVALIDATED: " + join(invalidatedSymbols, " • ")
                 : armedCount > 0
-                ? "🎯 ARMED • " + armedCount + " مرشح"
+                ? "🎯 ARMED • انتظار التأكيد • " + armedCount + " مرشح"
                 : candidates.isEmpty()
-                ? "Hybrid V4.2 • مراقبة السوق"
+                ? "Hybrid V4.2.3 • مراقبة السوق"
                 : "🔎 Early Hunt • " + candidates.size() + " مرشح";
-        out.summary = formatSummary(candidates, armedCount, buyCount);
+        out.summary = formatSummary(candidates, armedCount, activeCount)
+                + "\n\nالسوق: "+hour.size()+"/"+eligible.size()+" • فحص الدقيقة: "+checkedCount+" • تعذر: "+failedCount;
+        prefs.edit().putInt("market_checked",hour.size()).putInt("minute_checked",checkedCount).putInt("minute_failed",failedCount).apply();
         return out;
     }
 
@@ -228,7 +353,9 @@ public final class HybridEngine {
             String encoded = URLEncoder.encode(names.toString(), StandardCharsets.UTF_8.name());
             String url = API + "/api/v3/ticker?symbols=" + encoded
                     + "&windowSize=1h&type=FULL&symbolStatus=TRADING";
-            JSONArray batch = new JSONArray(readUrl(url));
+            JSONArray batch;
+            try { batch = new JSONArray(readUrl(url)); }
+            catch (Exception ex) { continue; }
             for (int i = 0; i < batch.length(); i++) {
                 JSONObject j = batch.optJSONObject(i);
                 if (j == null) continue;
@@ -236,12 +363,16 @@ public final class HybridEngine {
                 if (!symbol.isEmpty()) out.put(symbol, HourTicker.from(j));
             }
         }
+        if (out.isEmpty() && !symbols.isEmpty()) throw new Exception("Rolling market data unavailable");
         return out;
     }
 
-    private static Analysis analyze15m(String symbol) throws Exception {
-        String u = API + "/api/v3/klines?symbol=" + symbol + "&interval=15m&limit=50";
-        JSONArray rows = new JSONArray(readUrl(u));
+    private static Analysis analyze1m(String symbol) throws Exception {
+        String u = API + "/api/v3/klines?symbol=" + symbol + "&interval=1m&limit=130";
+        JSONArray rows = new JSONArray(readEarlyUrl(u));
+        EntryWindow window=EntryWindow.parse(rows,System.currentTimeMillis());
+        PreExplosionEngine.Result pre=PreExplosionJson.evaluate(rows,System.currentTimeMillis());
+        window.resistance=pre.resistance;
         List<Bar> closed = new ArrayList<>();
         long now = System.currentTimeMillis();
         for (int i = 0; i < rows.length(); i++) {
@@ -345,11 +476,14 @@ public final class HybridEngine {
         }
 
         Analysis a = new Analysis();
+        a.pre=pre;
         a.score = score;
         a.rvol = rvol;
         a.tradeRatio = tradeR;
         a.takerBuyRatio = taker;
-        a.resistance = resistance;
+        a.resistance = pre.resistance;
+        window.resistance=a.resistance;
+        a.window=window;
         a.breakout = breakout;
         a.retest = retest;
         a.nearBreakout = nearBreakout;
@@ -368,91 +502,214 @@ public final class HybridEngine {
         return c.score >= 3.0 && pressure && structure;
     }
 
-    private static boolean maybeBuyAlert(Context context,
-                                         SharedPreferences prefs,
-                                         Candidate c,
-                                         Analysis a,
-                                         double totalScore) {
-        long now = System.currentTimeMillis();
-        String key = "hybrid_buy_" + c.symbol;
-        long last = prefs.getLong(key, 0L);
-        if (now - last < BUY_COOLDOWN_MS) return false;
-        prefs.edit().putLong(key, now).apply();
+    private static boolean maybeBuyAlert(Context context, SharedPreferences prefs, Candidate c, Analysis a, double totalScore) { return false; }
 
-        double entryLow = Math.max(a.resistance, a.lastClose * 0.997);
-        double entryHigh = a.lastClose * 1.003;
-
-        List<String> badges = new ArrayList<>();
-        badges.add("Early Hunt");
-        if (c.whale != null) badges.add(c.whale.strong ? "Whale strong" : "Whale");
-        if (c.catalystPositive) badges.add("Catalyst");
-        badges.add(a.retest ? "Retest" : "Breakout");
-
-        String title = "🚨 BUY — " + c.base + "/USDT";
-        String body = "تأكيد: " + fmt(entryLow) + "–" + fmt(entryHigh)
-                + " • إبطال: " + fmt(a.invalidation)
-                + "\nRVOL15m " + String.format(Locale.US, "%.1fx", a.rvol)
-                + " • Taker Buy " + String.format(Locale.US, "%.0f%%", a.takerBuyRatio * 100.0)
-                + " • Score " + String.format(Locale.US, "%.1f", totalScore)
-                + "\n" + join(badges, " + ");
-
-        Intent open = new Intent(context, MainActivity.class);
-        PendingIntent pi = PendingIntent.getActivity(context, c.symbol.hashCode(), open,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        Notification.Builder b = Build.VERSION.SDK_INT >= 26
-                ? new Notification.Builder(context, CHANNEL)
-                : new Notification.Builder(context);
-        Notification n = b.setContentTitle(title)
-                .setContentText(body)
-                .setStyle(new Notification.BigTextStyle().bigText(body))
-                .setSmallIcon(R.drawable.app_icon)
-                .setContentIntent(pi)
-                .setAutoCancel(true)
-                .setColor(Color.rgb(245, 183, 43))
-                .build();
-        ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE))
-                .notify(9000 + Math.abs(c.symbol.hashCode() % 800), n);
-        return true;
+    private static void persistLiveSignal(SharedPreferences prefs, Candidate c, long now) {
+        Set<String> symbols = new HashSet<>(prefs.getStringSet("hybrid_live_symbols", Collections.emptySet()));
+        symbols.add(c.symbol);
+        prefs.edit()
+                .putStringSet("hybrid_live_symbols", symbols)
+                .putLong("live_at_" + c.symbol, now)
+                .putString("live_entry_low_" + c.symbol, Double.toString(c.entryLow))
+                .putString("live_entry_high_" + c.symbol, Double.toString(c.entryHigh))
+                .putString("live_invalidation_" + c.symbol, Double.toString(c.invalidation))
+                .putString("live_score_" + c.symbol, Double.toString(c.totalScore))
+                .remove("live_invalidated_at_" + c.symbol)
+                .apply();
+        c.liveSignal = true;
+        c.liveSignalAt = now;
     }
+
+    private static void applyPersistedLiveSignals(Context context, List<Candidate> candidates,
+                                                   Map<String, DayTicker> day,
+                                                   SharedPreferences prefs,
+                                                   long now) {
+        Set<String> symbols = new HashSet<>(prefs.getStringSet("hybrid_live_symbols", Collections.emptySet()));
+        if (symbols.isEmpty()) return;
+
+        Map<String, Candidate> bySymbol = new HashMap<>();
+        for (Candidate c : candidates) bySymbol.put(c.symbol, c);
+        boolean changed = false;
+
+        for (String symbol : new HashSet<>(symbols)) {
+            long at = prefs.getLong("live_at_" + symbol, 0L);
+            long invalidatedAt = prefs.getLong("live_invalidated_at_" + symbol, 0L);
+            boolean tooOld = at <= 0L || now - at > LIVE_SIGNAL_TTL_MS;
+            boolean invalidatedExpired = invalidatedAt > 0L && now - invalidatedAt > INVALIDATED_VISIBLE_MS;
+            if (tooOld || invalidatedExpired) {
+                symbols.remove(symbol);
+                clearLiveSignalKeys(prefs, symbol);
+                changed = true;
+                continue;
+            }
+
+            DayTicker d = day.get(symbol);
+            if (d == null || d.last <= 0) continue;
+            Candidate c = bySymbol.get(symbol);
+            if (c == null) {
+                c = new Candidate();
+                c.symbol = symbol;
+                c.base = symbol.endsWith("USDT") ? symbol.substring(0, symbol.length() - 4) : symbol;
+                c.score = parsePrefDouble(prefs, "live_score_" + symbol, 0.0);
+                candidates.add(c);
+                bySymbol.put(symbol, c);
+            }
+            c.liveSignal = true;
+            c.liveSignalAt = at;
+            c.entryLow = parsePrefDouble(prefs, "live_entry_low_" + symbol, 0.0);
+            c.entryHigh = parsePrefDouble(prefs, "live_entry_high_" + symbol, 0.0);
+            c.invalidation = parsePrefDouble(prefs, "live_invalidation_" + symbol, 0.0);
+            c.totalScore = parsePrefDouble(prefs, "live_score_" + symbol, c.score);
+            c.lastPrice = d.last;
+            c.tradeTriggered = prefs.getBoolean("live_triggered_" + symbol, false);
+            classifyLiveState(c);
+            if ("ACTIVE".equals(c.liveState) && !c.tradeTriggered) {
+                c.tradeTriggered = true;
+                prefs.edit().putBoolean("live_triggered_" + symbol, true).apply();
+            }
+            classifyManagement(c);
+            if (c.tradeTriggered && "EXIT".equals(c.managementState)) {
+                maybeExitAlert(context, prefs, c);
+            }
+
+            if ("INVALIDATED".equals(c.liveState) && invalidatedAt <= 0L) {
+                prefs.edit().putLong("live_invalidated_at_" + symbol, now).apply();
+            }
+        }
+        if (changed) prefs.edit().putStringSet("hybrid_live_symbols", symbols).apply();
+    }
+
+    private static void classifyLiveState(Candidate c) {
+        c.liveSignal = true;
+        if (c.invalidation > 0 && c.lastPrice <= c.invalidation) {
+            c.liveState = "INVALIDATED";
+        } else if (c.entryLow > 0 && c.entryHigh > 0
+                && c.lastPrice >= c.entryLow && c.lastPrice <= c.entryHigh) {
+            c.liveState = "ACTIVE";
+        } else {
+            c.liveState = "WAIT";
+        }
+    }
+
+    private static void classifyManagement(Candidate c) {
+        if (!c.liveSignal || c.entryLow <= 0 || c.entryHigh <= 0) {
+            c.managementState = "";
+            return;
+        }
+
+        double entry = (c.entryLow + c.entryHigh) / 2.0;
+        double risk = entry - c.invalidation;
+        if (risk <= 0) risk = Math.max(entry * 0.025, entry - c.entryLow);
+        c.target1 = entry + risk;
+        c.target2 = entry + (2.0 * risk);
+        c.managedStop = c.invalidation;
+
+        if (!c.tradeTriggered) {
+            c.managementState = "WAIT";
+            return;
+        }
+        if (c.lastPrice <= c.invalidation) {
+            c.managementState = "EXIT";
+            return;
+        }
+        if (c.lastPrice >= c.target2) {
+            c.managementState = "TP2";
+            c.managedStop = c.target1;
+            return;
+        }
+        if (c.lastPrice >= c.target1) {
+            c.managementState = "TP1";
+            c.managedStop = entry;
+            return;
+        }
+        c.managementState = "HOLD";
+    }
+
+    private static int livePriority(Candidate c) {
+        if (c.liveSignal && "ACTIVE".equals(c.liveState)) return 0;
+        if (c.liveSignal && "WAIT".equals(c.liveState)) return 1;
+        if (c.liveSignal && "INVALIDATED".equals(c.liveState)) return 2;
+        if (c.armed) return 3;
+        return 4;
+    }
+
+    private static void clearLiveSignalKeys(SharedPreferences prefs, String symbol) {
+        prefs.edit()
+                .remove("live_at_" + symbol)
+                .remove("live_entry_low_" + symbol)
+                .remove("live_entry_high_" + symbol)
+                .remove("live_invalidation_" + symbol)
+                .remove("live_score_" + symbol)
+                .remove("live_invalidated_at_" + symbol)
+                .remove("live_triggered_" + symbol)
+                .apply();
+    }
+
+    private static double parsePrefDouble(SharedPreferences prefs, String key, double fallback) {
+        try { return Double.parseDouble(prefs.getString(key, Double.toString(fallback))); }
+        catch (Exception e) { return fallback; }
+    }
+
+    private static void maybeExitAlert(Context context, SharedPreferences prefs, Candidate c) { }
 
     private static String formatSummary(List<Candidate> candidates, int armedCount, int buyCount) {
         StringBuilder sb = new StringBuilder();
-        sb.append("🎯 Hybrid Explosion Radar V4.2\n");
-        sb.append("Early Hunt يفحص جميع أزواج Binance Spot/USDT تقريبًا • تأكيد 15m لأفضل المرشحين.\n");
-        sb.append("Early Hunt: ").append(candidates.size())
-                .append(" • ARMED: ").append(armedCount)
-                .append(" • BUY الآن: ").append(buyCount).append("\n\n");
+        int shown = 0;
+        final int MAX_SIMPLE = 7;
 
-        if (candidates.isEmpty()) {
-            sb.append("لا توجد حركة مبكرة قوية الآن. Whale/Catalyst يبقيان طبقات تقوية وليسا شرطًا.");
-            return sb.toString();
-        }
+        for (Candidate c : candidates) {
+            if (shown >= MAX_SIMPLE) break;
 
-        int shown = Math.min(MAX_DISPLAY, candidates.size());
-        for (int i = 0; i < shown; i++) {
-            Candidate c = candidates.get(i);
-            sb.append(i + 1).append(". ").append(c.base).append("/USDT");
-            if (c.armed) sb.append("  🎯 ARMED"); else sb.append("  🔎");
-            if (c.whale != null) sb.append(c.whale.strong ? " 🐋🔥" : " 🐋");
-            if (c.catalystPositive) sb.append(" ⚡");
-            if (c.catalystNegative) sb.append(" ⚠️");
-            sb.append("\n   Score ").append(String.format(Locale.US, "%.1f", c.score))
-                    .append(" • RVOL1h ").append(String.format(Locale.US, "%.1fx", c.rvol))
-                    .append(" • Trades ").append(String.format(Locale.US, "%.1fx", c.tradeAccel))
-                    .append(" • 1h ").append(String.format(Locale.US, "%+.2f%%", c.p1))
-                    .append(" • 24h ").append(String.format(Locale.US, "%+.2f%%", c.p24));
-            if (c.analysis != null) {
-                sb.append("\n   15m: RVOL ").append(String.format(Locale.US, "%.1fx", c.analysis.rvol))
-                        .append(" • Taker ").append(String.format(Locale.US, "%.0f%%", c.analysis.takerBuyRatio * 100.0));
-                if (c.analysis.retest) sb.append(" • Retest ✅");
-                else if (c.analysis.breakout) sb.append(" • Breakout ✅");
-                else if (c.analysis.nearBreakout) sb.append(" • Near resistance");
-                if (c.analysis.higherLows) sb.append(" • Higher lows");
-                if (c.analysis.compression) sb.append(" • Compression");
+            boolean buyNow = c.liveSignal && "ACTIVE".equals(c.liveState);
+            boolean managed = c.liveSignal && c.tradeTriggered;
+            boolean wait = !managed && ((c.liveSignal && "WAIT".equals(c.liveState)) || c.armed);
+            boolean exit = managed && "EXIT".equals(c.managementState);
+            boolean tp2 = managed && "TP2".equals(c.managementState);
+            boolean tp1 = managed && "TP1".equals(c.managementState);
+            boolean hold = managed && "HOLD".equals(c.managementState) && !buyNow;
+
+            if(c.analysis==null && c.earlyWhale==null)continue;
+            if(c.analysis!=null && c.analysis.window.reason(c.lastPrice,System.currentTimeMillis())!=null)buyNow=false;
+            // Automated discovery is not an executed user trade.
+            exit=false;tp2=false;tp1=false;hold=false;
+
+            if (shown > 0) sb.append("\n────────────────\n\n");
+            sb.append(c.base).append("/USDT\n");
+
+            if (buyNow) {
+                sb.append("🟢 شراء\n");
+                sb.append("نطاق الشراء: ")
+                        .append(fmt(c.entryLow)).append(" – ").append(fmt(c.entryHigh));
+            } else if (exit) {
+                sb.append("🔴 خروج\n");
+                sb.append("كسر مستوى الحماية: ").append(fmt(c.invalidation));
+            } else if (tp2) {
+                sb.append("💰 خذ ربحًا إضافيًا\n");
+                sb.append("وقف الحماية الآن: ").append(fmt(c.managedStop));
+            } else if (tp1) {
+                sb.append("🟣 بيع جزئي\n");
+                sb.append("وقف الحماية الآن: ").append(fmt(c.managedStop));
+            } else if (hold) {
+                sb.append("🔵 احتفاظ\n");
+                sb.append("الهدف الأول: ").append(fmt(c.target1))
+                        .append(" • وقف: ").append(fmt(c.managedStop));
+            } else {
+                sb.append("🟡 انتظار\n");
+                if (c.liveSignal && BuyAlertPolicy.validRange(c.entryLow,c.entryHigh)) {
+                    sb.append("نطاق الشراء: ")
+                            .append(fmt(c.entryLow)).append(" – ").append(fmt(c.entryHigh));
+                } else {
+                    sb.append("نطاق الشراء: بانتظار التأكيد");
+                }
             }
-            sb.append("\n");
+            sb.append("\nالسعر: ").append(fmt(c.lastPrice));
+            if(c.waitReason!=null)sb.append("\n").append(c.waitReason);
+            if(c.analysis!=null)sb.append("\nشمعة الدقيقة: ").append(new java.text.SimpleDateFormat("HH:mm:ss",Locale.getDefault()).format(new java.util.Date(c.analysis.window.closedAt)));
+            if (c.earlyWhale != null) sb.append("\n").append(c.earlyWhale.label());
+            shown++;
         }
-        sb.append("\n📲 Push notifications: BUY فقط. Early Hunt وARMED يظهران داخل التطبيق.");
+
+        if (shown == 0) sb.append("لا توجد فرصة جاهزة الآن");
         return sb.toString();
     }
 
@@ -466,19 +723,9 @@ public final class HybridEngine {
         nm.createNotificationChannel(c);
     }
 
-    private static String readUrl(String url) throws Exception {
-        HttpsURLConnection c = (HttpsURLConnection) new URL(url).openConnection();
-        c.setConnectTimeout(10_000);
-        c.setReadTimeout(18_000);
-        c.setRequestProperty("Accept", "application/json");
-        c.setRequestProperty("User-Agent", "HybridExplosionRadarV42/4.2");
-        int code = c.getResponseCode();
-        InputStream stream = code >= 200 && code < 300 ? c.getInputStream() : c.getErrorStream();
-        String text = readStream(stream);
-        c.disconnect();
-        if (code < 200 || code >= 300) throw new Exception("Binance HTTP " + code + " • " + trim(text));
-        return text;
-    }
+    private static String readEarlyUrl(String url) throws Exception {return MarketHttp.read(url);}
+
+    private static String readUrl(String url) throws Exception {return MarketHttp.read(url);}
 
     private static String readStream(InputStream stream) throws Exception {
         if (stream == null) return "";
@@ -541,6 +788,9 @@ public final class HybridEngine {
         public boolean hot;
         public int armedCount;
         public int buyCount;
+        public int waitCount;
+        public int invalidatedCount;
+        public List<String> buySymbols = new ArrayList<>();
         public List<Candidate> candidates = new ArrayList<>();
     }
 
@@ -557,12 +807,32 @@ public final class HybridEngine {
         boolean catalystPositive;
         boolean catalystNegative;
         boolean armed;
+        boolean buyConfirmed;
+        boolean liveSignal;
+        boolean tradeTriggered;
+        String liveState = "";
+        String managementState = "";
+        long liveSignalAt;
+        long displayUntil;
+        double lastPrice;
+        double totalScore;
+        double target1;
+        double target2;
+        double managedStop;
+        double entryLow;
+        double entryHigh;
+        double invalidation;
         ScannerService.WhaleSignal whale;
+        EarlyWhaleEngine.Evidence earlyWhale;
         Analysis analysis;
+        String waitReason="بانتظار فحص الدقيقة";
+        long checkedAt;
         List<String> reasons;
     }
 
     static final class Analysis {
+        EntryWindow window;
+        PreExplosionEngine.Result pre;
         double score;
         double rvol;
         double tradeRatio;

@@ -1,0 +1,302 @@
+[
+  {
+    "symbol": "MAGICUSDT",
+    "date": "2026-10-05",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/MAGICUSDT/1m/MAGICUSDT-1m-2026-10-05.zip"
+  },
+  {
+    "symbol": "MAGICUSDT",
+    "date": "2026-10-06",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/MAGICUSDT/1m/MAGICUSDT-1m-2026-10-06.zip"
+  },
+  {
+    "symbol": "MAGICUSDT",
+    "date": "2026-10-07",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/MAGICUSDT/1m/MAGICUSDT-1m-2026-10-07.zip"
+  },
+  {
+    "symbol": "MAGICUSDT",
+    "date": "2026-10-08",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/MAGICUSDT/1m/MAGICUSDT-1m-2026-10-08.zip"
+  },
+  {
+    "symbol": "MAGICUSDT",
+    "date": "2026-10-09",
+    "error": "HTTP Error 404: Not Found",
+    "url": "https://data.binance.vision/data/spot/daily/klines/MAGICUSDT/1m/MAGICUSDT-1m-2026-10-09.zip"
+  },
+  {
+    "symbol": "KAIAUSDT",
+    "date": "2026-10-05",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/KAIAUSDT/1m/KAIAUSDT-1m-2026-10-05.zip"
+  },
+  {
+    "symbol": "KAIAUSDT",
+    "date": "2026-10-06",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/KAIAUSDT/1m/KAIAUSDT-1m-2026-10-06.zip"
+  },
+  {
+    "symbol": "KAIAUSDT",
+    "date": "2026-10-07",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/KAIAUSDT/1m/KAIAUSDT-1m-2026-10-07.zip"
+  },
+  {
+    "symbol": "KAIAUSDT",
+    "date": "2026-10-08",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/KAIAUSDT/1m/KAIAUSDT-1m-2026-10-08.zip"
+  },
+  {
+    "symbol": "KAIAUSDT",
+    "date": "2026-10-09",
+    "error": "HTTP Error 404: Not Found",
+    "url": "https://data.binance.vision/data/spot/daily/klines/KAIAUSDT/1m/KAIAUSDT-1m-2026-10-09.zip"
+  },
+  {
+    "symbol": "BATUSDT",
+    "date": "2026-10-05",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/BATUSDT/1m/BATUSDT-1m-2026-10-05.zip"
+  },
+  {
+    "symbol": "BATUSDT",
+    "date": "2026-10-06",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/BATUSDT/1m/BATUSDT-1m-2026-10-06.zip"
+  },
+  {
+    "symbol": "BATUSDT",
+    "date": "2026-10-07",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/BATUSDT/1m/BATUSDT-1m-2026-10-07.zip"
+  },
+  {
+    "symbol": "BATUSDT",
+    "date": "2026-10-08",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/BATUSDT/1m/BATUSDT-1m-2026-10-08.zip"
+  },
+  {
+    "symbol": "BATUSDT",
+    "date": "2026-10-09",
+    "error": "HTTP Error 404: Not Found",
+    "url": "https://data.binance.vision/data/spot/daily/klines/BATUSDT/1m/BATUSDT-1m-2026-10-09.zip"
+  },
+  {
+    "symbol": "ZKUSDT",
+    "date": "2026-10-05",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/ZKUSDT/1m/ZKUSDT-1m-2026-10-05.zip"
+  },
+  {
+    "symbol": "ZKUSDT",
+    "date": "2026-10-06",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/ZKUSDT/1m/ZKUSDT-1m-2026-10-06.zip"
+  },
+  {
+    "symbol": "ZKUSDT",
+    "date": "2026-10-07",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/ZKUSDT/1m/ZKUSDT-1m-2026-10-07.zip"
+  },
+  {
+    "symbol": "ZKUSDT",
+    "date": "2026-10-08",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/ZKUSDT/1m/ZKUSDT-1m-2026-10-08.zip"
+  },
+  {
+    "symbol": "ZKUSDT",
+    "date": "2026-10-09",
+    "error": "HTTP Error 404: Not Found",
+    "url": "https://data.binance.vision/data/spot/daily/klines/ZKUSDT/1m/ZKUSDT-1m-2026-10-09.zip"
+  },
+  {
+    "symbol": "STRKUSDT",
+    "date": "2026-10-05",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/STRKUSDT/1m/STRKUSDT-1m-2026-10-05.zip"
+  },
+  {
+    "symbol": "STRKUSDT",
+    "date": "2026-10-06",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/STRKUSDT/1m/STRKUSDT-1m-2026-10-06.zip"
+  },
+  {
+    "symbol": "STRKUSDT",
+    "date": "2026-10-07",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/STRKUSDT/1m/STRKUSDT-1m-2026-10-07.zip"
+  },
+  {
+    "symbol": "STRKUSDT",
+    "date": "2026-10-08",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/STRKUSDT/1m/STRKUSDT-1m-2026-10-08.zip"
+  },
+  {
+    "symbol": "STRKUSDT",
+    "date": "2026-10-09",
+    "error": "HTTP Error 404: Not Found",
+    "url": "https://data.binance.vision/data/spot/daily/klines/STRKUSDT/1m/STRKUSDT-1m-2026-10-09.zip"
+  },
+  {
+    "symbol": "BTCUSDT",
+    "date": "2026-10-05",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/BTCUSDT/1m/BTCUSDT-1m-2026-10-05.zip"
+  },
+  {
+    "symbol": "BTCUSDT",
+    "date": "2026-10-06",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/BTCUSDT/1m/BTCUSDT-1m-2026-10-06.zip"
+  },
+  {
+    "symbol": "BTCUSDT",
+    "date": "2026-10-07",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/BTCUSDT/1m/BTCUSDT-1m-2026-10-07.zip"
+  },
+  {
+    "symbol": "BTCUSDT",
+    "date": "2026-10-08",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/BTCUSDT/1m/BTCUSDT-1m-2026-10-08.zip"
+  },
+  {
+    "symbol": "BTCUSDT",
+    "date": "2026-10-09",
+    "error": "HTTP Error 404: Not Found",
+    "url": "https://data.binance.vision/data/spot/daily/klines/BTCUSDT/1m/BTCUSDT-1m-2026-10-09.zip"
+  },
+  {
+    "symbol": "ETHUSDT",
+    "date": "2026-10-05",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/ETHUSDT/1m/ETHUSDT-1m-2026-10-05.zip"
+  },
+  {
+    "symbol": "ETHUSDT",
+    "date": "2026-10-06",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/ETHUSDT/1m/ETHUSDT-1m-2026-10-06.zip"
+  },
+  {
+    "symbol": "ETHUSDT",
+    "date": "2026-10-07",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/ETHUSDT/1m/ETHUSDT-1m-2026-10-07.zip"
+  },
+  {
+    "symbol": "ETHUSDT",
+    "date": "2026-10-08",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/ETHUSDT/1m/ETHUSDT-1m-2026-10-08.zip"
+  },
+  {
+    "symbol": "ETHUSDT",
+    "date": "2026-10-09",
+    "error": "HTTP Error 404: Not Found",
+    "url": "https://data.binance.vision/data/spot/daily/klines/ETHUSDT/1m/ETHUSDT-1m-2026-10-09.zip"
+  },
+  {
+    "symbol": "BNBUSDT",
+    "date": "2026-10-05",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/BNBUSDT/1m/BNBUSDT-1m-2026-10-05.zip"
+  },
+  {
+    "symbol": "BNBUSDT",
+    "date": "2026-10-06",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/BNBUSDT/1m/BNBUSDT-1m-2026-10-06.zip"
+  },
+  {
+    "symbol": "BNBUSDT",
+    "date": "2026-10-07",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/BNBUSDT/1m/BNBUSDT-1m-2026-10-07.zip"
+  },
+  {
+    "symbol": "BNBUSDT",
+    "date": "2026-10-08",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/BNBUSDT/1m/BNBUSDT-1m-2026-10-08.zip"
+  },
+  {
+    "symbol": "BNBUSDT",
+    "date": "2026-10-09",
+    "error": "HTTP Error 404: Not Found",
+    "url": "https://data.binance.vision/data/spot/daily/klines/BNBUSDT/1m/BNBUSDT-1m-2026-10-09.zip"
+  },
+  {
+    "symbol": "XRPUSDT",
+    "date": "2026-10-05",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/XRPUSDT/1m/XRPUSDT-1m-2026-10-05.zip"
+  },
+  {
+    "symbol": "XRPUSDT",
+    "date": "2026-10-06",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/XRPUSDT/1m/XRPUSDT-1m-2026-10-06.zip"
+  },
+  {
+    "symbol": "XRPUSDT",
+    "date": "2026-10-07",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/XRPUSDT/1m/XRPUSDT-1m-2026-10-07.zip"
+  },
+  {
+    "symbol": "XRPUSDT",
+    "date": "2026-10-08",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/XRPUSDT/1m/XRPUSDT-1m-2026-10-08.zip"
+  },
+  {
+    "symbol": "XRPUSDT",
+    "date": "2026-10-09",
+    "error": "HTTP Error 404: Not Found",
+    "url": "https://data.binance.vision/data/spot/daily/klines/XRPUSDT/1m/XRPUSDT-1m-2026-10-09.zip"
+  },
+  {
+    "symbol": "ADAUSDT",
+    "date": "2026-10-05",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/ADAUSDT/1m/ADAUSDT-1m-2026-10-05.zip"
+  },
+  {
+    "symbol": "ADAUSDT",
+    "date": "2026-10-06",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/ADAUSDT/1m/ADAUSDT-1m-2026-10-06.zip"
+  },
+  {
+    "symbol": "ADAUSDT",
+    "date": "2026-10-07",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/ADAUSDT/1m/ADAUSDT-1m-2026-10-07.zip"
+  },
+  {
+    "symbol": "ADAUSDT",
+    "date": "2026-10-08",
+    "rows": 1440,
+    "url": "https://data.binance.vision/data/spot/daily/klines/ADAUSDT/1m/ADAUSDT-1m-2026-10-08.zip"
+  },
+  {
+    "symbol": "ADAUSDT",
+    "date": "2026-10-09",
+    "error": "HTTP Error 404: Not Found",
+    "url": "https://data.binance.vision/data/spot/daily/klines/ADAUSDT/1m/ADAUSDT-1m-2026-10-09.zip"
+  }
+]

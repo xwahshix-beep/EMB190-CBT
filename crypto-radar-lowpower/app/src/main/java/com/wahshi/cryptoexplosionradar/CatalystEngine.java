@@ -80,24 +80,26 @@ public final class CatalystEngine {
                     String seenKey = seenKey(a.id, symbol);
                     boolean seen = prefs.contains(seenKey);
                     if (!initialized || seen) continue;
+                    if (s.positive) out.freshPositiveSymbols.add(symbol);
+                    if (s.negative) out.freshNegativeSymbols.add(symbol);
                     prefs.edit().putLong(seenKey, System.currentTimeMillis()).apply();
 
                     if (s.positive && s.early && s.whale != null && s.impact >= 1.5) {
                         out.combinedSymbols.add(symbol);
                         out.hot = true;
-                        post(context, 7200 + Math.abs((symbol + a.id).hashCode() % 1500),
+                        if (prefs.getBoolean("standalone_signal_notifications", false)) post(context, 7200 + Math.abs((symbol + a.id).hashCode() % 1500),
                                 "🐋⚡ حيتان + محفز — " + symbol + "/USDT",
                                 "Whale net +" + money(s.whale.netUsd) + " • " + s.whale.wallets + " محافظ"
                                         + "\n⚡ " + s.label + " • 24h " + pct(bt.change24)
                                         + "\n" + shortTitle(a.title));
                     } else if (s.positive && s.early && s.impact >= 3.0) {
                         out.hot = true;
-                        post(context, 7600 + Math.abs((symbol + a.id).hashCode() % 1500),
+                        if (prefs.getBoolean("standalone_signal_notifications", false)) post(context, 7600 + Math.abs((symbol + a.id).hashCode() % 1500),
                                 "⚡ محفز مبكر — " + symbol + "/USDT",
                                 s.label + " • 24h " + pct(bt.change24) + "\n" + shortTitle(a.title));
                     } else if (s.negative && s.impact >= 3.0) {
                         out.hot = true;
-                        post(context, 8000 + Math.abs((symbol + a.id).hashCode() % 1500),
+                        if (prefs.getBoolean("standalone_signal_notifications", false)) post(context, 8000 + Math.abs((symbol + a.id).hashCode() % 1500),
                                 "⚠️ محفز سلبي — " + symbol + "/USDT",
                                 s.label + " • 24h " + pct(bt.change24) + "\n" + shortTitle(a.title));
                     }
@@ -242,20 +244,7 @@ public final class CatalystEngine {
         nm.createNotificationChannel(c);
     }
 
-    private static void post(Context context, int id, String title, String body) {
-        Intent open = new Intent(context, MainActivity.class);
-        PendingIntent pi = PendingIntent.getActivity(context, id, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(context, CHANNEL) : new Notification.Builder(context);
-        Notification n = b.setContentTitle(title)
-                .setContentText(body)
-                .setStyle(new Notification.BigTextStyle().bigText(body))
-                .setSmallIcon(R.drawable.app_icon)
-                .setContentIntent(pi)
-                .setAutoCancel(true)
-                .setColor(Color.rgb(245,183,43))
-                .build();
-        ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).notify(id, n);
-    }
+    private static void post(Context context, int id, String title, String body) { }
 
     private static String readText(String url) throws Exception {
         HttpsURLConnection c = (HttpsURLConnection) new URL(url).openConnection();
@@ -362,6 +351,8 @@ public final class CatalystEngine {
 
     public static class ScanResult {
         public final Set<String> combinedSymbols = new HashSet<>();
+        public final Set<String> freshPositiveSymbols = new HashSet<>();
+        public final Set<String> freshNegativeSymbols = new HashSet<>();
         public List<CatalystSignal> relevant = new ArrayList<>();
         public boolean hot;
         public boolean sourceOk;

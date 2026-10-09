@@ -1,5 +1,6 @@
 package com.wahshi.cryptoexplosionradar;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -9,6 +10,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
+import android.os.PowerManager;
+import android.os.SystemClock;
 import android.os.IBinder;
 
 import org.json.JSONArray;
@@ -42,6 +45,7 @@ import javax.net.ssl.HttpsURLConnection;
 public class ScannerService extends Service {
     public static final String ACTION_START = "com.wahshi.cryptoexplosionradar.START";
     public static final String ACTION_STOP = "com.wahshi.cryptoexplosionradar.STOP";
+    public static final String ACTION_TICK = "com.wahshi.cryptoexplosionradar.TICK";
     public static final String ACTION_UI = "com.wahshi.cryptoexplosionradar.UI";
 
     private static final String SERVICE_CHANNEL = "free_whale_radar_service";
@@ -71,28 +75,85 @@ public class ScannerService extends Service {
         EVM_RPC.put("base", "https://mainnet.base.org");
         EVM_RPC.put("arbitrum", "https://arb1.arbitrum.io/rpc");
         EVM_RPC.put("avalanche", "https://api.avax.network/ext/bc/C/rpc");
+        EVM_RPC.put("bsc", "https://bsc-rpc.publicnode.com");
 
         // Roughly 30–90 minutes depending on chain cadence. The range is address-filtered.
         EVM_LOOKBACK_BLOCKS.put("ethereum", 360);
         EVM_LOOKBACK_BLOCKS.put("base", 2400);
         EVM_LOOKBACK_BLOCKS.put("arbitrum", 8000);
         EVM_LOOKBACK_BLOCKS.put("avalanche", 2400);
+        EVM_LOOKBACK_BLOCKS.put("bsc", 8000);
     }
 
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private volatile boolean running = false;
     private SharedPreferences prefs;
+    private AlarmManager alarmManager;
+    private PendingIntent tickIntent;
+    private PowerManager.WakeLock cycleWakeLock;
+    private volatile boolean cycleInFlight = false;
+    private volatile long lastWhaleScanAt = 0L;
+    private volatile List<WhaleSignal> cachedWhaleSignals = new ArrayList<>();
+    private volatile int lastWhaleScanned = 0;
+    private volatile int lastWhaleMapped = 0;
+    private volatile int lastWhaleOnChain = 0;
+
+    public static final String ACTION_REFRESH_FOLLOW="com.wahshi.cryptoexplosionradar.REFRESH_FOLLOW";
+    private java.util.concurrent.ScheduledExecutorService fastWorker;
+    private java.util.concurrent.ScheduledFuture<?> fastTask;
+    private long lastFollowRequest;
+    private synchronized void scheduleFollow(long delay){
+        if(fastWorker==null||fastWorker.isShutdown())fastWorker=java.util.concurrent.Executors.newSingleThreadScheduledExecutor();
+        if(fastTask!=null)fastTask.cancel(false);
+        fastTask=fastWorker.scheduleWithFixedDelay(() -> {
+            if(!running)return;
+            try{FastWatch.scan(this,prefs);}
+            catch(Exception failure){
+                // Keep the periodic worker alive; a later attempt may recover.
+                android.util.Log.e("FollowWatch","Follow scan failed",failure);
+            }
+        },delay,15,java.util.concurrent.TimeUnit.SECONDS);
+    }
 
     @Override public void onCreate() {
         super.onCreate();
         prefs = getSharedPreferences("free_whale_radar_v3", MODE_PRIVATE);
         createChannels();
+        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        Intent tick = new Intent(this, ScannerService.class).setAction(ACTION_TICK);
+        tickIntent = PendingIntent.getService(this, 4202, tick, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+        if (pm != null) {
+            cycleWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WhaleCatalystRadar:scan");
+            cycleWakeLock.setReferenceCounted(false);
+        }
     }
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent == null ? null : intent.getAction();
         if (ACTION_STOP.equals(action)) {
             stopScanner();
+            return START_NOT_STICKY;
+        }
+        if(ACTION_REFRESH_FOLLOW.equals(action)){
+            boolean wasRunning=running;
+            if(!running)startScanner();
+            long now=android.os.SystemClock.elapsedRealtime();
+            if(wasRunning&&now-lastFollowRequest>=2000)scheduleFollow(0);
+            lastFollowRequest=now;
+            return START_STICKY;
+        }
+        if (ACTION_TICK.equals(action)) {
+            if (!prefs.getBoolean("radar_enabled", false)) {
+                stopSelf();
+                return START_NOT_STICKY;
+            }
+            if (!running) startScanner();
+            triggerCycle();
+            return START_STICKY;
+        }
+        if (intent == null && !prefs.getBoolean("radar_enabled", false)) {
+            stopSelf();
             return START_NOT_STICKY;
         }
         startScanner();
@@ -102,73 +163,148 @@ public class ScannerService extends Service {
     private synchronized void startScanner() {
         if (running) return;
         running = true;
-        startForeground(SERVICE_NOTIFICATION_ID, buildServiceNotification("Free Whale Radar يعمل • On-chain"));
-        sendUi("🐋 Free Whale Radar يعمل", "أول فحص مجاني On-chain خلال ثوانٍ…");
+        prefs.edit().putBoolean("radar_enabled", true).putBoolean("service_alive", true).apply();
+        startForeground(SERVICE_NOTIFICATION_ID, buildServiceNotification("Hybrid Explosion Radar V4.2.3 يعمل • Background wake"));
+        sendUi("🐋⚡ Hybrid Explosion Radar V4.2.3", "أول فحص مجاني On-chain خلال ثوانٍ…");
+        scheduleFollow(0);
         scheduleNext(2_000L);
     }
 
     private synchronized void stopScanner() {
         running = false;
-        sendUi("الرادار متوقف", "لن تتم مراقبة حركة الحيتان حتى تشغيله من جديد.");
+        scanHandler.removeCallbacks(scheduledScan);
+        if(enrichmentWorker!=null)enrichmentWorker.shutdownNow();
+        if(fastWorker!=null)fastWorker.shutdownNow();
+        prefs.edit().putBoolean("radar_enabled", false).putBoolean("service_alive", false).apply();
+        if (alarmManager != null && tickIntent != null) alarmManager.cancel(tickIntent);
+        if (cycleWakeLock != null && cycleWakeLock.isHeld()) cycleWakeLock.release();
+        sendUi("الرادار متوقف", "تم إيقاف Hybrid Explosion Radar V4.2.3 بواسطة المستخدم.");
         if (Build.VERSION.SDK_INT >= 24) stopForeground(STOP_FOREGROUND_REMOVE); else stopForeground(true);
         stopSelf();
     }
 
-    private void scheduleNext(long delayMs) {
-        if (!running) return;
-        executor.schedule(this::runCycleSafe, delayMs, TimeUnit.MILLISECONDS);
+    private synchronized void scheduleNext(long delayMs) {
+        if (!running || alarmManager == null || tickIntent == null) return;
+        long when = SystemClock.elapsedRealtime() + Math.max(1_000L, delayMs);
+        alarmManager.cancel(tickIntent);
+        scanHandler.removeCallbacks(scheduledScan);
+        scanHandler.postDelayed(scheduledScan,Math.max(1000,delayMs));
+        if (Build.VERSION.SDK_INT >= 23) {
+            alarmManager.setAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, when, tickIntent);
+        } else {
+            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, when, tickIntent);
+        }
+        prefs.edit().putLong("next_wake_elapsed", when).apply();
+    }
+
+    private synchronized void triggerCycle() {
+        if (!running || cycleInFlight) return;
+        cycleInFlight = true;
+        executor.execute(() -> {
+            try {
+                runCycleSafe();
+            } finally {
+                cycleInFlight = false;
+            }
+        });
+    }
+
+    private final android.os.Handler scanHandler=new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable scheduledScan=() -> triggerCycle();
+    private java.util.concurrent.ExecutorService enrichmentWorker;
+    private java.util.concurrent.Future<?> enrichmentTask;
+    private volatile long enrichmentAt;
+    private volatile CatalystEngine.ScanResult cachedCatalyst;
+    private void startEnrichment() {
+        long enrichmentNow=System.currentTimeMillis();
+        if(enrichmentNow-enrichmentAt<600000 || (enrichmentTask!=null&&!enrichmentTask.isDone()))return;
+        if(enrichmentWorker==null||enrichmentWorker.isShutdown())enrichmentWorker=java.util.concurrent.Executors.newSingleThreadExecutor();
+        enrichmentAt=enrichmentNow;
+        enrichmentTask=enrichmentWorker.submit(() -> {
+            try {
+            long now = System.currentTimeMillis();
+            List<BinanceTicker> all = loadBinanceSpotTickers();
+
+            boolean existingWhaleWatch = false;
+            for (WhaleSignal w : cachedWhaleSignals) {
+                if (w.score >= 4.25) { existingWhaleWatch = true; break; }
+            }
+            long whaleCadence = existingWhaleWatch ? WATCH_INTERVAL_MS : NORMAL_INTERVAL_MS;
+            boolean whaleDue = lastWhaleScanAt == 0L
+                    || now - lastWhaleScanAt >= whaleCadence;
+
+            List<WhaleSignal> signals = cachedWhaleSignals;
+            if (whaleDue) {
+                List<BinanceTicker> batch = selectBatch(all);
+                batch=new ArrayList<>(batch.subList(0,Math.min(3,batch.size())));
+                List<WhaleSignal> fresh = new ArrayList<>();
+                int mapped = 0;
+                int directOnChain = 0;
+
+                for (BinanceTicker bt : batch) {
+                    if (!running) break;
+                    try {
+                        DexToken token = resolveDexToken(bt);
+                        if (token == null) continue;
+                        mapped++;
+
+                        WhaleSignal ws = null;
+                        if ("solana".equals(token.chain)) {
+                            directOnChain++;
+                            ws = analyzeSolanaTopHolders(bt, token);
+                        } else if (EVM_RPC.containsKey(token.chain)) {
+                            directOnChain++;
+                            ws = analyzeEvmTransfers(bt, token);
+                        }
+                        if (ws != null) fresh.add(ws);
+                    } catch (Exception ignored) {
+                        // Public on-chain providers are best-effort per token.
+                    }
+                }
+
+                fresh.sort((a, b) -> Double.compare(b.score, a.score));
+                cachedWhaleSignals = fresh;
+                signals = fresh;
+                lastWhaleScanAt = now;
+                lastWhaleScanned = batch.size();
+                lastWhaleMapped = mapped;
+                lastWhaleOnChain = directOnChain;
+            }
+
+            boolean whaleWatch = false;
+            for (WhaleSignal w : signals) {
+                if (w.score >= 4.25) { whaleWatch = true; break; }
+            }
+            whaleCadence = whaleWatch ? WATCH_INTERVAL_MS : NORMAL_INTERVAL_MS;
+
+            cachedCatalyst = CatalystEngine.scan(this, all, signals, prefs);
+            java.util.List<String> earlySymbols=new java.util.ArrayList<>();
+            for(BinanceTicker t:all)earlySymbols.add(t.symbol);
+            HybridEngine.refreshEarly(earlySymbols,prefs);
+
+            }catch(Exception ignored){/* Optional enrichment cannot block discovery. */}
+        });
     }
 
     private void runCycleSafe() {
-        if (!running) return;
-        long next = NORMAL_INTERVAL_MS;
+        if(!running)return;
+        long started=System.currentTimeMillis();
         try {
-            List<BinanceTicker> all = loadBinanceSpotTickers();
-            List<BinanceTicker> batch = selectBatch(all);
-            List<WhaleSignal> signals = new ArrayList<>();
-            int mapped = 0;
-            int directOnChain = 0;
-
-            for (BinanceTicker bt : batch) {
-                if (!running) break;
-                try {
-                    DexToken token = resolveDexToken(bt);
-                    if (token == null) continue;
-                    mapped++;
-
-                    WhaleSignal s = null;
-                    if ("solana".equals(token.chain)) {
-                        directOnChain++;
-                        s = analyzeSolanaTopHolders(bt, token);
-                    } else if (EVM_RPC.containsKey(token.chain)) {
-                        directOnChain++;
-                        s = analyzeEvmTransfers(bt, token);
-                    }
-
-                    if (s != null) {
-                        signals.add(s);
-                        maybeAlert(s);
-                    }
-                } catch (Exception ignored) {
-                    // Public endpoints are best-effort; a single token/provider failure must never stop the cycle.
-                }
-            }
-
-            signals.sort((a, b) -> Double.compare(b.score, a.score));
-            boolean watch = false;
-            for (WhaleSignal s : signals) if (s.score >= 4.25) { watch = true; break; }
-            next = watch ? WATCH_INTERVAL_MS : NORMAL_INTERVAL_MS;
-
-            String status = watch ? "🐋 Whale Watch • تجميع محتمل قيد المتابعة" : "Free Whale Radar • مراقبة هادئة";
-            String details = formatSignals(batch.size(), mapped, directOnChain, signals, next);
-            sendUi(status, details);
-            updateServiceNotification(status + " • التالي ~" + (next / 60_000L) + "m");
-        } catch (Exception e) {
-            next = ERROR_RETRY_MS;
-            sendUi("Free Whale Radar • خطأ مؤقت", "سيعيد المحاولة تلقائيًا.\n" + safe(e.getMessage()));
-            updateServiceNotification("Free Whale Radar • إعادة محاولة لاحقًا");
+            if(cycleWakeLock!=null&&!cycleWakeLock.isHeld())cycleWakeLock.acquire(90000);
+            startEnrichment();
+            List<WhaleSignal> whales=System.currentTimeMillis()-lastWhaleScanAt<900000?cachedWhaleSignals:Collections.emptyList();
+            HybridEngine.ScanResult result=HybridEngine.scan(this,whales,cachedCatalyst,prefs);
+            if(!running)return;
+            long finished=System.currentTimeMillis();
+            prefs.edit().putLong("last_scan_at",finished).putLong("scan_duration_ms",finished-started).apply();
+            sendUi(result.status,result.summary+"\nمدة الفحص: "+((finished-started)/1000)+" ثانية");
+            updateServiceNotification("رصد الدقيقة يعمل • فرص الشراء دون فتح التطبيق");
+        } catch(Exception ex) {
+            if(running)sendUi("تعذر تحديث السوق","انتظار — "+safe(ex.getMessage()));
         } finally {
-            scheduleNext(next);
+            if(cycleWakeLock!=null&&cycleWakeLock.isHeld())cycleWakeLock.release();
+            long elapsed=System.currentTimeMillis()-started;
+            scheduleNext(Math.max(MarketHttp.retryDelay(),Math.max(5000,15000-elapsed)));
         }
     }
 
@@ -640,7 +776,7 @@ public class ScannerService extends Service {
         Intent open = new Intent(this, MainActivity.class);
         PendingIntent pi = PendingIntent.getActivity(this, 1, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, SERVICE_CHANNEL) : new Notification.Builder(this);
-        return b.setContentTitle("Free Whale Radar V3")
+        return b.setContentTitle("Hybrid Explosion Radar V4.2.3")
                 .setContentText(text)
                 .setSmallIcon(R.drawable.app_icon)
                 .setContentIntent(pi)
@@ -653,25 +789,26 @@ public class ScannerService extends Service {
         ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(SERVICE_NOTIFICATION_ID, buildServiceNotification(text));
     }
 
-    private void postWhaleNotification(String symbol, String title, String body) {
-        Intent open = new Intent(this, MainActivity.class);
-        PendingIntent pi = PendingIntent.getActivity(this, symbol.hashCode(), open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, ALERT_CHANNEL) : new Notification.Builder(this);
-        Notification n = b.setContentTitle(title)
-                .setContentText(body)
-                .setStyle(new Notification.BigTextStyle().bigText(body))
-                .setSmallIcon(R.drawable.app_icon)
-                .setContentIntent(pi)
-                .setAutoCancel(true)
-                .setColor(Color.rgb(245,183,43))
-                .build();
-        ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(5000 + Math.abs(symbol.hashCode() % 4000), n);
-    }
+    private void postWhaleNotification(String symbol, String title, String body) { }
 
     private void sendUi(String status, String details) {
+        long now = System.currentTimeMillis();
+        if (prefs != null) {
+            prefs.edit()
+                    .putString("ui_status", safe(status))
+                    .putString("ui_details", safe(details))
+                    .putString("last_status", safe(status))
+                    .putString("last_details", safe(details))
+                    .putLong("ui_updated_at", now)
+                    .putLong("last_update_at", now)
+                    .putBoolean("service_alive", running)
+                    .apply();
+        }
         Intent i = new Intent(ACTION_UI).setPackage(getPackageName());
         i.putExtra("status", status);
         i.putExtra("details", details);
+        i.putExtra("updated_at", now);
+        i.putExtra("last_scan_at", prefs == null ? 0L : prefs.getLong("last_scan_at", 0L));
         sendBroadcast(i);
     }
 
@@ -741,7 +878,11 @@ public class ScannerService extends Service {
     private static String safe(String s) { return s == null ? "" : s; }
 
     @Override public void onDestroy() {
+        if(fastWorker!=null)fastWorker.shutdownNow();
         running = false;
+        scanHandler.removeCallbacks(scheduledScan);
+        if(enrichmentWorker!=null)enrichmentWorker.shutdownNow();
+        if(fastWorker!=null)fastWorker.shutdownNow();
         executor.shutdownNow();
         super.onDestroy();
     }

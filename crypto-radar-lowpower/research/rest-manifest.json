@@ -1,0 +1,62 @@
+[
+  {
+    "symbol": "MAGICUSDT",
+    "rows": 1208,
+    "cutoff": 1791576480000,
+    "source": "https://data-api.binance.vision/api/v3/klines"
+  },
+  {
+    "symbol": "KAIAUSDT",
+    "rows": 1208,
+    "cutoff": 1791576480000,
+    "source": "https://data-api.binance.vision/api/v3/klines"
+  },
+  {
+    "symbol": "BATUSDT",
+    "rows": 1208,
+    "cutoff": 1791576480000,
+    "source": "https://data-api.binance.vision/api/v3/klines"
+  },
+  {
+    "symbol": "ZKUSDT",
+    "rows": 1208,
+    "cutoff": 1791576480000,
+    "source": "https://data-api.binance.vision/api/v3/klines"
+  },
+  {
+    "symbol": "STRKUSDT",
+    "rows": 1208,
+    "cutoff": 1791576480000,
+    "source": "https://data-api.binance.vision/api/v3/klines"
+  },
+  {
+    "symbol": "BTCUSDT",
+    "rows": 1208,
+    "cutoff": 1791576480000,
+    "source": "https://data-api.binance.vision/api/v3/klines"
+  },
+  {
+    "symbol": "ETHUSDT",
+    "rows": 1208,
+    "cutoff": 1791576480000,
+    "source": "https://data-api.binance.vision/api/v3/klines"
+  },
+  {
+    "symbol": "BNBUSDT",
+    "rows": 1208,
+    "cutoff": 1791576480000,
+    "source": "https://data-api.binance.vision/api/v3/klines"
+  },
+  {
+    "symbol": "XRPUSDT",
+    "rows": 1208,
+    "cutoff": 1791576480000,
+    "source": "https://data-api.binance.vision/api/v3/klines"
+  },
+  {
+    "symbol": "ADAUSDT",
+    "rows": 1208,
+    "cutoff": 1791576480000,
+    "source": "https://data-api.binance.vision/api/v3/klines"
+  }
+]

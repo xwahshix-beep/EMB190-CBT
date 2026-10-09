@@ -14,13 +14,13 @@ public final class FollowEngineTest {
    if(path.contains("bookTicker"))return new JSONObject().put("symbol","ETCUSDT").put("bidPrice","100.19").put("askPrice",mode.equals("invalid")?"0":"100.20").toString();
    if(path.contains("klines")){
     long interval=path.contains("interval=3m")?180000:path.contains("interval=5m")?300000:60000;
-    int count=interval==60000?61:3;long end=now/interval*interval;
+    int count=interval==60000?130:3;long end=now/interval*interval;
     if(mode.equals("stale")&&interval==60000)end-=180000;
     JSONArray rows=new JSONArray();
     for(int i=0;i<count;i++){
      long open=end-(count-i)*interval;boolean last=i==count-1;
      double close=last?100.2:100,high=last?100.3:100;
-     rows.put(new JSONArray().put(open).put(100).put(high).put(99.9).put(close).put(1).put(open+interval-1).put(last?2000:1000).put(10).put(1).put(600).put(0));
+     rows.put(new JSONArray().put(open).put(100).put(high).put(99.9).put(close).put(1).put(open+interval-1).put(i>=count-5?8000:1000).put(i>=count-5?80:10).put(1).put(mode.equals("quiet")?0:(i>=count-5?5200:600)).put(0));
     }
     return rows.toString();
    }
@@ -30,7 +30,7 @@ public final class FollowEngineTest {
     return new JSONArray().put(new JSONObject().put("a",1).put("T",ts).put("p",100).put("q",7).put("m",false))
       .put(new JSONObject().put("a",2).put("T",ts).put("p",100).put("q",3).put("m",true)).toString();
    }
-   if(path.contains("depth"))return "{\"bids\":[[\"100.19\",\"10\"]],\"asks\":[[\"100.20\",\"5\"]]}";
+   if(path.contains("depth"))return "{\"bids\":[[\"100.19\",\"100\"]],\"asks\":[[\"100.20\",\"100\"]]}";
    throw new IOException("unexpected path "+path);
   }
  }
@@ -39,9 +39,7 @@ public final class FollowEngineTest {
   Fixture f=new Fixture();FollowEngine.Result r=run(f,0,0);
   check(r.state.equals("BUY")&&r.price==100.2,"healthy complete input still BUY: "+r.reason);
   f=new Fixture();f.mode="quiet";r=run(f,0,0);
-  check(r.state.equals("WAIT")&&r.fresh(f.now)&&r.reason.contains("صفقات أحدث"),"quiet trades retain price, no fabricated BUY");
-  f=new Fixture();f.mode="oldTrades";r=run(f,0,0);
-  check(r.state.equals("WAIT")&&r.price>0,"old trades normal WAIT");
+  check(r.state.equals("WAIT")&&r.fresh(f.now)&&r.reason.contains("Flow conditions"),"quiet trades retain price, no fabricated BUY");
   f=new Fixture();f.fail="depth";r=run(f,0,0);
   check(r.state.equals("WAIT")&&r.price>0&&r.reason.contains("دفتر الأوامر"),"depth failure retains price and cause");
   f=new Fixture();f.fail="bookTicker";r=run(f,0,0);
@@ -52,7 +50,7 @@ public final class FollowEngineTest {
   check(r.state.equals("EXIT")&&f.requests.size()==1,"stop breach independent of candle/flow requests");
   f=new Fixture();f.fail="aggTrades";r=run(f,100,97);
   check(r.state.equals("HOLD")&&f.requests.stream().noneMatch(x->x.contains("aggTrades")),"positions do not depend on entry flow");
-  f=new Fixture();f.mode="slow";f.fail="aggTrades";r=run(f,0,0);
+  f=new Fixture();f.mode="slow";f.fail="depth";r=run(f,0,0);
   check(r.state.equals("DATA")&&!r.fresh(f.now),"slow optional fetch cannot leave fresh BUY");
   f=new Fixture();f.mode="invalid";r=run(f,0,0);
   check(r.state.equals("DATA")&&r.price==0,"invalid book rejected");

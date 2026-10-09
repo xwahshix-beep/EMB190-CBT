@@ -1,0 +1,58 @@
+{
+  "from_utc": "2026-10-06T00:00:00Z",
+  "through_utc": "2026-10-09T20:07:59Z",
+  "warmup": "2026-10-05",
+  "partial_last_day": true,
+  "files": [
+    {
+      "symbol": "MAGICUSDT",
+      "rows": 6968,
+      "sha256": "1a131ffc505a041f4b6279f93e432173bebba9c1e36b1c65572ffa206dc579bc"
+    },
+    {
+      "symbol": "KAIAUSDT",
+      "rows": 6968,
+      "sha256": "7b0693f975c98a87a169e4670835fa687de969c68c1e439804659e8c1389a3ad"
+    },
+    {
+      "symbol": "BATUSDT",
+      "rows": 6968,
+      "sha256": "ab7cdcebc6782378b2c5de9503db3cb31fca1bd3afa9136c0c594ae7f01cfe33"
+    },
+    {
+      "symbol": "ZKUSDT",
+      "rows": 6968,
+      "sha256": "745f413a4269b6894c3478ad1ab94a547809f1b1fedee4cc53eb83b6d63cc818"
+    },
+    {
+      "symbol": "STRKUSDT",
+      "rows": 6968,
+      "sha256": "c72a9e825bdeaf8c702195b2e032de87702b6981f6418dbaecaf93309dfa27a2"
+    },
+    {
+      "symbol": "BTCUSDT",
+      "rows": 6968,
+      "sha256": "de620722c12af540a323f16e74909e34644d92b79834934563773c0716795da8"
+    },
+    {
+      "symbol": "ETHUSDT",
+      "rows": 6968,
+      "sha256": "4abfc4154f1ffb6f1bf2b707c2a1a8b69b035ce1f03150c2efdc57f29dd018f5"
+    },
+    {
+      "symbol": "BNBUSDT",
+      "rows": 6968,
+      "sha256": "92a669093a5d5b24e1677e7fccb59c596bf42195f610657bf7059242503cd8ce"
+    },
+    {
+      "symbol": "XRPUSDT",
+      "rows": 6968,
+      "sha256": "3e48901f83496b38bd75e45f5608213b6460f13ff53340551491aabb1035bc3c"
+    },
+    {
+      "symbol": "ADAUSDT",
+      "rows": 6968,
+      "sha256": "c14ba209fb2d68d792ef9bcf6ba78cddd816ed865b79a3e02081f36a87e3817a"
+    }
+  ]
+}

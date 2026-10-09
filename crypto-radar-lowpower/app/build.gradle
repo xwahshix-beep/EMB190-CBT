@@ -10,8 +10,8 @@ android {
         applicationId 'com.wahshi.cryptoexplosionradar'
         minSdk 26
         targetSdk 34
-        versionCode 7
-        versionName '4.1-background-hardened'
+        versionCode 61
+        versionName "6.0-pre-explosion"
     }
 
     compileOptions {

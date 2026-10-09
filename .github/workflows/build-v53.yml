@@ -1,20 +1,14 @@
-name: Build Explosion Radar V5.4.4 APK
-
+name: Build Explosion Radar V6 APK
 on:
   push:
-    branches: [ crypto-scanner-apk-build ]
-    paths:
-      - 'crypto-radar-lowpower/**'
-      - '.github/workflows/build-v53.yml'
+    branches: [crypto-scanner-apk-build]
+    paths: ['crypto-radar-lowpower/**', '.github/workflows/build-v53.yml']
   workflow_dispatch:
-
 permissions:
   contents: read
-
 concurrency:
   group: explosion-radar-crypto-scanner-apk-build
   cancel-in-progress: false
-
 jobs:
   build:
     if: github.ref == 'refs/heads/crypto-scanner-apk-build'
@@ -26,105 +20,45 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
-      - name: Install Android SDK 35
-        run: sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+      - uses: android-actions/setup-android@v4
+      - run: sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Integrate V4.1 background wake foundation
-        working-directory: crypto-radar-lowpower
-        run: python3 patch_v4.py
-      - name: Integrate V4.2 Hybrid Early Hunt engine
-        working-directory: crypto-radar-lowpower
-        run: python3 patch_v42.py
-      - name: Apply V4.2.1 candidate-first dashboard
-        working-directory: crypto-radar-lowpower
-        run: python3 patch_ui_v421.py
-      - name: Apply V4.2.2 explicit BUY display
-        working-directory: crypto-radar-lowpower
-        run: python3 patch_v422.py
-      - name: Apply V4.2.3 live signal revalidation
-        working-directory: crypto-radar-lowpower
-        run: python3 patch_v423.py
-      - name: Apply V4.2.4 simple radar interface
-        working-directory: crypto-radar-lowpower
-        run: python3 patch_v424.py
-      - name: Apply V4.3 Exit Manager
-        working-directory: crypto-radar-lowpower
-        run: python3 patch_v43.py
-      - name: Apply V4.3.1 BUY and EXIT push alerts
-        working-directory: crypto-radar-lowpower
-        run: python3 patch_v431.py
-      - name: Apply V4.4 manual Trade Manager
-        working-directory: crypto-radar-lowpower
-        run: python3 patch_v44.py
-      - name: Apply V5.3 Early Whale Engine
-        working-directory: crypto-radar-lowpower
-        run: python3 patch_v50_base.py
-      - name: Apply isolated selected coin watch
-        working-directory: crypto-radar-lowpower
-        run: python3 patch_v53.py
-      - name: Apply V5.3.1 UI refinement
-        working-directory: crypto-radar-lowpower
-        run: python3 patch_v531.py
-      - name: Enable V5.3.2 global BUY alerts
-        working-directory: crypto-radar-lowpower
-        run: python3 patch_v532.py
-      - name: Apply V5.4.4 minute confirmation and shared guard
-        working-directory: crypto-radar-lowpower
-        run: python3 patch_v54.py
-      - name: Test Early Whale behavior
+      - name: Test native engine and state regressions
         working-directory: crypto-radar-lowpower
         run: |
-          mkdir -p /tmp/whale-tests
-          javac -d /tmp/whale-tests app/src/main/java/com/wahshi/cryptoexplosionradar/EarlyWhaleMath.java tests/EarlyWhaleMathTest.java
-          java -cp /tmp/whale-tests com.wahshi.cryptoexplosionradar.EarlyWhaleMathTest
-          javac -d /tmp/whale-tests app/src/main/java/com/wahshi/cryptoexplosionradar/WatchPolicy.java tests/WatchPolicyTest.java
-          java -cp /tmp/whale-tests com.wahshi.cryptoexplosionradar.WatchPolicyTest
-          javac -d /tmp/whale-tests app/src/main/java/com/wahshi/cryptoexplosionradar/BuyAlertPolicy.java tests/BuyAlertPolicyTest.java
-          java -cp /tmp/whale-tests com.wahshi.cryptoexplosionradar.BuyAlertPolicyTest
-          javac -d /tmp/whale-tests app/src/main/java/com/wahshi/cryptoexplosionradar/EntryGuard.java tests/EntryGuardTest.java
-          java -cp /tmp/whale-tests com.wahshi.cryptoexplosionradar.EntryGuardTest
           curl --fail --retry 2 -o /tmp/json.jar https://repo.maven.apache.org/maven2/org/json/json/20240303/json-20240303.jar
-          javac -cp /tmp/json.jar:/tmp/whale-tests -d /tmp/whale-tests app/src/main/java/com/wahshi/cryptoexplosionradar/EntryWindow.java tests/EntryWindowTest.java
-          java -cp /tmp/json.jar:/tmp/whale-tests com.wahshi.cryptoexplosionradar.EntryWindowTest
-      - name: Test independent signal display deadlines
+          bash tests/run-v6.sh /tmp/json.jar
+      - name: Reproduce packaged historical results
         working-directory: crypto-radar-lowpower
         run: |
-          javac -d /tmp/whale-tests app/src/main/java/com/wahshi/cryptoexplosionradar/SignalDisplay.java tests/SignalDisplayTest.java
-          java -cp /tmp/whale-tests com.wahshi.cryptoexplosionradar.SignalDisplayTest
-      - name: Test follow failures and signal transitions
-        working-directory: crypto-radar-lowpower
-        run: |
-          javac -cp /tmp/json.jar:/tmp/whale-tests -d /tmp/whale-tests app/src/main/java/com/wahshi/cryptoexplosionradar/FollowEngine.java app/src/main/java/com/wahshi/cryptoexplosionradar/FollowView.java tests/FollowEngineTest.java
-          java -cp /tmp/json.jar:/tmp/whale-tests com.wahshi.cryptoexplosionradar.FollowEngineTest
-          javac -d /tmp/whale-tests app/src/main/java/com/wahshi/cryptoexplosionradar/BuyStability.java tests/BuyStabilityTest.java
-          java -cp /tmp/whale-tests com.wahshi.cryptoexplosionradar.BuyStabilityTest
-      - name: Test persistent signals independent of ranking
-        working-directory: crypto-radar-lowpower
-        run: |
-          javac -cp /tmp/json.jar -d /tmp/whale-tests app/src/main/java/com/wahshi/cryptoexplosionradar/SignalJournal.java tests/SignalJournalTest.java
-          java -cp /tmp/json.jar:/tmp/whale-tests com.wahshi.cryptoexplosionradar.SignalJournalTest
-      - name: Build Explosion Radar V5.4.4 APK
+          java -cp /tmp/v6tests com.wahshi.cryptoexplosionradar.ReplayCli app/src/main/assets/replay /tmp/results.csv /tmp/alerts.csv
+          diff research/v6-results.csv /tmp/results.csv
+          diff research/v6-alerts.csv /tmp/alerts.csv
+      - name: Build native Android V6
         working-directory: crypto-radar-lowpower
         run: gradle --no-daemon assembleDebug --stacktrace
-      - name: Rename APK
-        run: cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Explosion-Radar-V5.4.4.apk
-      - name: Verify APK metadata and signature
+      - name: Verify APK package, version, signature, and replay assets
         run: |
-          test -s Explosion-Radar-V5.4.4.apk
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging Explosion-Radar-V5.4.4.apk | tee apk-metadata.txt
+          cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Explosion-Radar-V6.apk
+          test -s Explosion-Radar-V6.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging Explosion-Radar-V6.apk | tee apk-metadata.txt
+          grep -q "name='com.wahshi.cryptoexplosionradar'" apk-metadata.txt
+          grep -q "versionName='6.0-pre-explosion'" apk-metadata.txt
           grep -q "application-icon" apk-metadata.txt
-          grep -q "versionName='5.4.4-live-validity'" apk-metadata.txt
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose Explosion-Radar-V5.4.4.apk
-          sha256sum Explosion-Radar-V5.4.4.apk > Explosion-Radar-V5.4.4.apk.sha256
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose Explosion-Radar-V6.apk | tee signature.txt
+          unzip -l Explosion-Radar-V6.apk | grep 'assets/replay/MAGICUSDT.csv.gz'
+          sha256sum Explosion-Radar-V6.apk > Explosion-Radar-V6.apk.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: Explosion-Radar-V5.4.4-APK
+          name: Explosion-Radar-V6-APK
+          if-no-files-found: error
           path: |
-            Explosion-Radar-V5.4.4.apk
-            Explosion-Radar-V5.4.4.apk.sha256
+            Explosion-Radar-V6.apk
+            Explosion-Radar-V6.apk.sha256
             apk-metadata.txt
-          retention-days: 7
+            signature.txt
+            crypto-radar-lowpower/research/v6-results.csv
+            crypto-radar-lowpower/research/v6-alerts.csv
+          retention-days: 30
