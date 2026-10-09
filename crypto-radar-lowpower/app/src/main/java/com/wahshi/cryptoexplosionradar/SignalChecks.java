@@ -27,7 +27,7 @@ public final class SignalChecks {
  private static BuyStability.State observe(SharedPreferences p,String symbol,boolean valid,long until,String reason){
   synchronized(LOCK){
    String source=SOURCE.get()==null?"market":SOURCE.get();
-   String owner=p.getString("signal_owner_"+symbol,"");if(owner.equals("selected")&&!symbol.equals(FollowGate.active(p)))owner="";BuyStability.State previous=read(p,symbol);
+   String owner=p.getString("signal_owner_"+symbol,"");if(owner.equals("selected")&&!symbol.equals(FollowGate.active(p)))owner="";if(source.equals("selected")&&symbol.equals(FollowGate.active(p)))owner="";BuyStability.State previous=read(p,symbol);
    if(!BuyStability.acceptsOwner(owner,source,previous))return previous;
    BuyStability.State s=BuyStability.observe(previous,valid,until,System.currentTimeMillis(),reason);
    if(s.phase.equals("PENDING")||s.phase.equals("BUY"))p.edit().putString("signal_owner_"+symbol,source).apply();
@@ -56,7 +56,7 @@ public final class SignalChecks {
  public static String reject(SharedPreferences p,String symbol,String reason,String source){SOURCE.set(source);try{return observe(p,symbol,false,0,reason==null?"شروط الدخول لم تعد مكتملة":reason).reason;}finally{SOURCE.remove();}}
  public static Result confirm(SharedPreferences p,String symbol,EntryWindow window,double price,long quoteAt,String source)throws Exception{
   SOURCE.set(source);try{
-   synchronized(LOCK){String owner=p.getString("signal_owner_"+symbol,"");if(owner.equals("selected")&&!symbol.equals(FollowGate.active(p)))owner="";BuyStability.State previous=read(p,symbol);
+   synchronized(LOCK){String owner=p.getString("signal_owner_"+symbol,"");if(owner.equals("selected")&&!symbol.equals(FollowGate.active(p)))owner="";if(source.equals("selected")&&symbol.equals(FollowGate.active(p)))owner="";BuyStability.State previous=read(p,symbol);
     if(!BuyStability.acceptsOwner(owner,source,previous)){Result out=new Result();out.price=price;out.quoteAt=quoteAt;out.reason="الإشارة تديرها متابعة المصدر الأصلي؛ راجع السجل المحفوظ";return out;}}
    return confirmInternal(p,symbol,window,price,quoteAt);
   }finally{SOURCE.remove();}

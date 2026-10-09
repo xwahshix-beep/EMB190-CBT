@@ -30,7 +30,7 @@ The requested symbols are outcome-selected by the user; adding five fixed contro
 
 ## Observed result
 
-On requested coins FULL_BUY emitted 17 signals: zero reached +5% before -2% in 60 minutes. FULL_WATCH emitted 62 signals: 7 targets, 55 false alerts; it detected 3 of 9 mechanically defined +15% episodes. Across all ten coins FULL_BUY emitted 32 signals, all failed this target definition. These results do NOT support a profitability or high-accuracy claim. V6 is an instrumentation/replay and stability improvement, not a proven profitable strategy.
+On requested coins FULL_BUY emitted 17 signals: zero reached +5% before -2% in 60 minutes. FULL_WATCH emitted 62 signals: 7 targets, 55 false alerts; it detected 3 of 9 mechanically defined +15% episodes. Across all ten coins FULL_BUY emitted 30 signals, all failed this target definition. These results do NOT support a profitability or high-accuracy claim. V6 is an instrumentation/replay and stability improvement, not a proven profitable strategy.
 
 ## App changes
 

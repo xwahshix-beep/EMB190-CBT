@@ -15,7 +15,7 @@ public final class ReplayActivity extends Activity {
  }
  private void replay(){String symbol=(String)symbols.getSelectedItem(),variant=(String)variants.getSelectedItem();run.setEnabled(false);output.setText("جارٍ حساب جميع الشموع بالتسلسل…");
   worker.submit(()->{String text;
-   try(Reader input=new InputStreamReader(new java.util.zip.GZIPInputStream(getAssets().open("replay/"+symbol+".csv.gz")),"UTF-8")){
+   try(Reader input=new InputStreamReader(new java.util.zip.GZIPInputStream(getAssets().open("replay/"+symbol+".csv.bin")),"UTF-8")){
     List<PreExplosionEngine.Bar> bars=HistoricalReplay.read(input);StringBuilder alerts=new StringBuilder();String summary=HistoricalReplay.run(symbol,bars,alerts);StringBuilder s=new StringBuilder(symbol+" · "+variant+"\n");
     java.text.SimpleDateFormat fmt=new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm 'UTC'",Locale.US);fmt.setTimeZone(TimeZone.getTimeZone("UTC"));
     s.append("نهاية البيانات: ").append(fmt.format(new Date(bars.get(bars.size()-1).time+59999))).append("\n\n");
