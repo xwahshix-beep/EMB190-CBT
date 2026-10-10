@@ -206,16 +206,16 @@ public final class HybridEngine {
                 checkedCount++;
                 c.lastPrice=a.lastClose;
                 c.checkedAt=System.currentTimeMillis();
-                c.waitReason=a.window.reason(a.lastClose,c.checkedAt);
-                if(c.waitReason!=null) {c.armed=true;armedCount++;continue;}
-                c.waitReason="انتظار تأكيد الاختراق والحجم";
-                c.armed = isArmed(c, a);
-                if (c.armed) armedCount++;
-
+                // Watch states precede the breakout: do not gate them on the BUY entry window.
+                c.armed=a.pre.state.equals("WATCH")||a.pre.state.equals("EARLY_WATCH");
+                if(c.armed)armedCount++;
+                c.waitReason=a.pre.detail()+" • "+a.pre.reason;
                 double total = c.score + a.score;
                 boolean confirmedBuy = a.pre.state.equals("BUY") && !c.catalystNegative;
-                c.armed=a.pre.state.equals("WATCH");
-                c.waitReason=a.pre.detail();
+                if(confirmedBuy){
+                    String guard=a.window.reason(a.lastClose,c.checkedAt);
+                    if(guard!=null){c.waitReason=guard;continue;}
+                }
                 if (confirmedBuy) {
                     c.buyConfirmed = true;
                     c.totalScore = total;
@@ -694,7 +694,7 @@ public final class HybridEngine {
                 sb.append("الهدف الأول: ").append(fmt(c.target1))
                         .append(" • وقف: ").append(fmt(c.managedStop));
             } else {
-                sb.append("🟡 انتظار\n");
+                sb.append(c.armed?"🐋 مراقبة مبكرة\n":"🟡 انتظار\n");
                 if (c.liveSignal && BuyAlertPolicy.validRange(c.entryLow,c.entryHigh)) {
                     sb.append("نطاق الشراء: ")
                             .append(fmt(c.entryLow)).append(" – ").append(fmt(c.entryHigh));

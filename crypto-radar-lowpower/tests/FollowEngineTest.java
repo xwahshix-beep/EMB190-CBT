@@ -39,7 +39,7 @@ public final class FollowEngineTest {
   Fixture f=new Fixture();FollowEngine.Result r=run(f,0,0);
   check(r.state.equals("BUY")&&r.price==100.2,"healthy complete input still BUY: "+r.reason);
   f=new Fixture();f.mode="quiet";r=run(f,0,0);
-  check(r.state.equals("WAIT")&&r.fresh(f.now)&&r.reason.contains("Flow conditions"),"quiet trades retain price, no fabricated BUY");
+  check(r.state.equals("EARLY_WATCH")&&r.fresh(f.now)&&r.reason.contains("buyer confirmation pending"),"accelerating activity without buyer flow is EARLY_WATCH, never BUY");
   f=new Fixture();f.fail="depth";r=run(f,0,0);
   check(r.state.equals("WAIT")&&r.price>0&&r.reason.contains("دفتر الأوامر"),"depth failure retains price and cause");
   f=new Fixture();f.fail="bookTicker";r=run(f,0,0);
@@ -55,7 +55,9 @@ public final class FollowEngineTest {
   f=new Fixture();f.mode="invalid";r=run(f,0,0);
   check(r.state.equals("DATA")&&r.price==0,"invalid book rejected");
   f=new Fixture();f.mode="stale";r=run(f,0,0);
-  check(r.state.equals("WAIT")&&r.price>0,"stale candles cannot BUY, price retained");
+  check(r.state.equals("DATA")&&r.price>0,"stale candles cannot BUY, price retained");
+  f=new Fixture();f.mode="stale";f.fail="depth";r=run(f,0,0);
+  check(r.state.equals("DATA")&&f.requests.stream().noneMatch(x->x.contains("depth")),"stale history rejected before order book");
   String error="ETCUSDT\nتعذر تحديث دفتر الأوامر";
   check(FollowView.render("ETCUSDT",error,NOW,NOW,true).equals(error),"UI keeps specific failure without masking it by missing quote time");
   check(!FollowView.render("ETCUSDT","🟢 شراء",NOW-70000,NOW,true).contains("🟢 شراء"),"old view cannot show active BUY");

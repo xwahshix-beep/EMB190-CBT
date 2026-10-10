@@ -7,6 +7,14 @@ public class PreExplosionTest {
   for(int i=0;i<125;i++)bars.add(new PreExplosionEngine.Bar(t+i*60000,100,100.1,99.9,100,i<120?1000:8000,i<120?10:80,i<120?500:5200));
   bars.set(124,new PreExplosionEngine.Bar(t+124*60000,100,100.4,100,100.3,8000,80,5200));
   PreExplosionEngine.Result before=PreExplosionEngine.evaluate(bars,124);check(before.state.equals("BUY"),before.detail());
+  for(int i=120;i<125;i++)bars.get(i).buy=3200;
+  check(PreExplosionEngine.evaluate(bars,124).state.equals("EARLY_WATCH"),"activity without buyer confirmation must remain early watch");
+  for(int i=120;i<125;i++)bars.get(i).trades=10;
+  check(PreExplosionEngine.evaluate(bars,124).state.equals("WAIT"),"volume alone must not create early watch");
+  for(int i=120;i<125;i++){bars.get(i).trades=80;bars.get(i).buy=5200;}
+  bars.get(124).high=102;bars.get(124).close=102;
+  check(PreExplosionEngine.evaluate(bars,124).state.equals("TOO_LATE"),"extended price must not create BUY or WATCH");
+  bars.get(124).high=100.4;bars.get(124).close=100.3;
   bars.add(new PreExplosionEngine.Bar(t+125*60000,200,201,199,200,1e9,100000,1e9));
   check(PreExplosionEngine.evaluate(bars,124).detail().equals(before.detail()),"Future leakage");
   bars.get(120).time+=60000;check(PreExplosionEngine.evaluate(bars,124).state.equals("DATA"),"Gap accepted");bars.get(120).time-=60000;

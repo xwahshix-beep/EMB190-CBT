@@ -8,6 +8,6 @@ with zipfile.ZipFile(sys.argv[1]) as z:
         assert hashlib.sha256(data).hexdigest()==row['sha256'],path
         assert len(data.splitlines())==row['rows'],path
     dex=b''.join(z.read(p) for p in z.namelist() if p.endswith('.dex'))
-    for name in [b'PreExplosionEngine',b'HistoricalReplay',b'ReplayActivity']:
+    for name in [b'PreExplosionEngine',b'HistoricalReplay',b'ReplayActivity',b'EARLY_WATCH']:
         assert name in dex,name
     print('Verified all 10 packaged datasets and native V6 classes')
