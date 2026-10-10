@@ -45,7 +45,7 @@ public final class FastWatch {
    try{
     if(result.state.equals("BUY"))OpportunityAlerts.send(context,prefs,symbol,result.price,result.window.entryLow(),result.window.entryHigh(),result.quoteAt,result.window.closedAt,result.window);
     String prev=prefs.getString("fast_alert_state","");long lastAlert=prefs.getLong("fast_alert_at",0);
-    if((result.state.equals("WATCH")||result.state.equals("EXIT"))&&!result.state.equals(prev)
+    if((result.state.equals("WATCH")||result.state.equals("EARLY_WATCH")||result.state.equals("EXIT"))&&!result.state.equals(prev)
          &&(result.state.equals("EXIT")||now-lastAlert>60000)){
      NotificationManager nm=(NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
      nm.createNotificationChannel(new NotificationChannel("selected_watch_v53","Selected coin Watch / Buy / Exit",NotificationManager.IMPORTANCE_HIGH));
