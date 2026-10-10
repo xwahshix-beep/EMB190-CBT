@@ -13,7 +13,7 @@ public final class FollowEngine {
   public EntryWindow window;
   public boolean fresh(long now){return price>0&&quoteAt>0&&now>=quoteAt&&now-quoteAt<=15000;}
   public String detail(String symbol,double entry,long now){
-   String label=state.equals("BUY")?"🟢 شراء":state.equals("WATCH")?"🐋 مراقبة مبكرة":state.equals("EXIT")?"🔴 خروج":state.equals("HOLD")?"🔵 احتفاظ":state.equals("DATA")?"⏳ تعذر تحديث السعر":"🟡 انتظار";
+   String label=state.equals("BUY")?"🟢 شراء":(state.equals("WATCH")||state.equals("EARLY_WATCH"))?"🐋 مراقبة مبكرة":state.equals("EXIT")?"🔴 خروج":state.equals("HOLD")?"🔵 احتفاظ":state.equals("DATA")?"⏳ تعذر تحديث السعر":"🟡 انتظار";
    String text="⭐ "+symbol+"\n"+label;
    if(price>0)text+="\n"+(fresh(now)?"السعر: ":"آخر سعر مستلم (غير محدث): ")+price+" USDT\nوقت السعر: "+time(quoteAt);
    if(state.equals("BUY")&&window!=null)text+="\nنطاق الشراء: "+window.entryLow()+" – "+window.entryHigh();
