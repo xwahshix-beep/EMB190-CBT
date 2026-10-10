@@ -11,9 +11,10 @@ public final class PreExplosionEngine {
  }
  public static final class Result {
   public String state="DATA",reason="Incomplete minute history";
-  public double volumeAcceleration,tradeAcceleration,buyShare,quote5,resistance,extension,change5;
+  public double volumeAcceleration,tradeAcceleration,buyShare,quote5,resistance,extension,change5,tradeZ,flowImbalance;
+  public int score;
   public long closedAt;
-  public String detail(){return String.format(Locale.US,"%s | Vol %.2fx | Trades %.2fx | Buy %.1f%% | Q5 $%.0f | Ext %.2f%%",state,volumeAcceleration,tradeAcceleration,buyShare*100,quote5,extension*100);}
+  public String detail(){return String.format(Locale.US,"%s | Score %d | Vol %.2fx | Trades %.2fx | Z %.2f | Buy %.1f%% | Q5 $%.0f | Ext %.2f%%",state,score,volumeAcceleration,tradeAcceleration,tradeZ,buyShare*100,quote5,extension*100);}
  }
  public static Result evaluate(List<Bar> bars,int at){
   Result r=new Result();if(at<WARMUP-1||at>=bars.size())return r;
@@ -28,7 +29,16 @@ public final class PreExplosionEngine {
   if(baselineQ<=0||baselineN<=0||r.quote5<=0)return r;
   r.volumeAcceleration=r.quote5/(baselineQ/24);r.tradeAcceleration=n5/(baselineN/24);r.buyShare=b5/r.quote5;
   r.extension=last.close/r.resistance-1;r.change5=last.close/bars.get(at-4).open-1;
-  boolean activity=r.volumeAcceleration>=2.5&&r.tradeAcceleration>=1.8;
+  // Trade intensity z-score: compare 5-minute trade count with 24 non-overlapping historical windows.
+  double mean=baselineN/24.0,variance=0;
+  for(int j=0;j<24;j++){double count=0;for(int k=0;k<5;k++)count+=bars.get(at-124+j*5+k).trades;variance+=(count-mean)*(count-mean);}
+  double sd=Math.sqrt(variance/24.0);
+  r.tradeZ=sd>0?(n5-mean)/sd:0;
+  r.flowImbalance=2*r.buyShare-1;
+  r.score=(r.volumeAcceleration>=2.5?25:0)+(r.tradeAcceleration>=1.8?20:0)
+    +(r.tradeZ>=2?15:0)+(r.buyShare>=.55?15:0)+(r.quote5>=25000?10:0)
+    +(r.extension>=-.005&&r.extension<=.006?15:0);
+  boolean activity=r.volumeAcceleration>=2.5&&(r.tradeAcceleration>=1.8||r.tradeZ>=2.5);
   boolean flow=activity&&r.buyShare>=.55;
   boolean liquidity=r.quote5>=25000; // Turnover proxy only; not historical order-book liquidity.
   boolean near=r.extension>=-.005;
