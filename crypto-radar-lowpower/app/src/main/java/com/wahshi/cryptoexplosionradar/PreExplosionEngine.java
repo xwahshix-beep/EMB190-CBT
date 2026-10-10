@@ -52,9 +52,12 @@ public final class PreExplosionEngine {
   boolean flow=activity&&r.buyShare>=.55;
   boolean liquidity=r.quote5>=25000; // Turnover proxy only; not historical order-book liquidity.
   boolean near=r.extension>=-.005;
-  if(activity&&liquidity&&near){
+  // Discovery is deliberately wider than the entry gate: high activity should not disappear
+  // solely because price is 0.08 percentage points beyond the near-resistance threshold.
+  boolean discovery=activity&&liquidity&&r.extension>=-.025&&r.extension<=.006&&r.change5<=.015;
+  if(discovery){
    r.state="EARLY_WATCH";
-   r.reason=flow?"Early activity and buyer flow; awaiting breakout":"Volume and trades accelerating; buyer confirmation pending";
+   r.reason=flow?"Early activity with buyer flow; entry confirmation pending":"Unusual activity; buyer confirmation pending";
   }
   if(flow&&liquidity&&near){r.state="WATCH";r.reason="Pre-breakout buyer flow detected";}
   if(flow&&liquidity&&r.extension>=.001&&r.extension<=.006&&r.change5<=.015&&r.change5>=0&&last.high/last.low-1<=.012){r.state="BUY";r.reason="Closed-minute breakout with sustained flow";}
