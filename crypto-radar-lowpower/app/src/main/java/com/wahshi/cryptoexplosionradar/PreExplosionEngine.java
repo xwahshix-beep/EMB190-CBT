@@ -28,12 +28,17 @@ public final class PreExplosionEngine {
   if(baselineQ<=0||baselineN<=0||r.quote5<=0)return r;
   r.volumeAcceleration=r.quote5/(baselineQ/24);r.tradeAcceleration=n5/(baselineN/24);r.buyShare=b5/r.quote5;
   r.extension=last.close/r.resistance-1;r.change5=last.close/bars.get(at-4).open-1;
-  boolean flow=r.volumeAcceleration>=2.5&&r.tradeAcceleration>=1.8&&r.buyShare>=.55;
+  boolean activity=r.volumeAcceleration>=2.5&&r.tradeAcceleration>=1.8;
+  boolean flow=activity&&r.buyShare>=.55;
   boolean liquidity=r.quote5>=25000; // Turnover proxy only; not historical order-book liquidity.
   boolean near=r.extension>=-.005;
-  if(flow&&liquidity&&near){r.state="WATCH";r.reason="Pre-breakout flow detected";}
+  if(activity&&liquidity&&near){
+   r.state="EARLY_WATCH";
+   r.reason=flow?"Early activity and buyer flow; awaiting breakout":"Volume and trades accelerating; buyer confirmation pending";
+  }
+  if(flow&&liquidity&&near){r.state="WATCH";r.reason="Pre-breakout buyer flow detected";}
   if(flow&&liquidity&&r.extension>=.001&&r.extension<=.006&&r.change5<=.015&&r.change5>=0&&last.high/last.low-1<=.012){r.state="BUY";r.reason="Closed-minute breakout with sustained flow";}
-  if(flow&&near&&(r.extension>.006||r.change5>.015)){r.state="TOO_LATE";r.reason="Price extended; no chase";}
+  if(activity&&liquidity&&near&&(r.extension>.006||r.change5>.015)){r.state="TOO_LATE";r.reason="Price extended; no chase";}
   return r;
  }
 }
