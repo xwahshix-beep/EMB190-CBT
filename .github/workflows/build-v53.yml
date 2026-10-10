@@ -33,7 +33,10 @@ jobs:
       - name: Reproduce packaged historical results
         working-directory: crypto-radar-lowpower
         run: |
-          java -cp /tmp/v6tests com.wahshi.cryptoexplosionradar.ReplayCli app/src/main/assets/replay /tmp/results.csv /tmp/alerts.csv
+          mkdir -p /tmp/v6-replay
+          cp app/src/main/assets/replay/*.csv.bin /tmp/v6-replay/
+          python3 tests/fetch-optional-replay.py /tmp/v6-replay
+          java -cp /tmp/v6tests com.wahshi.cryptoexplosionradar.ReplayCli /tmp/v6-replay /tmp/results.csv /tmp/alerts.csv
           python3 tests/validate-replay.py /tmp/results.csv /tmp/alerts.csv
           cp /tmp/results.csv ../v6-results-ci.csv
           cp /tmp/alerts.csv ../v6-alerts-ci.csv
@@ -63,6 +66,7 @@ jobs:
             signature.txt
             v6-results-ci.csv
             v6-alerts-ci.csv
+            crypto-radar-lowpower/research/optional-replay-coverage.txt
             crypto-radar-lowpower/research/v6-results.csv
             crypto-radar-lowpower/research/v6-alerts.csv
           retention-days: 30

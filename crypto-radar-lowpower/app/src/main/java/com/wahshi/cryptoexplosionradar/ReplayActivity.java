@@ -42,7 +42,7 @@ public final class ReplayActivity extends Activity {
   List<PreExplosionEngine.Bar> out=new ArrayList<>();
   StringBuilder csv=new StringBuilder();
   for(int page=0;page<9&&cursor<HistoricalReplay.END;page++){
-   String url="https://api.binance.com/api/v3/klines?symbol="+symbol+"&interval=1m&startTime="+cursor+"&endTime="+(HistoricalReplay.END-1)+"&limit=1000";
+   String url="https://data-api.binance.vision/api/v3/klines?symbol="+symbol+"&interval=1m&startTime="+cursor+"&endTime="+(HistoricalReplay.END-1)+"&limit=1000";
    JSONArray rows=new JSONArray(MarketHttp.read(url));if(rows.length()==0)break;
    long latest=cursor-60000L;
    for(int i=0;i<rows.length();i++){
