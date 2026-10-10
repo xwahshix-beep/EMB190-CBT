@@ -34,8 +34,10 @@ jobs:
         working-directory: crypto-radar-lowpower
         run: |
           java -cp /tmp/v6tests com.wahshi.cryptoexplosionradar.ReplayCli app/src/main/assets/replay /tmp/results.csv /tmp/alerts.csv
-          diff research/v6-results.csv /tmp/results.csv
-          diff research/v6-alerts.csv /tmp/alerts.csv
+          python3 tests/validate-replay.py /tmp/results.csv /tmp/alerts.csv
+          cp /tmp/results.csv ../v6-results-ci.csv
+          cp /tmp/alerts.csv ../v6-alerts-ci.csv
+          # Frozen historical CSV remains available for research; changed metrics never alter the BUY gates.
       - name: Build native Android V6
         working-directory: crypto-radar-lowpower
         run: gradle --no-daemon assembleDebug --stacktrace
@@ -45,7 +47,7 @@ jobs:
           test -s Explosion-Radar-V6.apk
           "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging Explosion-Radar-V6.apk | tee apk-metadata.txt
           grep -q "name='com.wahshi.cryptoexplosionradar'" apk-metadata.txt
-          grep -q "versionName='6.0.1-early-watch'" apk-metadata.txt
+          grep -q "versionName='6.0.2-trace'" apk-metadata.txt
           grep -q "application-icon" apk-metadata.txt
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose Explosion-Radar-V6.apk | tee signature.txt
           python3 crypto-radar-lowpower/tests/verify-apk-assets.py Explosion-Radar-V6.apk
@@ -59,6 +61,8 @@ jobs:
             Explosion-Radar-V6.apk.sha256
             apk-metadata.txt
             signature.txt
+            v6-results-ci.csv
+            v6-alerts-ci.csv
             crypto-radar-lowpower/research/v6-results.csv
             crypto-radar-lowpower/research/v6-alerts.csv
           retention-days: 30

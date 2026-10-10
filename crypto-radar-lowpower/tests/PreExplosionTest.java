@@ -7,6 +7,8 @@ public class PreExplosionTest {
   for(int i=0;i<125;i++)bars.add(new PreExplosionEngine.Bar(t+i*60000,100,100.1,99.9,100,i<120?1000:8000,i<120?10:80,i<120?500:5200));
   bars.set(124,new PreExplosionEngine.Bar(t+124*60000,100,100.4,100,100.3,8000,80,5200));
   PreExplosionEngine.Result before=PreExplosionEngine.evaluate(bars,124);check(before.state.equals("BUY"),before.detail());
+  check(Math.abs(before.cvd5-12000)<0.01,"Incorrect CVD quote delta");
+  check(before.liquidityShift>0,"Buyer-side flow shift should be positive");
   for(int i=120;i<125;i++)bars.get(i).buy=3200;
   check(PreExplosionEngine.evaluate(bars,124).state.equals("EARLY_WATCH"),"activity without buyer confirmation must remain early watch");
   for(int i=120;i<125;i++)bars.get(i).trades=10;

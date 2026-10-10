@@ -12,16 +12,20 @@ public final class PreExplosionEngine {
  public static final class Result {
   public String state="DATA",reason="Incomplete minute history";
   public double volumeAcceleration,tradeAcceleration,buyShare,quote5,resistance,extension,change5,tradeZ,flowImbalance;
+  // Signed taker quote-volume delta; liquidityShift is a FLOW proxy, not order-book depth.
+  public double cvd5,cvdBaseline5,cvdAcceleration,liquidityShift,buyShareBaseline;
   public int score;
   public long closedAt;
+  public String audit(){return String.format(Locale.US,"state=%s score=%d vol=%.2fx trades=%.2fx z=%.2f buy=%.3f cvd5=%.0f cvdBase5=%.0f shift=%.3f quote5=%.0f breakout=%.4f change5=%.4f reason=%s",state,score,volumeAcceleration,tradeAcceleration,tradeZ,buyShare,cvd5,cvdBaseline5,liquidityShift,quote5,extension,change5,reason);}
+
   public String detail(){return String.format(Locale.US,"%s | Score %d | Vol %.2fx | Trades %.2fx | Z %.2f | Buy %.1f%% | Q5 $%.0f | Ext %.2f%%",state,score,volumeAcceleration,tradeAcceleration,tradeZ,buyShare*100,quote5,extension*100);}
  }
  public static Result evaluate(List<Bar> bars,int at){
   Result r=new Result();if(at<WARMUP-1||at>=bars.size())return r;
-  double baselineQ=0,baselineN=0,n5=0,b5=0;
+  double baselineQ=0,baselineN=0,baselineBuy=0,n5=0,b5=0;
   for(int i=at-124;i<=at;i++){
    Bar b=bars.get(i);if(!b.valid()||(i>at-124&&b.time-bars.get(i-1).time!=60000)){r.reason="Invalid or missing minute";return r;}
-   if(i<=at-5){baselineQ+=b.quote;baselineN+=b.trades;}else{r.quote5+=b.quote;n5+=b.trades;b5+=b.buy;}
+   if(i<=at-5){baselineQ+=b.quote;baselineN+=b.trades;baselineBuy+=b.buy;}else{r.quote5+=b.quote;n5+=b.trades;b5+=b.buy;}
    if(i>=at-30&&i<at)r.resistance=Math.max(r.resistance,b.high);
   }
   Bar last=bars.get(at);r.closedAt=last.time+59999;
@@ -29,6 +33,12 @@ public final class PreExplosionEngine {
   if(baselineQ<=0||baselineN<=0||r.quote5<=0)return r;
   r.volumeAcceleration=r.quote5/(baselineQ/24);r.tradeAcceleration=n5/(baselineN/24);r.buyShare=b5/r.quote5;
   r.extension=last.close/r.resistance-1;r.change5=last.close/bars.get(at-4).open-1;
+  r.cvd5=2*b5-r.quote5;
+  r.cvdBaseline5=(2*baselineBuy-baselineQ)/24.0;
+  r.cvdAcceleration=r.cvd5-r.cvdBaseline5;
+  r.buyShareBaseline=baselineBuy/baselineQ;
+  r.liquidityShift=r.buyShare-r.buyShareBaseline; // taker-share shift, NOT depth liquidity
+
   // Trade intensity z-score: compare 5-minute trade count with 24 non-overlapping historical windows.
   double mean=baselineN/24.0,variance=0;
   for(int j=0;j<24;j++){double count=0;for(int k=0;k<5;k++)count+=bars.get(at-124+j*5+k).trades;variance+=(count-mean)*(count-mean);}

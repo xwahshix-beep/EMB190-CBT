@@ -124,6 +124,13 @@ public class MainActivity extends Activity {
         Button replay=new Button(this);replay.setText("Historical Replay • الاختبار التاريخي");
         replay.setOnClickListener(v -> startActivity(new Intent(this,ReplayActivity.class)));
         root.addView(replay);
+        Button log=new Button(this);
+        log.setText("📋 سجل قبول ورفض الإشارات");
+        log.setOnClickListener(v -> new AlertDialog.Builder(this)
+            .setTitle("سجل قرارات Scanner • آخر 80 حدثًا")
+            .setMessage(DecisionLedger.history(prefs().getString("v6_trace","[]"),80))
+            .setPositiveButton("إغلاق",null).show());
+        root.addView(log);
 
         TextView listTitle = new TextView(this);
         listTitle.setText("الرادار والإشارات");

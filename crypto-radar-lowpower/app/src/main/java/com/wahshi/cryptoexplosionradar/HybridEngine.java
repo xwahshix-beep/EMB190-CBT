@@ -202,7 +202,7 @@ public final class HybridEngine {
             try {
                 Analysis a = analyze1m(c.symbol);
                 c.analysis = a;
-                if (a == null) {c.waitReason="بيانات الدقيقة غير مكتملة";failedCount++;continue;}
+                if (a == null) {c.waitReason="بيانات الدقيقة غير مكتملة";failedCount++;logDecision(prefs,c.symbol,null,"DATA",c.waitReason,System.currentTimeMillis());continue;}
                 checkedCount++;
                 c.lastPrice=a.lastClose;
                 c.checkedAt=System.currentTimeMillis();
@@ -210,18 +210,19 @@ public final class HybridEngine {
                 c.armed=a.pre.state.equals("WATCH")||a.pre.state.equals("EARLY_WATCH");
                 if(c.armed)armedCount++;
                 c.waitReason=a.pre.detail()+" • "+a.pre.reason;
+                logDecision(prefs,c.symbol,a.pre,a.pre.state,c.waitReason,c.checkedAt);
                 double total = c.score + a.score;
                 boolean confirmedBuy = a.pre.state.equals("BUY") && !c.catalystNegative;
                 if(confirmedBuy){
                     String guard=a.window.reason(a.lastClose,c.checkedAt);
-                    if(guard!=null){c.waitReason=guard;continue;}
+                    if(guard!=null){c.waitReason=guard;logDecision(prefs,c.symbol,a.pre,"WAIT",guard,c.checkedAt);continue;}
                 }
                 if (confirmedBuy) {
                     c.buyConfirmed = true;
                     c.totalScore = total;
                     c.entryLow = a.window.entryLow();
                     c.entryHigh = a.window.entryHigh();
-                    if (!BuyAlertPolicy.validRange(c.entryLow,c.entryHigh)) continue;
+                    if (!BuyAlertPolicy.validRange(c.entryLow,c.entryHigh)) {logDecision(prefs,c.symbol,a.pre,"WAIT","Invalid BUY price band",c.checkedAt);continue;}
                     c.invalidation = a.invalidation;
                     c.liveSignal=true;
                     c.liveSignalAt=a.window.closedAt;
@@ -237,6 +238,7 @@ public final class HybridEngine {
                 }
             } catch (Exception ex) {
                 failedCount++;c.waitReason="تعذر تحديث بيانات الدقيقة";
+                logDecision(prefs,c.symbol,null,"DATA",c.waitReason,System.currentTimeMillis());
             }
         }
 
@@ -266,8 +268,9 @@ public final class HybridEngine {
                 if("ACTIVE".equals(c.liveState)) {
                     SignalChecks.Result stable=SignalChecks.confirm(prefs,c.symbol,c.analysis.window,c.lastPrice,quoteAt);
                     c.lastPrice=stable.price;c.waitReason=stable.reason;
-                    if(!stable.buy){c.liveState="WAIT";c.tradeTriggered=false;continue;}
+                    if(!stable.buy){c.liveState="WAIT";c.tradeTriggered=false;logDecision(prefs,c.symbol,c.analysis.pre,"WAIT",stable.reason,checked);continue;}
                     c.displayUntil=stable.until;
+                    logDecision(prefs,c.symbol,c.analysis.pre,"BUY","Verified quote and stability: "+stable.reason,checked);
                     OpportunityAlerts.send(context,prefs,c.symbol,c.lastPrice,c.entryLow,c.entryHigh,stable.quoteAt,c.liveSignalAt,c.analysis.window);
                 } else c.waitReason=c.lastPrice>c.entryHigh?"فات نطاق الدخول":"انتظار دخول السعر في النطاق";
             } catch(Exception ignored) {c.liveState="WAIT";c.waitReason="تعذر التحقق من السعر الحالي";}
@@ -324,9 +327,18 @@ public final class HybridEngine {
                 ? "Hybrid V4.2.3 • مراقبة السوق"
                 : "🔎 Early Hunt • " + candidates.size() + " مرشح";
         out.summary = formatSummary(candidates, armedCount, activeCount)
-                + "\n\nالسوق: "+hour.size()+"/"+eligible.size()+" • فحص الدقيقة: "+checkedCount+" • تعذر: "+failedCount;
+                + "\n\n📌 مرشحون رُصدوا سابقًا (تاريخي، ليست إشارة شراء حالية):\n" + DecisionLedger.recent(prefs.getString("v6_recent", "{}"),now,8)
+                + "\nالسوق: "+hour.size()+"/"+eligible.size()+" • فحص الدقيقة: "+checkedCount+" • تعذر: "+failedCount;
         prefs.edit().putInt("market_checked",hour.size()).putInt("minute_checked",checkedCount).putInt("minute_failed",failedCount).apply();
         return out;
+    }
+
+    private static void logDecision(SharedPreferences prefs,String symbol,PreExplosionEngine.Result r,String state,String reason,long now) {
+        synchronized (HybridEngine.class) {
+            String events=DecisionLedger.append(prefs.getString("v6_trace","[]"),symbol,state,reason,r,now);
+            String remembered=DecisionLedger.remember(prefs.getString("v6_recent","{}"),symbol,r,now);
+            prefs.edit().putString("v6_trace",events).putString("v6_recent",remembered).apply();
+        }
     }
 
     private static Map<String, DayTicker> load24h() throws Exception {

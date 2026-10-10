@@ -4,7 +4,7 @@ import java.util.*;
 /** Fixed chronological evaluation: every eligible minute, no peak-selected windows. */
 public final class HistoricalReplay {
  public static final long START=1791244800000L, END=1791590400000L;
- public static final String[] SYMBOLS={"MAGICUSDT","KAIAUSDT","BATUSDT","ZKUSDT","STRKUSDT","BTCUSDT","ETHUSDT","BNBUSDT","XRPUSDT","ADAUSDT"};
+ public static final String[] SYMBOLS={"MAGICUSDT","LUMIAUSDT","ERAUSDT","CFXUSDT","BATUSDT","KAIAUSDT","ZKUSDT","STRKUSDT","BTCUSDT","ETHUSDT","BNBUSDT","XRPUSDT","ADAUSDT"};
  public static final String[] VARIANTS={"VOLUME","VOLUME_FLOW","VOLUME_TRADES","BREAKOUT","FULL_WATCH","FULL_BUY"};
  public static List<PreExplosionEngine.Bar> read(Reader input)throws Exception{
   List<PreExplosionEngine.Bar> out=new ArrayList<>();BufferedReader r=new BufferedReader(input);String s;
