@@ -61,7 +61,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(9, 12, 17));
 
         TextView title = new TextView(this);
-        title.setText("🎯 Explosion Radar V6");
+        title.setText("🎯 Explosion Radar V6.1");
         title.setTextColor(Color.WHITE);
         title.setTextSize(27);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
@@ -69,7 +69,7 @@ public class MainActivity extends Activity {
         root.addView(title);
 
         TextView sub = new TextView(this);
-        sub.setText("EXPERIMENTAL • 1m RADAR • BINANCE SPOT");
+        sub.setText("تجريبي • الربحية غير مثبتة • BINANCE SPOT");
         sub.setTextColor(Color.rgb(245, 183, 43));
         sub.setTextSize(12);
         sub.setGravity(Gravity.CENTER);
@@ -124,6 +124,9 @@ public class MainActivity extends Activity {
         Button replay=new Button(this);replay.setText("Historical Replay • الاختبار التاريخي");
         replay.setOnClickListener(v -> startActivity(new Intent(this,ReplayActivity.class)));
         root.addView(replay);
+        Button research=new Button(this);research.setText("مختبر الزخم اليومي · نتائج وفحص ورقي");
+        research.setOnClickListener(v -> startActivity(new Intent(this,ResearchLabActivity.class)));
+        root.addView(research);
         Button log=new Button(this);
         log.setText("📋 سجل قبول ورفض الإشارات");
         log.setOnClickListener(v -> new AlertDialog.Builder(this)

@@ -25,6 +25,7 @@
         </activity>
 
         <activity android:name=".ReplayActivity" android:exported="false" />
+        <activity android:name=".ResearchLabActivity" android:exported="false" />
         <service
             android:name=".ScannerService"
             android:exported="false"
