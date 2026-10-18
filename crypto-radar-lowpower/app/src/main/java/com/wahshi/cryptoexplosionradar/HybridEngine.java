@@ -92,19 +92,17 @@ public final class HybridEngine {
         for (String symbol : eligible) {
             DayTicker d = day.get(symbol);
             HourTicker h = hour.get(symbol);
-            if (d == null || h == null || d.last <= 0 || h.last <= 0) continue;
+            if (d == null || d.last <= 0) continue;
 
             double p24 = d.changePct();
-            double p1 = h.changePct();
-            if ((p24 < -8.0 || p24 > 10.0) && !SignalChecks.isActive(prefs,symbol)) continue;
-            if ((p1 < -1.8 || p1 > 5.5) && !SignalChecks.isActive(prefs,symbol)) continue;
+            double p1 = h == null ? 0 : h.changePct();
 
             double avgHourlyQ = d.quoteVolume / 24.0;
             double avgHourlyN = d.trades / 24.0;
-            double rvol = avgHourlyQ > 0 ? h.quoteVolume / avgHourlyQ : 0;
-            double tradeAccel = avgHourlyN > 0 ? h.trades / avgHourlyN : 0;
+            double rvol = h != null && avgHourlyQ > 0 ? h.quoteVolume / avgHourlyQ : 0;
+            double tradeAccel = h != null && avgHourlyN > 0 ? h.trades / avgHourlyN : 0;
             double spread = d.spreadBps();
-            if (spread > 45.0) continue;
+            // Spread remains a live BUY guard; it must not hide a symbol from discovery.
 
             double nearHigh = d.high > 0 ? d.last / d.high : 0;
             double score = 0.0;
@@ -156,7 +154,7 @@ public final class HybridEngine {
             EarlyWhaleEngine.Evidence flow = early.evidence.get(symbol);
             if (flow != null) { score += flow.score; reasons.add(flow.label()); }
             boolean hasFlow = rvol >= 1.25 || tradeAccel >= 1.25 || whale != null || catPos || flow != null;
-            if (score >= 1.0 || hasFlow || SignalChecks.isActive(prefs,symbol)) {
+            { // Hourly features rank candidates, never exclude them from minute discovery.
                 Candidate c = new Candidate();
                 c.symbol = symbol;
                 c.base = base;
@@ -178,18 +176,18 @@ public final class HybridEngine {
         }
 
         candidates.sort((a, b) -> {int active=Boolean.compare(SignalChecks.isActive(prefs,b.symbol),SignalChecks.isActive(prefs,a.symbol));return active!=0?active:Double.compare(b.score,a.score);});
-        // Keep four leaders and rotate four other liquid candidates; scoring thresholds remain below.
-        List<Candidate> work=new ArrayList<>();
-        int leaders=Math.min(4,candidates.size());
-        work.addAll(candidates.subList(0,leaders));
-        List<Candidate> rest=new ArrayList<>(candidates.subList(leaders,candidates.size()));
-        rest.sort((x,y)->x.symbol.compareTo(y.symbol));
-        if(!rest.isEmpty()) {
-            int cursor=Math.floorMod(prefs.getInt("minute_cursor",0),rest.size());
-            int batch=Math.min(4,rest.size());
-            for(int i=0;i<batch;i++)work.add(rest.get((cursor+i)%rest.size()));
-            prefs.edit().putInt("minute_cursor",(cursor+batch)%rest.size()).apply();
+        Map<String,Long> attempts=new HashMap<>();
+        Map<String,Candidate> bySymbol=new HashMap<>();
+        Set<String> priority=new HashSet<>();
+        List<String> ranked=new ArrayList<>();
+        for(Candidate c:candidates) {
+            ranked.add(c.symbol);bySymbol.put(c.symbol,c);
+            attempts.put(c.symbol,prefs.getLong("minute_attempt_"+c.symbol,0));
+            long watchAt=prefs.getLong("minute_watch_"+c.symbol,0);
+            if(SignalChecks.isActive(prefs,c.symbol)||(watchAt>0&&now-watchAt<120000))priority.add(c.symbol);
         }
+        List<Candidate> work=new ArrayList<>();
+        for(String symbol:MinuteScanPolicy.select(ranked,priority,attempts,MAX_CONFIRM))work.add(bySymbol.get(symbol));
         int confirmN=work.size();
         long deadline=System.currentTimeMillis()+30000;
         int checkedCount=0,failedCount=0;
@@ -199,16 +197,24 @@ public final class HybridEngine {
         for (int i = 0; i < confirmN; i++) {
             Candidate c = work.get(i);
             if(System.currentTimeMillis()>deadline||!prefs.getBoolean("radar_enabled",false))break;
+            // Advance only attempted symbols, including failures, so a deadline cannot skip unseen work.
+            prefs.edit().putLong("minute_attempt_"+c.symbol,System.currentTimeMillis()).apply();
             try {
                 Analysis a = analyze1m(c.symbol);
                 c.analysis = a;
                 if (a == null) {c.waitReason="بيانات الدقيقة غير مكتملة";failedCount++;logDecision(prefs,c.symbol,null,"DATA",c.waitReason,System.currentTimeMillis());continue;}
+                if("DATA".equals(a.pre.state)) {
+                    c.waitReason=a.pre.reason;failedCount++;
+                    logDecision(prefs,c.symbol,a.pre,"DATA",c.waitReason,System.currentTimeMillis());continue;
+                }
                 checkedCount++;
+                prefs.edit().putLong("minute_success_"+c.symbol,System.currentTimeMillis()).apply();
                 c.lastPrice=a.lastClose;
                 c.checkedAt=System.currentTimeMillis();
                 // Watch states precede the breakout: do not gate them on the BUY entry window.
                 c.armed=a.pre.state.equals("WATCH")||a.pre.state.equals("EARLY_WATCH");
                 if(c.armed)armedCount++;
+                prefs.edit().putLong("minute_watch_"+c.symbol,c.armed?c.checkedAt:0).apply();
                 c.waitReason=a.pre.detail()+" • "+a.pre.reason;
                 logDecision(prefs,c.symbol,a.pre,a.pre.state,c.waitReason,c.checkedAt);
                 double total = c.score + a.score;
@@ -329,6 +335,20 @@ public final class HybridEngine {
         out.summary = formatSummary(candidates, armedCount, activeCount)
                 + "\n\n📌 مرشحون رُصدوا سابقًا (تاريخي، ليست إشارة شراء حالية):\n" + DecisionLedger.recent(prefs.getString("v6_recent", "{}"),now,8)
                 + "\nالسوق: "+hour.size()+"/"+eligible.size()+" • فحص الدقيقة: "+checkedCount+" • تعذر: "+failedCount;
+        long coverageNow=System.currentTimeMillis();int recent=0,never=0;
+        for(String symbol:eligible) {
+            long success=prefs.getLong("minute_success_"+symbol,0);
+            if(success==0)never++;
+            if(success>0&&coverageNow-success<=300000)recent++;
+        }
+        String coverage="نطاق الفحص: "+eligible.size()+" زوج USDT بسيولة يومية ≥ 1.5 مليون$"
+                +"\nبيانات دقيقة صالحة خلال آخر 5 دقائق: "+recent+" / "+eligible.size()
+                +" • لم يُفحص بنجاح بعد: "+never
+                +"\nهذه الدورة: "+checkedCount+" صالح • "+failedCount+" تعذر • "+(confirmN-checkedCount-failedCount)+" مؤجل"
+                +"\nمراقبة مبكرة: "+armedCount+" • شراء مؤكد: "+activeCount
+                +"\nترتيب الساعة متاح: "+hour.size()+" / "+eligible.size()
+                +"\nالفحص متناوب وليس لحظيًا لكل العملات؛ غياب الإشارة لا يعني غياب حركة في السوق.";
+        prefs.edit().putString("scan_coverage",coverage).putLong("scan_coverage_at",coverageNow).apply();
         prefs.edit().putInt("market_checked",hour.size()).putInt("minute_checked",checkedCount).putInt("minute_failed",failedCount).apply();
         return out;
     }
@@ -375,7 +395,7 @@ public final class HybridEngine {
                 if (!symbol.isEmpty()) out.put(symbol, HourTicker.from(j));
             }
         }
-        if (out.isEmpty() && !symbols.isEmpty()) throw new Exception("Rolling market data unavailable");
+        // Minute discovery continues when the optional hourly ranking is unavailable.
         return out;
     }
 

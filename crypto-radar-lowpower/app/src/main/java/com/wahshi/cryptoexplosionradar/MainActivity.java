@@ -36,6 +36,7 @@ public class MainActivity extends Activity {
     private Button startButton;
     private TextView details;
     private TextView savedSignals;
+    private TextView scanCoverage;
     private TextView followStatus;
     private Button retryFollow;
     private long quoteRequest;
@@ -61,7 +62,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(9, 12, 17));
 
         TextView title = new TextView(this);
-        title.setText("🎯 Explosion Radar V6.1");
+        title.setText("🎯 Explosion Radar V6.2");
         title.setTextColor(Color.WHITE);
         title.setTextSize(27);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
@@ -167,6 +168,13 @@ public class MainActivity extends Activity {
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
         LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);
+        scanCoverage=new TextView(this);scanCoverage.setTextColor(Color.rgb(135,210,180));
+        scanCoverage.setTextSize(14);scanCoverage.setPadding(dp(12),dp(12),dp(12),dp(12));
+        content.addView(scanCoverage);
+        TextView currentTitle=new TextView(this);currentTitle.setText("نتائج آخر دفعة / العملة المتابعة");
+        currentTitle.setTextColor(Color.WHITE);currentTitle.setTextSize(20);currentTitle.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
+        currentTitle.setPadding(dp(4),dp(12),dp(4),dp(8));content.addView(currentTitle);
+        content.addView(details);
         TextView savedTitle=new TextView(this);savedTitle.setText("📌 إشارات الشراء المحفوظة");
         savedTitle.setTextColor(Color.rgb(245,183,43));savedTitle.setTypeface(Typeface.DEFAULT,Typeface.BOLD);savedTitle.setTextSize(20);
         savedTitle.setPadding(dp(4),dp(10),dp(4),dp(8));content.addView(savedTitle);
@@ -176,10 +184,7 @@ public class MainActivity extends Activity {
         savedSignals.setLineSpacing(dp(4),1.05f);savedSignals.setPadding(dp(16),dp(16),dp(16),dp(16));
         savedSignals.setBackground(roundRect(Color.rgb(20,25,34),18));
         savedSignals.setOnClickListener(v -> chooseSavedSignal());content.addView(savedSignals);
-        TextView currentTitle=new TextView(this);currentTitle.setText("الفرص الآن / العملة المتابعة");
-        currentTitle.setTextColor(Color.WHITE);currentTitle.setTextSize(20);currentTitle.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
-        currentTitle.setPadding(dp(4),dp(22),dp(4),dp(8));content.addView(currentTitle);
-        content.addView(details);scroll.addView(content);
+        scroll.addView(content);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, 0, 1);
         root.addView(scroll, lp);
@@ -345,6 +350,12 @@ public class MainActivity extends Activity {
             text=SignalChecks.decorate(p,text);
             text=SignalDisplay.market(text,expiries,now,enabled);
         }
+        long coverageAt=p.getLong("scan_coverage_at",0);
+        String coverage=p.getString("scan_coverage","لم تكتمل دورة فحص بعد");
+        if(coverageAt>0)coverage="عمر تقرير التغطية: "+Math.max(0,(now-coverageAt)/1000)+" ثانية\n"+coverage;
+        if(!enabled)coverage="الرادار متوقف — التقرير السابق فقط\n"+coverage;
+        else if(coverageAt>0&&now-coverageAt>120000)coverage="⚠ تقرير قديم؛ قد تكون دورة الفحص متأخرة أو البيانات متعذرة\n"+coverage;
+        scanCoverage.setText(coverage);
         details.setText(styleDetails(text));
         savedSignals.setText(styleDetails(SignalChecks.history(p)));
     }
