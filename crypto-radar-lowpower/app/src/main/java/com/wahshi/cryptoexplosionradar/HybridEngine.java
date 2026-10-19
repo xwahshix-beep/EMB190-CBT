@@ -44,6 +44,9 @@ public final class HybridEngine {
     private static final long INVALIDATED_VISIBLE_MS = 30L * 60L * 1000L;
 
     private HybridEngine() {}
+    private static Map<String,DayTicker> dayCache;
+    private static Map<String,HourTicker> hourCache;
+    private static long dayCacheAt,hourCacheAt;
     private static volatile EarlyWhaleEngine.Result earlyCache=new EarlyWhaleEngine.Result();
     private static volatile long earlyCacheAt;
     public static void refreshEarly(List<String> symbols,SharedPreferences prefs) {
@@ -78,6 +81,7 @@ public final class HybridEngine {
 
         Map<String, DayTicker> day = load24h();
         List<String> eligible = new ArrayList<>(day.keySet());
+        MinuteStreams.ensure(eligible,now);
         Map<String, HourTicker> hour = loadRolling1h(eligible);
 
         eligible.sort((a,b) -> {
@@ -187,7 +191,15 @@ public final class HybridEngine {
             if(SignalChecks.isActive(prefs,c.symbol)||(watchAt>0&&now-watchAt<120000))priority.add(c.symbol);
         }
         List<Candidate> work=new ArrayList<>();
-        for(String symbol:MinuteScanPolicy.select(ranked,priority,attempts,MAX_CONFIRM))work.add(bySymbol.get(symbol));
+        Map<String,JSONArray> readyRows=new HashMap<>();
+        List<String> needsHistory=new ArrayList<>();
+        for(String symbol:ranked){
+            JSONArray rows=MinuteStreams.snapshot(symbol,System.currentTimeMillis());
+            if(rows==null)needsHistory.add(symbol);
+            else{readyRows.put(symbol,rows);work.add(bySymbol.get(symbol));}
+        }
+        // Evaluate every ready stream locally, then seed/repair at most eight REST histories.
+        for(String symbol:MinuteScanPolicy.select(needsHistory,priority,attempts,MAX_CONFIRM))work.add(bySymbol.get(symbol));
         int confirmN=work.size();
         long deadline=System.currentTimeMillis()+30000;
         int checkedCount=0,failedCount=0;
@@ -200,7 +212,7 @@ public final class HybridEngine {
             // Advance only attempted symbols, including failures, so a deadline cannot skip unseen work.
             prefs.edit().putLong("minute_attempt_"+c.symbol,System.currentTimeMillis()).apply();
             try {
-                Analysis a = analyze1m(c.symbol);
+                Analysis a = analyze1m(c.symbol,readyRows.get(c.symbol));
                 c.analysis = a;
                 if (a == null) {c.waitReason="بيانات الدقيقة غير مكتملة";failedCount++;logDecision(prefs,c.symbol,null,"DATA",c.waitReason,System.currentTimeMillis());continue;}
                 if("DATA".equals(a.pre.state)) {
@@ -341,13 +353,13 @@ public final class HybridEngine {
             if(success==0)never++;
             if(success>0&&coverageNow-success<=300000)recent++;
         }
-        String coverage="نطاق الفحص: "+eligible.size()+" زوج USDT بسيولة يومية ≥ 1.5 مليون$"
+        String coverage=MinuteStreams.status(coverageNow)+"\nتاريخ دقيقة جاهز للتحليل: "+readyRows.size()+" / "+eligible.size()+"\nنطاق الفحص: "+eligible.size()+" زوج USDT بسيولة يومية ≥ 1.5 مليون$"
                 +"\nبيانات دقيقة صالحة خلال آخر 5 دقائق: "+recent+" / "+eligible.size()
                 +" • لم يُفحص بنجاح بعد: "+never
                 +"\nهذه الدورة: "+checkedCount+" صالح • "+failedCount+" تعذر • "+(confirmN-checkedCount-failedCount)+" مؤجل"
                 +"\nمراقبة مبكرة: "+armedCount+" • شراء مؤكد: "+activeCount
                 +"\nترتيب الساعة متاح: "+hour.size()+" / "+eligible.size()
-                +"\nالفحص متناوب وليس لحظيًا لكل العملات؛ غياب الإشارة لا يعني غياب حركة في السوق.";
+                +"\nبعد التهيئة تُحلّل كل البيانات الحديثة في كل دورة؛ تحميل التاريخ وإصلاح الفجوات متناوبان. الإشارات تعتمد إغلاق الدقيقة.";
         prefs.edit().putString("scan_coverage",coverage).putLong("scan_coverage_at",coverageNow).apply();
         prefs.edit().putInt("market_checked",hour.size()).putInt("minute_checked",checkedCount).putInt("minute_failed",failedCount).apply();
         return out;
@@ -362,6 +374,8 @@ public final class HybridEngine {
     }
 
     private static Map<String, DayTicker> load24h() throws Exception {
+        long now=System.currentTimeMillis();
+        if(dayCache!=null&&now-dayCacheAt<60000)return dayCache;
         JSONArray rows = new JSONArray(readUrl(API + "/api/v3/ticker/24hr"));
         Map<String, DayTicker> out = new HashMap<>();
         for (int i = 0; i < rows.length(); i++) {
@@ -373,10 +387,12 @@ public final class HybridEngine {
             if (t.last <= 0 || t.quoteVolume < MIN_QUOTE_24H) continue;
             out.put(symbol, t);
         }
+        dayCache=out;dayCacheAt=System.currentTimeMillis();
         return out;
     }
 
     private static Map<String, HourTicker> loadRolling1h(List<String> symbols) throws Exception {
+        if(hourCache!=null&&System.currentTimeMillis()-hourCacheAt<60000)return hourCache;
         Map<String, HourTicker> out = new HashMap<>();
         for (int start = 0; start < symbols.size(); start += ROLLING_BATCH) {
             int end = Math.min(start + ROLLING_BATCH, symbols.size());
@@ -395,13 +411,18 @@ public final class HybridEngine {
                 if (!symbol.isEmpty()) out.put(symbol, HourTicker.from(j));
             }
         }
+        hourCache=out;hourCacheAt=System.currentTimeMillis();
         // Minute discovery continues when the optional hourly ranking is unavailable.
         return out;
     }
 
-    private static Analysis analyze1m(String symbol) throws Exception {
-        String u = API + "/api/v3/klines?symbol=" + symbol + "&interval=1m&limit=130";
-        JSONArray rows = new JSONArray(readEarlyUrl(u));
+    private static Analysis analyze1m(String symbol,JSONArray cached) throws Exception {
+        JSONArray rows=cached;
+        if(rows==null){
+            String u = API + "/api/v3/klines?symbol=" + symbol + "&interval=1m&limit=130";
+            rows=new JSONArray(readEarlyUrl(u));
+            MinuteStreams.seed(symbol,rows,System.currentTimeMillis());
+        }
         EntryWindow window=EntryWindow.parse(rows,System.currentTimeMillis());
         PreExplosionEngine.Result pre=PreExplosionJson.evaluate(rows,System.currentTimeMillis());
         window.resistance=pre.resistance;

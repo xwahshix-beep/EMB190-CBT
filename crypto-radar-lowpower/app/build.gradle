@@ -10,8 +10,8 @@ android {
         applicationId 'com.wahshi.cryptoexplosionradar'
         minSdk 26
         targetSdk 34
-        versionCode 65
-        versionName "6.2-coverage"
+        versionCode 66
+        versionName "6.3-streams"
     }
 
     compileOptions {
@@ -19,3 +19,5 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 }
+
+dependencies { implementation "com.squareup.okhttp3:okhttp:4.12.0" }

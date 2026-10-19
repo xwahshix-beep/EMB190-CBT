@@ -163,6 +163,7 @@ public class ScannerService extends Service {
     private synchronized void startScanner() {
         if (running) return;
         running = true;
+        MinuteStreams.start();
         prefs.edit().putBoolean("radar_enabled", true).putBoolean("service_alive", true).apply();
         startForeground(SERVICE_NOTIFICATION_ID, buildServiceNotification("Hybrid Explosion Radar V4.2.3 يعمل • Background wake"));
         sendUi("🐋⚡ Hybrid Explosion Radar V4.2.3", "أول فحص مجاني On-chain خلال ثوانٍ…");
@@ -172,6 +173,7 @@ public class ScannerService extends Service {
 
     private synchronized void stopScanner() {
         running = false;
+        MinuteStreams.stop();
         scanHandler.removeCallbacks(scheduledScan);
         if(enrichmentWorker!=null)enrichmentWorker.shutdownNow();
         if(fastWorker!=null)fastWorker.shutdownNow();
@@ -880,6 +882,7 @@ public class ScannerService extends Service {
     @Override public void onDestroy() {
         if(fastWorker!=null)fastWorker.shutdownNow();
         running = false;
+        MinuteStreams.stop();
         scanHandler.removeCallbacks(scheduledScan);
         if(enrichmentWorker!=null)enrichmentWorker.shutdownNow();
         if(fastWorker!=null)fastWorker.shutdownNow();

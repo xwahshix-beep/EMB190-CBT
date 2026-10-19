@@ -62,7 +62,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(9, 12, 17));
 
         TextView title = new TextView(this);
-        title.setText("🎯 Explosion Radar V6.2");
+        title.setText("🎯 Explosion Radar V6.3");
         title.setTextColor(Color.WHITE);
         title.setTextSize(27);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
