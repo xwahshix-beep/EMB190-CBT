@@ -265,14 +265,21 @@ public final class HybridEngine {
 
         // Notify on active, recently confirmed signals across the scanned universe.
         // Revalidate the quote after slow optional market layers have completed.
+        long quoteDeadline=System.currentTimeMillis()+15000;
+        int quoteRequests=0;
         for (Candidate c : candidates) {
             long checked=System.currentTimeMillis();
             if(!prefs.getBoolean("radar_enabled",false))break;
             if(!c.liveSignal || c.analysis==null || c.catalystNegative
                     || !BuyAlertPolicy.validRange(c.entryLow,c.entryHigh))continue;
+            if(quoteRequests>=MAX_CONFIRM||checked>quoteDeadline){
+                c.liveState="WAIT";c.tradeTriggered=false;
+                c.waitReason="انتظار بيانات السعر — تأجيل التحقق إلى دورة لاحقة";continue;
+            }
             if(checked-c.liveSignalAt>75000){c.liveState="WAIT";c.waitReason="بيانات الدقيقة تحتاج تحديثًا";continue;}
             // Revalidate UI state as well, even when notification cooldown is active.
             try {
+                quoteRequests++;
                 long quoteAt=System.currentTimeMillis();
                 JSONObject quote=new JSONObject(readEarlyUrl(API+"/api/v3/ticker/bookTicker?symbol="+c.symbol));
                 double bid=quote.getDouble("bidPrice"),ask=quote.getDouble("askPrice");
