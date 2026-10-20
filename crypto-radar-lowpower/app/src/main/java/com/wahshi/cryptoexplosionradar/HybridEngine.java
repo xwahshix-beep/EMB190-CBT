@@ -798,7 +798,7 @@ public final class HybridEngine {
     }
 
     private static boolean eligibleSymbol(String s) {
-        if (s == null || !s.endsWith("USDT") || s.length() <= 4) return false;
+        if (!BuyAlertPolicy.supported(s) || !s.endsWith("USDT") || s.length() <= 4) return false;
         String base = s.substring(0, s.length() - 4).toUpperCase(Locale.US);
         String[] skip = {"USDC","FDUSD","TUSD","USDP","DAI","EUR","TRY","BRL","UAH","BUSD"};
         for (String x : skip) if (base.equals(x)) return false;

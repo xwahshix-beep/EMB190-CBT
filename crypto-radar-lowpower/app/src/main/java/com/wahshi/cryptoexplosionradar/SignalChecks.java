@@ -63,6 +63,7 @@ public final class SignalChecks {
  }
  public static Result confirm(SharedPreferences p,String symbol,EntryWindow window,double price,long quoteAt)throws Exception{return confirm(p,symbol,window,price,quoteAt,"market");}
  private static Result confirmInternal(SharedPreferences p,String symbol,EntryWindow window,double price,long quoteAt)throws Exception{
+  if(!BuyAlertPolicy.supported(symbol))throw new Exception("MUB مستبعد: سهم مرمز خارج نطاق الرادار");
   Result out=new Result();out.price=price;out.quoteAt=quoteAt;
   long now=System.currentTimeMillis();String reason=window.reason(price,now);
   boolean valid=reason==null&&price>=window.entryLow()&&price<=window.entryHigh()&&now-quoteAt<=15000&&quoteAt<=now&&p.getBoolean("radar_enabled",false);

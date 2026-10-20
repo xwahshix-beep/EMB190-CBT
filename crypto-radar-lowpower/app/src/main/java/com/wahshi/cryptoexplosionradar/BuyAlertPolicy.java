@@ -1,5 +1,7 @@
 package com.wahshi.cryptoexplosionradar;
 public final class BuyAlertPolicy {
+ public static boolean supported(String symbol){return symbol!=null&&!"MUBUSDT".equals(symbol);}
+ public static boolean inScope(boolean all,String selected,String symbol){return supported(symbol)&&(all||symbol.equals(selected));}
  public static final long COOLDOWN=6L*60*60*1000;
  public static boolean validRange(double low,double high){return Double.isFinite(low)&&Double.isFinite(high)&&low>0&&high>=low;}
  public static boolean eligible(boolean enabled,boolean permitted,boolean confirmed,double price,double low,double high,long now,long quoteAt,long signalAt,long lastSent){

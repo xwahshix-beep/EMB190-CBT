@@ -62,7 +62,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(9, 12, 17));
 
         TextView title = new TextView(this);
-        title.setText("🎯 Explosion Radar V6.3");
+        title.setText("🎯 Explosion Radar V6.4");
         title.setTextColor(Color.WHITE);
         title.setTextSize(27);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
@@ -135,6 +135,13 @@ public class MainActivity extends Activity {
             .setMessage(DecisionLedger.history(prefs().getString("v6_trace","[]"),80))
             .setPositiveButton("إغلاق",null).show());
         root.addView(log);
+        Button alerts=new Button(this);alerts.setText("🔔 إعدادات الإشعارات / اختبار");
+        alerts.setOnClickListener(v -> new AlertDialog.Builder(this).setTitle("نطاق إشعارات الشراء")
+            .setItems(new String[]{"كل إشارات الشراء المؤكدة","العملة المتابعة فقط","إرسال إشعار تجريبي","إعدادات إشعارات Android"},(d,which)->{
+                if(which<2){prefs().edit().putBoolean("notify_all_buys",which==0).apply();feedback(which==0?"تنبيهات جميع إشارات الشراء مفعلة":"تنبيهات العملة المتابعة فقط");renderDetails();}
+                else if(which==2)feedback(OpportunityAlerts.test(this));
+                else{Intent i=new Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS);i.putExtra(android.provider.Settings.EXTRA_APP_PACKAGE,getPackageName());startActivity(i);}
+            }).setNegativeButton("إغلاق",null).show());root.addView(alerts);
 
         TextView listTitle = new TextView(this);
         listTitle.setText("الرادار والإشارات");
@@ -355,6 +362,7 @@ public class MainActivity extends Activity {
         if(coverageAt>0)coverage="عمر تقرير التغطية: "+Math.max(0,(now-coverageAt)/1000)+" ثانية\n"+coverage;
         if(!enabled)coverage="الرادار متوقف — التقرير السابق فقط\n"+coverage;
         else if(coverageAt>0&&now-coverageAt>120000)coverage="⚠ تقرير قديم؛ قد تكون دورة الفحص متأخرة أو البيانات متعذرة\n"+coverage;
+        coverage="تنبيهات الشراء: "+(p.getBoolean("notify_all_buys",true)?"كل الإشارات المؤكدة":"العملة المتابعة فقط")+"\n"+p.getString("push_status","لم يُسجّل إرسال إشعار بعد")+"\n"+coverage;
         scanCoverage.setText(coverage);
         details.setText(styleDetails(text));
         savedSignals.setText(styleDetails(SignalChecks.history(p)));
