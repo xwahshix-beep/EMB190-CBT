@@ -62,9 +62,9 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(9, 12, 17));
 
         TextView title = new TextView(this);
-        title.setText("🎯 Explosion Radar V6.5");
+        title.setText("🎯 Explosion Radar V6.5.1");
         title.setTextColor(Color.WHITE);
-        title.setTextSize(27);
+        title.setTextSize(22);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         title.setGravity(Gravity.CENTER);
         root.addView(title);
@@ -124,17 +124,17 @@ public class MainActivity extends Activity {
         root.addView(controls);
         Button replay=new Button(this);replay.setText("Historical Replay • الاختبار التاريخي");
         replay.setOnClickListener(v -> startActivity(new Intent(this,ReplayActivity.class)));
-        root.addView(replay);
+
         Button research=new Button(this);research.setText("مختبر الزخم اليومي · نتائج وفحص ورقي");
         research.setOnClickListener(v -> startActivity(new Intent(this,ResearchLabActivity.class)));
-        root.addView(research);
+
         Button log=new Button(this);
         log.setText("📋 سجل قبول ورفض الإشارات");
         log.setOnClickListener(v -> new AlertDialog.Builder(this)
             .setTitle("سجل قرارات Scanner • آخر 80 حدثًا")
             .setMessage(DecisionLedger.history(prefs().getString("v6_trace","[]"),80))
             .setPositiveButton("إغلاق",null).show());
-        root.addView(log);
+
         Button audit=new Button(this);audit.setText("🔎 لماذا لم تظهر العملة؟");
         audit.setOnClickListener(v->{
             android.widget.EditText input=new android.widget.EditText(this);input.setHint("ARK أو ARKUSDT");
@@ -149,25 +149,32 @@ public class MainActivity extends Activity {
                     "\n\nهذا آخر قرار فقط، وليس إعادة بناء لما حدث قبل التحديث. ارتفاع 24 ساعة لا يثبت وجود شرط شراء أثناء تشغيل الرادار.";
                 new AlertDialog.Builder(this).setTitle(symbol).setMessage(message).setPositiveButton("إغلاق",null).show();
             }).setNegativeButton("إلغاء",null).show();
-        });root.addView(audit);
+        });
         Button outcomes=new Button(this);outcomes.setText("📊 نتائج الرصد بعد 5 / 15 / 60 دقيقة");
-        outcomes.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("تقييم الرصد • V6.5")
+        outcomes.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("تقييم الرصد • V6.5.1")
             .setMessage(OutcomeLedger.report(prefs().getString("v65_outcomes","[]"),System.currentTimeMillis()))
-            .setPositiveButton("إغلاق",null).show());root.addView(outcomes);
+            .setPositiveButton("إغلاق",null).show());
         Button alerts=new Button(this);alerts.setText("🔔 إعدادات الإشعارات / اختبار");
         alerts.setOnClickListener(v -> new AlertDialog.Builder(this).setTitle("نطاق إشعارات الشراء")
             .setItems(new String[]{"كل إشارات الشراء المؤكدة","العملة المتابعة فقط","إرسال إشعار تجريبي","إعدادات إشعارات Android"},(d,which)->{
                 if(which<2){prefs().edit().putBoolean("notify_all_buys",which==0).apply();feedback(which==0?"تنبيهات جميع إشارات الشراء مفعلة":"تنبيهات العملة المتابعة فقط");renderDetails();}
                 else if(which==2)feedback(OpportunityAlerts.test(this));
                 else{Intent i=new Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS);i.putExtra(android.provider.Settings.EXTRA_APP_PACKAGE,getPackageName());startActivity(i);}
-            }).setNegativeButton("إغلاق",null).show());root.addView(alerts);
+            }).setNegativeButton("إغلاق",null).show());
 
+        Button toolsMenu=new Button(this);toolsMenu.setText("☰ الأدوات والتقارير والإشعارات");
+        toolsMenu.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("الأدوات")
+            .setItems(new String[]{"الاختبار التاريخي","مختبر الزخم اليومي","سجل قبول ورفض الإشارات","لماذا لم تظهر العملة؟","نتائج 5 / 15 / 60 دقيقة","إعدادات الإشعارات / اختبار","حالة الاتصال وتغطية الفحص"},(d,w)->{
+                Button[] actions={replay,research,log,audit,outcomes,alerts};
+                if(w<actions.length)actions[w].performClick();
+                else new AlertDialog.Builder(this).setTitle("حالة الفحص والتغطية").setMessage(scanCoverage.getText()).setPositiveButton("إغلاق",null).show();
+            }).setNegativeButton("إغلاق",null).show());root.addView(toolsMenu);
         TextView listTitle = new TextView(this);
         listTitle.setText("الرادار والإشارات");
         listTitle.setTextColor(Color.WHITE);
         listTitle.setTextSize(21);
         listTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        listTitle.setPadding(dp(4), dp(18), 0, dp(8));
+        listTitle.setPadding(dp(4), dp(6), 0, dp(4));
         root.addView(listTitle);
 
         followStatus = new TextView(this);
@@ -196,7 +203,7 @@ public class MainActivity extends Activity {
         LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);
         scanCoverage=new TextView(this);scanCoverage.setTextColor(Color.rgb(135,210,180));
         scanCoverage.setTextSize(14);scanCoverage.setPadding(dp(12),dp(12),dp(12),dp(12));
-        content.addView(scanCoverage);
+        // Coverage is available from Tools; it no longer pushes coins below the fold.
         TextView currentTitle=new TextView(this);currentTitle.setText("نتائج آخر دفعة / العملة المتابعة");
         currentTitle.setTextColor(Color.WHITE);currentTitle.setTextSize(20);currentTitle.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
         currentTitle.setPadding(dp(4),dp(12),dp(4),dp(8));content.addView(currentTitle);
@@ -210,12 +217,10 @@ public class MainActivity extends Activity {
         savedSignals.setLineSpacing(dp(4),1.05f);savedSignals.setPadding(dp(16),dp(16),dp(16),dp(16));
         savedSignals.setBackground(roundRect(Color.rgb(20,25,34),18));
         savedSignals.setOnClickListener(v -> chooseSavedSignal());content.addView(savedSignals);
-        scroll.addView(content);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1);
-        root.addView(scroll, lp);
-
-        setContentView(root);
+        root.addView(content);
+        // One page scroll: large fonts and short screens cannot collapse the coin viewport.
+        scroll.addView(root);
+        setContentView(scroll);
     }
 
     private SpannableString styleDetails(String text) {
