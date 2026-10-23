@@ -7,6 +7,9 @@ public final class OpportunityAlerts {
  public static final String CHANNEL="all_confirmed_buy_v532";
  private static final Object LOCK=new Object();
  public static boolean send(Context context,SharedPreferences prefs,String symbol,double price,double low,double high,long quoteAt,long signalAt,EntryWindow window){
+  return send(context,prefs,symbol,price,low,high,quoteAt,signalAt,window,null);
+ }
+ public static boolean send(Context context,SharedPreferences prefs,String symbol,double price,double low,double high,long quoteAt,long signalAt,EntryWindow window,PreExplosionEngine.Result evidence){
   synchronized(FollowGate.LOCK){
    if(!BuyAlertPolicy.inScope(prefs.getBoolean("notify_all_buys",true),FollowGate.active(prefs),symbol)){prefs.edit().putString("push_status","مستبعد من نطاق التنبيهات: "+symbol).apply();return false;}
    long checked=System.currentTimeMillis();
@@ -21,6 +24,7 @@ public final class OpportunityAlerts {
    String key="buy_push_sent_"+symbol;long now=System.currentTimeMillis();
    if(!BuyAlertPolicy.eligible(prefs.getBoolean("radar_enabled",false),permitted,true,price,low,high,now,quoteAt,signalAt,prefs.getLong(key,0)))return false;
    String body="نطاق الشراء: "+fmt(low)+" – "+fmt(high)+" USDT\nالسعر عند التنبيه: "+fmt(price)+"\nوقت الإشارة: "+new java.text.SimpleDateFormat("HH:mm:ss",Locale.getDefault()).format(new java.util.Date(signalAt))+"\nوقت الإرسال: "+new java.text.SimpleDateFormat("HH:mm:ss",Locale.getDefault()).format(new java.util.Date(now))+"\nهذه لقطة عند التأكيد؛ افتح السجل للاطلاع على آخر حالة وسبب أي إلغاء.";
+   body+="\n"+ResearchExport.explanation(evidence);
    Intent open=new Intent(context,MainActivity.class).setAction("buy:"+symbol);
    PendingIntent pi=PendingIntent.getActivity(context,0,open,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
    Notification n=new Notification.Builder(context,CHANNEL).setSmallIcon(R.drawable.app_icon)
@@ -30,6 +34,7 @@ public final class OpportunityAlerts {
     if(!BuyAlertPolicy.inScope(prefs.getBoolean("notify_all_buys",true),FollowGate.active(prefs),symbol)||!prefs.getBoolean("radar_enabled",false)||!SignalChecks.isActive(prefs,symbol))return false;
     nm.notify("buy:"+symbol,32000,n);
     prefs.edit().putLong(key,now).putString("push_status","سُلّم إشعار "+symbol+" إلى Android عند "+new java.text.SimpleDateFormat("HH:mm:ss",Locale.getDefault()).format(new java.util.Date(now))).apply();
+    try{prefs.edit().putString("v67_notifications",ResearchExport.notification(prefs.getString("v67_notifications","[]"),symbol,price,quoteAt,signalAt,now,body)).apply();}catch(Exception ignored){}
     return true;
    }catch(SecurityException denied){prefs.edit().putString("push_status","رفض Android إذن الإشعار").apply();return false;}
   }

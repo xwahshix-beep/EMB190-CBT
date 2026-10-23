@@ -1,0 +1,4 @@
+<data-extraction-rules>
+    <cloud-backup><exclude domain="sharedpref" path="radar_secrets.xml" /></cloud-backup>
+    <device-transfer><exclude domain="sharedpref" path="radar_secrets.xml" /></device-transfer>
+</data-extraction-rules>

@@ -49,7 +49,15 @@ public class MainActivity extends Activity {
         }
     };
 
-    private static final int EXPORT_PHASE=660;
+    private static final int EXPORT_PHASE=660,EXPORT_AUDIT=670;
+    private void exportAudit(){
+        new AlertDialog.Builder(this).setTitle("تصدير سجل CSV")
+            .setMessage("يشمل آخر 300 قرار خلال 24 ساعة، ورصد الأسعار حتى 1000 سجل / 7 أيام، وتسليم الإشعارات حتى 500 سجل / 7 أيام. قد يُحذف الأقدم عند بلوغ الحد؛ هذا ليس أرشيفًا كاملًا. النتائج قبل التكاليف وليست صفقات. الأوقات بالمللي ثانية UTC. القيم القديمة غير المسجلة تبقى فارغة.")
+            .setPositiveButton("حفظ CSV",(d,w)->{
+                Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("text/csv");
+                i.putExtra(Intent.EXTRA_TITLE,"Radar-audit-"+System.currentTimeMillis()+".csv");startActivityForResult(i,EXPORT_AUDIT);
+            }).setNegativeButton("إلغاء",null).show();
+    }
     private void showPhaseShadow(){
         new AlertDialog.Builder(this).setTitle("اختبار ربع الساعة")
             .setMessage(PhaseShadow.report(prefs().getAll(),System.currentTimeMillis())+"\n"+prefs().getString("v66_phase_error",""))
@@ -61,12 +69,19 @@ public class MainActivity extends Activity {
     }
     @Override protected void onActivityResult(int request,int result,Intent data){
         super.onActivityResult(request,result,data);
-        if(request!=EXPORT_PHASE||result!=RESULT_OK||data==null||data.getData()==null)return;
+        if((request!=EXPORT_PHASE&&request!=EXPORT_AUDIT)||result!=RESULT_OK||data==null||data.getData()==null)return;
         final android.net.Uri uri=data.getData();
         final java.util.Map<String,?> snapshot=prefs().getAll();
         new Thread(()->{
             try{
-                org.json.JSONObject out=new org.json.JSONObject().put("schema","phase-shadow-v1").put("app","6.6-shadow").put("exportedAt",System.currentTimeMillis())
+                if(request==EXPORT_AUDIT){
+                    String csv=ResearchExport.csv(String.valueOf((snapshot.containsKey("v6_trace")?snapshot.get("v6_trace"):"[]")),String.valueOf((snapshot.containsKey("v65_outcomes")?snapshot.get("v65_outcomes"):"[]")),String.valueOf((snapshot.containsKey("v67_notifications")?snapshot.get("v67_notifications"):"[]")));
+                    try(java.io.OutputStream stream=getContentResolver().openOutputStream(uri,"wt")){
+                        if(stream==null)throw new java.io.IOException("No output stream");stream.write(csv.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    }
+                    runOnUiThread(()->feedback("تم حفظ CSV"));return;
+                }
+                org.json.JSONObject out=new org.json.JSONObject().put("schema","phase-shadow-v1").put("app","6.7-audit").put("exportedAt",System.currentTimeMillis())
                     .put("description","Frozen per-symbol calibration; activity only, not BUY. Hourly samples capped at 72 per symbol. Gross closed-minute price returns, no fills or costs.");
                 org.json.JSONObject symbols=new org.json.JSONObject();
                 for(java.util.Map.Entry<String,?> e:snapshot.entrySet())if(e.getKey().startsWith("v66_phase_")){
@@ -96,7 +111,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(9, 12, 17));
 
         TextView title = new TextView(this);
-        title.setText("🎯 Explosion Radar V6.6");
+        title.setText("🎯 Explosion Radar V6.7");
         title.setTextColor(Color.WHITE);
         title.setTextSize(22);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
@@ -185,7 +200,7 @@ public class MainActivity extends Activity {
             }).setNegativeButton("إلغاء",null).show();
         });
         Button outcomes=new Button(this);outcomes.setText("📊 نتائج الرصد بعد 5 / 15 / 60 دقيقة");
-        outcomes.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("تقييم الرصد • V6.6")
+        outcomes.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("تقييم الرصد • V6.7")
             .setMessage(OutcomeLedger.report(prefs().getString("v65_outcomes","[]"),System.currentTimeMillis()))
             .setPositiveButton("إغلاق",null).show());
         Button alerts=new Button(this);alerts.setText("🔔 إعدادات الإشعارات / اختبار");
@@ -198,10 +213,11 @@ public class MainActivity extends Activity {
 
         Button toolsMenu=new Button(this);toolsMenu.setText("☰ الأدوات والتقارير والإشعارات");
         toolsMenu.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("الأدوات")
-            .setItems(new String[]{"الاختبار التاريخي","مختبر الزخم اليومي","سجل قبول ورفض الإشارات","لماذا لم تظهر العملة؟","نتائج 5 / 15 / 60 دقيقة","إعدادات الإشعارات / اختبار","حالة الاتصال وتغطية الفحص","اختبار ربع الساعة (تجريبي)"},(d,w)->{
+            .setItems(new String[]{"الاختبار التاريخي","مختبر الزخم اليومي","سجل قبول ورفض الإشارات","لماذا لم تظهر العملة؟","نتائج 5 / 15 / 60 دقيقة","إعدادات الإشعارات / اختبار","حالة الاتصال وتغطية الفحص","اختبار ربع الساعة (تجريبي)","تصدير سجل الإشارات CSV"},(d,w)->{
                 Button[] actions={replay,research,log,audit,outcomes,alerts};
                 if(w<actions.length)actions[w].performClick();
                 else if(w==7)showPhaseShadow();
+                else if(w==8)exportAudit();
                 else new AlertDialog.Builder(this).setTitle("حالة الفحص والتغطية").setMessage(scanCoverage.getText()).setPositiveButton("إغلاق",null).show();
             }).setNegativeButton("إغلاق",null).show());root.addView(toolsMenu);
         TextView listTitle = new TextView(this);

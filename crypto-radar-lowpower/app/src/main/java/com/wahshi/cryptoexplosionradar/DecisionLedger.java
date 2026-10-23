@@ -12,6 +12,8 @@ public final class DecisionLedger {
    JSONObject event=new JSONObject().put("symbol",symbol).put("state",state).put("reason",reason==null?"":reason)
      .put("observedAt",now).put("closedAt",candle)
      .put("score",r==null?0:r.score).put("audit",r==null?"No complete candles":r.audit());
+   if(r!=null)event.put("vol",r.volumeAcceleration).put("trades",r.tradeAcceleration).put("z",r.tradeZ)
+      .put("buyShare",r.buyShare).put("quote5",r.quote5).put("extension",r.extension);
    out.put(event);
    int count=1;
    for(int i=0;i<before.length()&&count<LIMIT;i++){

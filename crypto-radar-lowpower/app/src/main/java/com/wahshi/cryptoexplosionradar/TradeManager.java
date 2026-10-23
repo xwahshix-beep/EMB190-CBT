@@ -118,7 +118,7 @@ public final class TradeManager {
 
     private static String readUrl(String u) throws Exception {
         HttpsURLConnection c = (HttpsURLConnection)new URL(u).openConnection();
-        c.setConnectTimeout(8000); c.setReadTimeout(12000); c.setRequestProperty("User-Agent", "ExplosionRadarV44/4.4");
+        c.setConnectTimeout(8000); c.setReadTimeout(12000); c.setRequestProperty("User-Agent", "ExplosionRadar/"+BuildConfig.VERSION_NAME);
         InputStream in = c.getResponseCode() >= 200 && c.getResponseCode() < 300 ? c.getInputStream() : c.getErrorStream();
         BufferedReader br = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
         StringBuilder sb = new StringBuilder(); String line; while ((line=br.readLine())!=null) sb.append(line); br.close(); c.disconnect();

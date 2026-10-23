@@ -725,7 +725,7 @@ public class ScannerService extends Service {
         c.setDoOutput(true);
         c.setRequestProperty("Content-Type", "application/json");
         c.setRequestProperty("Accept", "application/json");
-        c.setRequestProperty("User-Agent", "FreeWhaleRadarV3/3.0");
+        c.setRequestProperty("User-Agent", "ExplosionRadar/"+BuildConfig.VERSION_NAME);
         byte[] bytes = body.toString().getBytes(StandardCharsets.UTF_8);
         try (OutputStream os = c.getOutputStream()) { os.write(bytes); }
         int code = c.getResponseCode();
@@ -741,7 +741,7 @@ public class ScannerService extends Service {
         c.setConnectTimeout(10_000);
         c.setReadTimeout(15_000);
         c.setRequestProperty("Accept", "application/json");
-        c.setRequestProperty("User-Agent", "FreeWhaleRadarV3/3.0");
+        c.setRequestProperty("User-Agent", "ExplosionRadar/"+BuildConfig.VERSION_NAME);
         int code = c.getResponseCode();
         InputStream stream = code >= 200 && code < 300 ? c.getInputStream() : c.getErrorStream();
         String text = readStream(stream);

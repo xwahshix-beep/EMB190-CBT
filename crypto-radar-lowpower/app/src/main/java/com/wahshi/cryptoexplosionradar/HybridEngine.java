@@ -312,7 +312,7 @@ public final class HybridEngine {
                     c.displayUntil=stable.until;
                     logDecision(prefs,c.symbol,c.analysis.pre,"BUY","Verified quote and stability: "+stable.reason,checked);
                     synchronized(HybridEngine.class){prefs.edit().putString("v65_outcomes",OutcomeLedger.start(prefs.getString("v65_outcomes","[]"),c.symbol,"BUY",stable.price,checked)).apply();}
-                    OpportunityAlerts.send(context,prefs,c.symbol,c.lastPrice,c.entryLow,c.entryHigh,stable.quoteAt,c.liveSignalAt,c.analysis.window);
+                    OpportunityAlerts.send(context,prefs,c.symbol,c.lastPrice,c.entryLow,c.entryHigh,stable.quoteAt,c.liveSignalAt,c.analysis.window,c.analysis.pre);
                 } else c.waitReason=c.lastPrice>c.entryHigh?"فات نطاق الدخول":"انتظار دخول السعر في النطاق";
             } catch(Exception ignored) {c.liveState="WAIT";c.waitReason="تعذر التحقق من السعر الحالي";}
         }

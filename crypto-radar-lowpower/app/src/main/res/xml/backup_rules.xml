@@ -1,0 +1,3 @@
+<full-backup-content>
+    <exclude domain="sharedpref" path="radar_secrets.xml" />
+</full-backup-content>

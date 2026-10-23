@@ -12,9 +12,11 @@ public final class MinuteStreams {
     private static WebSocket socket;
     private static long generation,lastConnect,lastMessage,retryAfter;
     private static boolean enabled,connected;
+    private static int failures;
+    private static long healthySince;
     private MinuteStreams(){}
     public static synchronized void start(){enabled=true;}
-    public static synchronized void stop(){enabled=false;generation++;if(socket!=null)socket.cancel();socket=null;connected=false;histories.clear();symbols.clear();retryAfter=0;}
+    public static synchronized void stop(){enabled=false;generation++;if(socket!=null)socket.cancel();socket=null;connected=false;histories.clear();symbols.clear();retryAfter=0;failures=0;healthySince=0;}
     public static synchronized void ensure(List<String> universe,long now){
         if(!enabled)return;
         Set<String> wanted=new TreeSet<>(universe);
@@ -22,29 +24,36 @@ public final class MinuteStreams {
         if(wanted.size()>900){wanted=new TreeSet<>(new ArrayList<>(wanted).subList(0,900));}
         boolean healthy=socket!=null&&now-Math.max(lastMessage,lastConnect)<45000;
         if(healthy&&(wanted.equals(symbols)||now-lastConnect<60000))return;
+        if(socket!=null&&!healthy){
+            generation++;socket.cancel();socket=null;connected=false;healthySince=0;
+            retryAfter=now+RetryPolicy.delay(++failures,Math.random());return;
+        }
         if(now<retryAfter)return;
         generation++;final long own=generation;
         if(socket!=null)socket.cancel();socket=null;connected=false;
         symbols=wanted;histories.keySet().retainAll(new HashSet<>(universe));
         if(wanted.isEmpty())return;
         StringBuilder streams=new StringBuilder();for(String s:wanted){if(streams.length()>0)streams.append('/');streams.append(s.toLowerCase(Locale.US)).append("@kline_1m");}
-        lastConnect=now;lastMessage=0;retryAfter=now+15000;
+        lastConnect=now;lastMessage=0;healthySince=0;retryAfter=now+15000;
         socket=CLIENT.newWebSocket(new Request.Builder().url("wss://stream.binance.com:9443/stream?streams="+streams).build(),new WebSocketListener(){
             @Override public void onOpen(WebSocket ws,Response response){synchronized(MinuteStreams.class){if(own!=generation||!enabled){ws.cancel();return;}connected=true;}}
             @Override public void onMessage(WebSocket ws,String message){synchronized(MinuteStreams.class){
                 if(own!=generation||!enabled)return;
                 try{JSONObject data=new JSONObject(message).getJSONObject("data");JSONObject k=data.getJSONObject("k");String s=k.getString("s");
                     if(!symbols.contains(s))return;
-                    lastMessage=System.currentTimeMillis();histories.computeIfAbsent(s,key->new MinuteHistory()).stream(k,lastMessage);
+                    lastMessage=System.currentTimeMillis();
+                    if(healthySince==0)healthySince=lastMessage;
+                    if(lastMessage-healthySince>=60000)failures=0;
+                    histories.computeIfAbsent(s,key->new MinuteHistory()).stream(k,lastMessage);
                 }catch(Exception ignored){} // Bad packets never become usable candles.
             }}
             @Override public void onFailure(WebSocket ws,Throwable error,Response response){lost();}
             @Override public void onClosing(WebSocket ws,int code,String reason){ws.close(code,reason);lost();}
             @Override public void onClosed(WebSocket ws,int code,String reason){lost();}
-            private void lost(){synchronized(MinuteStreams.class){if(own!=generation)return;connected=false;socket=null;retryAfter=System.currentTimeMillis()+60000;}}
+            private void lost(){synchronized(MinuteStreams.class){if(own!=generation)return;generation++;connected=false;socket=null;healthySince=0;retryAfter=System.currentTimeMillis()+RetryPolicy.delay(++failures,Math.random());}}
         });
     }
     public static synchronized JSONArray snapshot(String symbol,long now){try{MinuteHistory h=histories.get(symbol);return h==null?null:h.snapshot(now);}catch(Exception e){return null;}}
     public static synchronized void seed(String symbol,JSONArray rows,long now)throws Exception{if(enabled)histories.computeIfAbsent(symbol,key->new MinuteHistory()).merge(rows,now);}
-    public static synchronized String status(long now){return "WebSocket: "+(connected?"متصل":"غير متصل / إعادة محاولة")+" • آخر رسالة: "+(lastMessage==0?"لم تصل":Math.max(0,(now-lastMessage)/1000)+" ث");}
+    public static synchronized String status(long now){return "WebSocket: "+(connected?"متصل":"غير متصل / إعادة محاولة")+" • إعادة المحاولة بعد: "+(connected?0:Math.max(0,(retryAfter-now+999)/1000))+" ث • آخر رسالة: "+(lastMessage==0?"لم تصل":Math.max(0,(now-lastMessage)/1000)+" ث");}
 }
