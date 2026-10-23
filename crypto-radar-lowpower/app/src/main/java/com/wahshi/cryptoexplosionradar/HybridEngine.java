@@ -231,6 +231,13 @@ public final class HybridEngine {
                         outcomes=OutcomeLedger.start(outcomes,c.symbol,a.pre.state,a.lastClose,c.checkedAt);
                     prefs.edit().putString("v65_outcomes",outcomes).apply();
                 }
+                // Isolated observational experiment: failures cannot change the live decision path.
+                try {
+                    String key="v66_phase_"+c.symbol;
+                    String old=prefs.getString(key,"{}");
+                    String updated=PhaseShadow.update(old,a.phaseRows,c.checkedAt);
+                    if(!old.equals(updated))prefs.edit().putString(key,updated).apply();
+                } catch(Exception ex) { prefs.edit().putString("v66_phase_error","تعذر تحديث الاختبار: "+c.symbol).apply(); }
                 // Watch states precede the breakout: do not gate them on the BUY entry window.
                 c.armed=a.pre.state.equals("WATCH")||a.pre.state.equals("EARLY_WATCH");
                 if(c.armed)armedCount++;
@@ -547,6 +554,7 @@ public final class HybridEngine {
 
         Analysis a = new Analysis();
         a.pre=pre;
+        a.phaseRows=rows;
         a.score = score;
         a.rvol = rvol;
         a.tradeRatio = tradeR;
@@ -903,6 +911,7 @@ public final class HybridEngine {
     static final class Analysis {
         EntryWindow window;
         PreExplosionEngine.Result pre;
+        JSONArray phaseRows;
         double score;
         double rvol;
         double tradeRatio;
