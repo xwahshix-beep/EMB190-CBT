@@ -62,7 +62,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(9, 12, 17));
 
         TextView title = new TextView(this);
-        title.setText("🎯 Explosion Radar V6.4");
+        title.setText("🎯 Explosion Radar V6.5");
         title.setTextColor(Color.WHITE);
         title.setTextSize(27);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
@@ -135,6 +135,25 @@ public class MainActivity extends Activity {
             .setMessage(DecisionLedger.history(prefs().getString("v6_trace","[]"),80))
             .setPositiveButton("إغلاق",null).show());
         root.addView(log);
+        Button audit=new Button(this);audit.setText("🔎 لماذا لم تظهر العملة؟");
+        audit.setOnClickListener(v->{
+            android.widget.EditText input=new android.widget.EditText(this);input.setHint("ARK أو ARKUSDT");
+            new AlertDialog.Builder(this).setTitle("فحص آخر قرار مسجل").setView(input).setPositiveButton("فحص",(d,w)->{
+                String symbol=input.getText().toString().trim().toUpperCase(java.util.Locale.US).replace("/","");
+                if(!symbol.endsWith("USDT"))symbol+="USDT";
+                long at=prefs().getLong("v65_last_at_"+symbol,0),scopeAt=prefs().getLong("v65_universe_at",0);
+                boolean inside=false;try{inside=new org.json.JSONObject(prefs().getString("v65_universe","{}")).has(symbol);}catch(Exception ignored){}
+                String message="آخر تحديث لنطاق الفحص: "+(scopeAt==0?"غير متاح":new java.util.Date(scopeAt).toString())+
+                    "\n"+(inside?"داخل نطاق آخر فحص":"غير موجود في نطاق آخر فحص؛ قد يكون غير مدعوم أو دون حد السيولة، ولا يكفي ذلك لتحديد السبب التاريخي")+
+                    "\n\n"+(at==0?"لا يوجد قرار محفوظ لهذه العملة منذ تثبيت هذا التحديث":new java.util.Date(at)+"\n"+prefs().getString("v65_last_"+symbol,""))+
+                    "\n\nهذا آخر قرار فقط، وليس إعادة بناء لما حدث قبل التحديث. ارتفاع 24 ساعة لا يثبت وجود شرط شراء أثناء تشغيل الرادار.";
+                new AlertDialog.Builder(this).setTitle(symbol).setMessage(message).setPositiveButton("إغلاق",null).show();
+            }).setNegativeButton("إلغاء",null).show();
+        });root.addView(audit);
+        Button outcomes=new Button(this);outcomes.setText("📊 نتائج الرصد بعد 5 / 15 / 60 دقيقة");
+        outcomes.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("تقييم الرصد • V6.5")
+            .setMessage(OutcomeLedger.report(prefs().getString("v65_outcomes","[]"),System.currentTimeMillis()))
+            .setPositiveButton("إغلاق",null).show());root.addView(outcomes);
         Button alerts=new Button(this);alerts.setText("🔔 إعدادات الإشعارات / اختبار");
         alerts.setOnClickListener(v -> new AlertDialog.Builder(this).setTitle("نطاق إشعارات الشراء")
             .setItems(new String[]{"كل إشارات الشراء المؤكدة","العملة المتابعة فقط","إرسال إشعار تجريبي","إعدادات إشعارات Android"},(d,which)->{

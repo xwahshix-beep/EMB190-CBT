@@ -81,6 +81,8 @@ public final class HybridEngine {
 
         Map<String, DayTicker> day = load24h();
         List<String> eligible = new ArrayList<>(day.keySet());
+        JSONObject universe=new JSONObject();for(String symbol:eligible)universe.put(symbol,true);
+        prefs.edit().putString("v65_universe",universe.toString()).putLong("v65_universe_at",System.currentTimeMillis()).apply();
         MinuteStreams.ensure(eligible,now);
         Map<String, HourTicker> hour = loadRolling1h(eligible);
 
@@ -223,12 +225,18 @@ public final class HybridEngine {
                 prefs.edit().putLong("minute_success_"+c.symbol,System.currentTimeMillis()).apply();
                 c.lastPrice=a.lastClose;
                 c.checkedAt=System.currentTimeMillis();
+                synchronized(HybridEngine.class){
+                    String outcomes=OutcomeLedger.observe(prefs.getString("v65_outcomes","[]"),c.symbol,a.lastClose,a.pre.closedAt,c.checkedAt);
+                    if("WATCH".equals(a.pre.state) || "EARLY_WATCH".equals(a.pre.state))
+                        outcomes=OutcomeLedger.start(outcomes,c.symbol,a.pre.state,a.lastClose,c.checkedAt);
+                    prefs.edit().putString("v65_outcomes",outcomes).apply();
+                }
                 // Watch states precede the breakout: do not gate them on the BUY entry window.
                 c.armed=a.pre.state.equals("WATCH")||a.pre.state.equals("EARLY_WATCH");
                 if(c.armed)armedCount++;
                 prefs.edit().putLong("minute_watch_"+c.symbol,c.armed?c.checkedAt:0).apply();
                 c.waitReason=a.pre.detail()+" • "+a.pre.reason;
-                logDecision(prefs,c.symbol,a.pre,a.pre.state,c.waitReason,c.checkedAt);
+                logDecision(prefs,c.symbol,a.pre,"BUY".equals(a.pre.state)?"PENDING_CONFIRMATION":a.pre.state,c.waitReason,c.checkedAt);
                 double total = c.score + a.score;
                 boolean confirmedBuy = a.pre.state.equals("BUY") && !c.catalystNegative;
                 if(confirmedBuy){
@@ -296,6 +304,7 @@ public final class HybridEngine {
                     if(!stable.buy){c.liveState="WAIT";c.tradeTriggered=false;logDecision(prefs,c.symbol,c.analysis.pre,"WAIT",stable.reason,checked);continue;}
                     c.displayUntil=stable.until;
                     logDecision(prefs,c.symbol,c.analysis.pre,"BUY","Verified quote and stability: "+stable.reason,checked);
+                    synchronized(HybridEngine.class){prefs.edit().putString("v65_outcomes",OutcomeLedger.start(prefs.getString("v65_outcomes","[]"),c.symbol,"BUY",stable.price,checked)).apply();}
                     OpportunityAlerts.send(context,prefs,c.symbol,c.lastPrice,c.entryLow,c.entryHigh,stable.quoteAt,c.liveSignalAt,c.analysis.window);
                 } else c.waitReason=c.lastPrice>c.entryHigh?"فات نطاق الدخول":"انتظار دخول السعر في النطاق";
             } catch(Exception ignored) {c.liveState="WAIT";c.waitReason="تعذر التحقق من السعر الحالي";}
@@ -376,7 +385,8 @@ public final class HybridEngine {
         synchronized (HybridEngine.class) {
             String events=DecisionLedger.append(prefs.getString("v6_trace","[]"),symbol,state,reason,r,now);
             String remembered=DecisionLedger.remember(prefs.getString("v6_recent","{}"),symbol,r,now);
-            prefs.edit().putString("v6_trace",events).putString("v6_recent",remembered).apply();
+            prefs.edit().putString("v6_trace",events).putString("v6_recent",remembered)
+                .putString("v65_last_"+symbol,state+" • "+reason).putLong("v65_last_at_"+symbol,now).apply();
         }
     }
 

@@ -17,7 +17,7 @@ public final class ResearchLabActivity extends Activity {
  private TextView text(LinearLayout root,String value,int size){TextView t=new TextView(this);t.setText(value);t.setTextSize(size);t.setTextColor(Color.rgb(230,237,244));t.setPadding(0,14,0,14);root.addView(t);return t;}
  @Override public void onCreate(Bundle b){super.onCreate(b);
   ScrollView scroll=new ScrollView(this);LinearLayout root=new LinearLayout(this);root.setOrientation(1);root.setPadding(28,28,28,28);root.setBackgroundColor(Color.rgb(9,18,28));scroll.addView(root);setContentView(scroll);
-  TextView title=text(root,"مختبر الزخم اليومي · V6.4",25);title.setGravity(Gravity.CENTER);
+  TextView title=text(root,"مختبر الزخم اليومي · V6.5",25);title.setGravity(Gravity.CENTER);
   text(root,"وضع بحثي — لا توجد أفضلية ربحية مثبتة\nفحص يدوي ودفتر ملاحظات؛ لا تنفيذ صفقات ولا مراقبة خلفية في هذه الشاشة.",17).setTextColor(Color.rgb(255,197,90));
   text(root,"نتائج الاختبارات الفعلية",21);
   try{

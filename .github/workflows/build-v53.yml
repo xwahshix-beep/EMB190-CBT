@@ -50,7 +50,7 @@ jobs:
           test -s Explosion-Radar-V6.apk
           "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging Explosion-Radar-V6.apk | tee apk-metadata.txt
           grep -q "name='com.wahshi.cryptoexplosionradar'" apk-metadata.txt
-          grep -q "versionName='6.4-alerts'" apk-metadata.txt
+          grep -q "versionName='6.5-audit'" apk-metadata.txt
           grep -q "application-icon" apk-metadata.txt
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose Explosion-Radar-V6.apk | tee signature.txt
           python3 crypto-radar-lowpower/tests/verify-apk-assets.py Explosion-Radar-V6.apk
