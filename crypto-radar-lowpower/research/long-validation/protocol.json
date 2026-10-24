@@ -1,0 +1,20 @@
+{
+ "id":"radar-long-v1-20261024","frozen_before_run":true,
+ "source_commit":"a391b1ca45a302e6ec81ea929c4aed7a750e0856",
+ "symbols":["BTCUSDT","ETHUSDT","ADAUSDT","XRPUSDT","DOGEUSDT","LTCUSDT","FTTUSDT"],
+ "periods":{"stress_history":["2022-01","2022-12"],"validation":["2025-01","2025-12"],"confirmation_retrospective":["2026-01","2026-09"]},
+ "data":"Binance public monthly Spot 1m klines, SHA256 checksum required; unavailable files recorded, not substituted; reset warmup each month",
+ "engines":["PreExplosionEngine BUY unchanged","PreExplosionEngine BUY plus EntryGuard unchanged, and prior-12-bar resistance entry range [0.1%,0.6%]"],
+ "unevaluable":["Hybrid ranking and real quote stability/spread","EarlyWhale aggregate orders","Catalyst historical publication arrivals","manual Follow/TradeManager user entries","PhaseShadow prospective calibration"],
+ "entry":"open two bars after signal bar (one minute delay after close); stress open four bars after signal (three minutes delay)",
+ "exit":"open 60 minutes after entry; no optimized stop or target; no overlapping signals within 6h per symbol per variant",
+ "costs":{"fee_each_side":0.001,"slippage_each_side":0.0005,"stress_slippage_each_side":0.0015},
+ "baseline":"20 deterministic seeded uniform random valid entry times in the same symbol-month per signal, same duration/cost/delay; equal per-observation weight, not portfolio return; overlaps possible",
+ "bootstrap":"2000 resamples of pooled symbol-month clusters; 97.5% two-sided interval (Bonferroni for two variants); seed 20261024",
+ "acceptance":"each of validation and confirmation requires >=100 signals, >=6 distinct months, lower clustered interval of mean net and mean excess over random >0, mean stressed net >0, and stressed excess >0; confirmation is retrospective and insufficient for production enablement",
+ "missing":"all signal rows retained; incomplete forward 64-minute path marked missing; no negative/positive outcome substitution",
+ "events":"nonoverlapping by 60 minutes: first future close at least +2% from candidate minute close within 60 min; signal in previous 15 min or at event start counts detected; all gaps excluded and counted; fixed definition, not all pumps",
+ "limitations":"fixed seven-symbol panel is not all-market representative or free of selection bias; exclude no losses; historical periods may be familiar from prior daily research; no microstructure fill claims; no thresholds may be changed after results",
+ "daily_momentum":"separate strategy: rerun existing frozen portfolio simulator on previously archived broad daily universe through 2026-10-16; retain separate summary and label reused periods, not new independent evidence",
+ "deployment":"BUY alerts default research-disabled until genuine prospective validation; no ranking/threshold additions; keep one primary minute research engine; unavailable components labelled not evaluated rather than failed"
+}
