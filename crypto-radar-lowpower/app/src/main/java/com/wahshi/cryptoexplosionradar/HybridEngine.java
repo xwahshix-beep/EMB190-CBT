@@ -441,12 +441,15 @@ public final class HybridEngine {
     }
 
     private static Analysis analyze1m(String symbol,JSONArray cached) throws Exception {
+        long epoch=MinuteStreams.epoch();
         JSONArray rows=cached;
         if(rows==null){
             String u = API + "/api/v3/klines?symbol=" + symbol + "&interval=1m&limit=130";
             rows=new JSONArray(readEarlyUrl(u));
-            MinuteStreams.seed(symbol,rows,System.currentTimeMillis());
+            if(!MinuteStreams.seed(symbol,rows,System.currentTimeMillis(),epoch))return null;
+            rows=MinuteStreams.snapshot(symbol,System.currentTimeMillis());
         }
+        if(rows==null||epoch!=MinuteStreams.epoch()||!MinuteStreams.ready(symbol,System.currentTimeMillis()))return null;
         EntryWindow window=EntryWindow.parse(rows,System.currentTimeMillis());
         PreExplosionEngine.Result pre=PreExplosionJson.evaluate(rows,System.currentTimeMillis());
         window.resistance=pre.resistance;

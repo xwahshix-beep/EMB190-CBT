@@ -13,6 +13,7 @@ public final class OpportunityAlerts {
   synchronized(FollowGate.LOCK){
    if(!BuyAlertPolicy.inScope(prefs.getBoolean("notify_all_buys",true),FollowGate.active(prefs),symbol)){prefs.edit().putString("push_status","مستبعد من نطاق التنبيهات: "+symbol).apply();return false;}
    long checked=System.currentTimeMillis();
+   if(!MinuteStreams.ready(symbol,checked)){prefs.edit().putString("push_status","مؤجل حتى اكتمال استعادة البيانات: "+symbol).apply();return false;}
    if(window==null||window.reason(price,checked)!=null)return false;
    if(low<window.entryLow()-1e-10||high>window.entryHigh()+1e-10)return false;
    NotificationManager nm=(NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
