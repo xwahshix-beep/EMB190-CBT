@@ -1,0 +1,200 @@
+{
+  "apk_sha256": "715c9687be2c96875548fe73d49edb831c9945c1f5a55f30784fb850acf2aa9e",
+  "source_commit": "cab9084fd2a0dd81bb13d62111181bca48370af9",
+  "debuggable": true,
+  "hmac_implementation": "Bundled Okio dependency of OkHttp",
+  "application_hmac_calls": [],
+  "all_hmac_calls": [
+    {
+      "class": "Lokio/Buffer;",
+      "method": "hmac",
+      "call": "v9, Ljavax/crypto/Mac;->getInstance(Ljava/lang/String;)Ljavax/crypto/Mac;"
+    },
+    {
+      "class": "Lokio/Buffer;",
+      "method": "hmac",
+      "call": "v0, v1, Ljavax/crypto/Mac;->init(Ljava/security/Key;)V"
+    },
+    {
+      "class": "Lokio/Buffer;",
+      "method": "hmac",
+      "call": "v0, v3, v4, v5, Ljavax/crypto/Mac;->update([B I I)V"
+    },
+    {
+      "class": "Lokio/Buffer;",
+      "method": "hmac",
+      "call": "v0, v4, v5, v6, Ljavax/crypto/Mac;->update([B I I)V"
+    },
+    {
+      "class": "Lokio/Buffer;",
+      "method": "hmac",
+      "call": "v0, Ljavax/crypto/Mac;->doFinal()[B"
+    },
+    {
+      "class": "Lokio/Buffer;",
+      "method": "hmacSha1",
+      "call": "v1, v0, v2, Lokio/Buffer;->hmac(Ljava/lang/String; Lokio/ByteString;)Lokio/ByteString;"
+    },
+    {
+      "class": "Lokio/Buffer;",
+      "method": "hmacSha256",
+      "call": "v1, v0, v2, Lokio/Buffer;->hmac(Ljava/lang/String; Lokio/ByteString;)Lokio/ByteString;"
+    },
+    {
+      "class": "Lokio/Buffer;",
+      "method": "hmacSha512",
+      "call": "v1, v0, v2, Lokio/Buffer;->hmac(Ljava/lang/String; Lokio/ByteString;)Lokio/ByteString;"
+    },
+    {
+      "class": "Lokio/ByteString;",
+      "method": "hmac$okio",
+      "call": "v5, Ljavax/crypto/Mac;->getInstance(Ljava/lang/String;)Ljavax/crypto/Mac;"
+    },
+    {
+      "class": "Lokio/ByteString;",
+      "method": "hmac$okio",
+      "call": "v0, v1, Ljavax/crypto/Mac;->init(Ljava/security/Key;)V"
+    },
+    {
+      "class": "Lokio/ByteString;",
+      "method": "hmac$okio",
+      "call": "v0, v2, Ljavax/crypto/Mac;->doFinal([B)[B"
+    },
+    {
+      "class": "Lokio/ByteString;",
+      "method": "hmacSha1",
+      "call": "v1, v0, v2, Lokio/ByteString;->hmac$okio(Ljava/lang/String; Lokio/ByteString;)Lokio/ByteString;"
+    },
+    {
+      "class": "Lokio/ByteString;",
+      "method": "hmacSha256",
+      "call": "v1, v0, v2, Lokio/ByteString;->hmac$okio(Ljava/lang/String; Lokio/ByteString;)Lokio/ByteString;"
+    },
+    {
+      "class": "Lokio/ByteString;",
+      "method": "hmacSha512",
+      "call": "v1, v0, v2, Lokio/ByteString;->hmac$okio(Ljava/lang/String; Lokio/ByteString;)Lokio/ByteString;"
+    },
+    {
+      "class": "Lokio/HashingSink;",
+      "method": "<init>",
+      "call": "v8, Ljavax/crypto/Mac;->getInstance(Ljava/lang/String;)Ljavax/crypto/Mac;"
+    },
+    {
+      "class": "Lokio/HashingSink;",
+      "method": "<init>",
+      "call": "v1, v3, Ljavax/crypto/Mac;->init(Ljava/security/Key;)V"
+    },
+    {
+      "class": "Lokio/HashingSink;",
+      "method": "<init>",
+      "call": "v5, v6, v0, Lokio/HashingSink;-><init>(Lokio/Sink; Ljavax/crypto/Mac;)V"
+    },
+    {
+      "class": "Lokio/HashingSink;",
+      "method": "hmacSha1",
+      "call": "v0, v1, v2, Lokio/HashingSink$Companion;->hmacSha1(Lokio/Sink; Lokio/ByteString;)Lokio/HashingSink;"
+    },
+    {
+      "class": "Lokio/HashingSink;",
+      "method": "hmacSha256",
+      "call": "v0, v1, v2, Lokio/HashingSink$Companion;->hmacSha256(Lokio/Sink; Lokio/ByteString;)Lokio/HashingSink;"
+    },
+    {
+      "class": "Lokio/HashingSink;",
+      "method": "hmacSha512",
+      "call": "v0, v1, v2, Lokio/HashingSink$Companion;->hmacSha512(Lokio/Sink; Lokio/ByteString;)Lokio/HashingSink;"
+    },
+    {
+      "class": "Lokio/HashingSink;",
+      "method": "hash",
+      "call": "v0, Ljavax/crypto/Mac;->doFinal()[B"
+    },
+    {
+      "class": "Lokio/HashingSink;",
+      "method": "write",
+      "call": "v4, v5, v6, v3, Ljavax/crypto/Mac;->update([B I I)V"
+    },
+    {
+      "class": "Lokio/HashingSource;",
+      "method": "<init>",
+      "call": "v8, Ljavax/crypto/Mac;->getInstance(Ljava/lang/String;)Ljavax/crypto/Mac;"
+    },
+    {
+      "class": "Lokio/HashingSource;",
+      "method": "<init>",
+      "call": "v1, v3, Ljavax/crypto/Mac;->init(Ljava/security/Key;)V"
+    },
+    {
+      "class": "Lokio/HashingSource;",
+      "method": "<init>",
+      "call": "v5, v6, v0, Lokio/HashingSource;-><init>(Lokio/Source; Ljavax/crypto/Mac;)V"
+    },
+    {
+      "class": "Lokio/HashingSource;",
+      "method": "hmacSha1",
+      "call": "v0, v1, v2, Lokio/HashingSource$Companion;->hmacSha1(Lokio/Source; Lokio/ByteString;)Lokio/HashingSource;"
+    },
+    {
+      "class": "Lokio/HashingSource;",
+      "method": "hmacSha256",
+      "call": "v0, v1, v2, Lokio/HashingSource$Companion;->hmacSha256(Lokio/Source; Lokio/ByteString;)Lokio/HashingSource;"
+    },
+    {
+      "class": "Lokio/HashingSource;",
+      "method": "hmacSha512",
+      "call": "v0, v1, v2, Lokio/HashingSource$Companion;->hmacSha512(Lokio/Source; Lokio/ByteString;)Lokio/HashingSource;"
+    },
+    {
+      "class": "Lokio/HashingSource;",
+      "method": "hash",
+      "call": "v0, Ljavax/crypto/Mac;->doFinal()[B"
+    },
+    {
+      "class": "Lokio/HashingSource;",
+      "method": "read",
+      "call": "v8, v9, v7, v10, Ljavax/crypto/Mac;->update([B I I)V"
+    },
+    {
+      "class": "Lokio/Okio;",
+      "method": "hashingSink",
+      "call": "v1, v2, Lokio/Okio__JvmOkioKt;->hashingSink(Lokio/Sink; Ljavax/crypto/Mac;)Lokio/HashingSink;"
+    },
+    {
+      "class": "Lokio/Okio;",
+      "method": "hashingSource",
+      "call": "v1, v2, Lokio/Okio__JvmOkioKt;->hashingSource(Lokio/Source; Ljavax/crypto/Mac;)Lokio/HashingSource;"
+    },
+    {
+      "class": "Lokio/Okio__JvmOkioKt;",
+      "method": "hashingSink",
+      "call": "v0, v1, v2, Lokio/HashingSink;-><init>(Lokio/Sink; Ljavax/crypto/Mac;)V"
+    },
+    {
+      "class": "Lokio/Okio__JvmOkioKt;",
+      "method": "hashingSource",
+      "call": "v0, v1, v2, Lokio/HashingSource;-><init>(Lokio/Source; Ljavax/crypto/Mac;)V"
+    },
+    {
+      "class": "Lokio/SegmentedByteString;",
+      "method": "hmac$okio",
+      "call": "v13, Ljavax/crypto/Mac;->getInstance(Ljava/lang/String;)Ljavax/crypto/Mac;"
+    },
+    {
+      "class": "Lokio/SegmentedByteString;",
+      "method": "hmac$okio",
+      "call": "v0, v1, Ljavax/crypto/Mac;->init(Ljava/security/Key;)V"
+    },
+    {
+      "class": "Lokio/SegmentedByteString;",
+      "method": "hmac$okio",
+      "call": "v0, v8, v10, v9, Ljavax/crypto/Mac;->update([B I I)V"
+    },
+    {
+      "class": "Lokio/SegmentedByteString;",
+      "method": "hmac$okio",
+      "call": "v0, Ljavax/crypto/Mac;->doFinal()[B"
+    }
+  ],
+  "scope": "Static bytecode inspection; not a network traffic capture or proof against reflection/dynamic code"
+}

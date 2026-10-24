@@ -26,6 +26,23 @@ public final class ResearchLabActivity extends Activity {
    for(int i=0;i<periods.length();i++){JSONObject p=periods.getJSONObject(i);text(root,String.format(Locale.US,"%s\n%s → %s\nصافي العائد %+.2f%% • %d صفقة\nأقصى تراجع %.2f%% • عائد الضغط %+.2f%%",p.getString("label"),p.getString("start"),p.getString("end"),p.getDouble("return_pct"),p.getInt("trades"),p.getDouble("drawdown_pct"),p.getDouble("stress_return_pct")),17);}
    text(root,report.getString("limitations"),15);
   }catch(Exception e){text(root,"تعذر قراءة نتائج البحث؛ لا تعتمد أي نتيجة غير ظاهرة.",17);}
+  text(root,"اختبار ماسح الدقيقة الطويل — نتائج منفصلة",21);
+  try {
+   ByteArrayOutputStream bytes=new ByteArrayOutputStream();
+   try(InputStream in=getAssets().open("research/scanner-long-summary.json")){byte[] buffer=new byte[4096];int n;while((n=in.read(buffer))!=-1)bytes.write(buffer,0,n);}
+   JSONObject r=new JSONObject(bytes.toString("UTF-8"));
+   text(root,"عدد شموع الدقيقة: "+r.getLong("bars")+"\nلم يجتز أي من الخيارين معيار القبول التاريخي. ليست هذه محاكاة لجميع أجزاء التطبيق أو اختبارًا حيًا.",17);
+   JSONObject periods=r.getJSONObject("periods");
+   for(String key:new String[]{"stress_history","validation","confirmation_retrospective"}) {
+    JSONObject variants=periods.getJSONObject(key);
+    for(int v=0;v<2;v++) {
+     JSONObject x=variants.getJSONObject(String.valueOf(v));
+     String label=key.equals("stress_history")?"2022":key.equals("validation")?"2025":"يناير–سبتمبر 2026";
+     text(root,String.format(Locale.US,"%s • %s\n%d إشارة مقيمة • متوسط صافي الإشارة %+.3f%%\nمرجع الدخول العشوائي %+.3f%% • الضغط %+.3f%%",label,v==0?"المحرك الأساسي":"المحرك مع حارس الدخول",x.getInt("evaluated"),x.getDouble("net60"),x.getDouble("baseline60"),x.getDouble("stress60")),17);
+    }
+   }
+   text(root,"دخول بعد دقيقة من إغلاق شمعة الإشارة؛ احتفاظ 60 دقيقة؛ رسوم 0.10% وانزلاق 0.05% لكل طرف. الضغط: تأخير 3 دقائق وانزلاق 0.15%. المتوسط لكل إشارة وليس عائد محفظة. سبع عملات ثابتة، والفترات رجعية وليست تحققًا مستقبليًا مستقلًا.",15);
+  }catch(Exception e){text(root,"تعذر قراءة اختبار الدقيقة الطويل",17);}
   text(root,"افحص عملة للملاحظة الورقية",21);
   EditText symbol=new EditText(this);symbol.setSingleLine(true);symbol.setText("BTCUSDT");symbol.setTextColor(Color.WHITE);symbol.setHintTextColor(Color.GRAY);symbol.setHint("مثال: BTCUSDT");root.addView(symbol);
   Button check=new Button(this);check.setText("فحص آخر يوم مكتمل");root.addView(check);

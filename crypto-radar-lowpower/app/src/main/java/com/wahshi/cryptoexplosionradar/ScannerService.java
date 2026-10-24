@@ -88,6 +88,7 @@ public class ScannerService extends Service {
     private AlarmManager alarmManager;
     private PendingIntent tickIntent;
     private PowerManager.WakeLock cycleWakeLock;
+    private final WakeMetrics wakeMetrics=new WakeMetrics();
     private volatile boolean cycleInFlight = false;
     private volatile long lastWhaleScanAt = 0L;
     private volatile List<WhaleSignal> cachedWhaleSignals = new ArrayList<>();
@@ -176,7 +177,7 @@ public class ScannerService extends Service {
         if(fastWorker!=null)fastWorker.shutdownNow();
         prefs.edit().putBoolean("radar_enabled", false).putBoolean("service_alive", false).apply();
         if (alarmManager != null && tickIntent != null) alarmManager.cancel(tickIntent);
-        if (cycleWakeLock != null && cycleWakeLock.isHeld()) cycleWakeLock.release();
+        releaseCycleWake();
         sendUi("الرادار متوقف", "تم إيقاف Explosion Radar بواسطة المستخدم.");
         if (Build.VERSION.SDK_INT >= 24) stopForeground(STOP_FOREGROUND_REMOVE); else stopForeground(true);
         stopSelf();
@@ -296,24 +297,38 @@ public class ScannerService extends Service {
         });
     }
 
+    private synchronized void acquireCycleWake() {
+        if(!running || cycleWakeLock==null || cycleWakeLock.isHeld()) return;
+        cycleWakeLock.acquire(90000);
+        wakeMetrics.acquired(SystemClock.elapsedRealtime(),90000);
+    }
+    private synchronized void releaseCycleWake() {
+        if(cycleWakeLock!=null && cycleWakeLock.isHeld()) cycleWakeLock.release();
+        wakeMetrics.released(SystemClock.elapsedRealtime());
+    }
+    private String wakeSummary() {
+        return "إبقاء المعالج مستيقظًا في الجلسة: "+(wakeMetrics.totalMs()/1000)+" ث • دورات مكتملة: "+wakeMetrics.cycles()
+            +" • بلوغ مهلة القفل: "+wakeMetrics.expired()+"\nالقياس يشمل الشاشة المفتوحة؛ ليس قياسًا لاستهلاك البطارية";
+    }
+
     private void runCycleSafe() {
         if(!running)return;
         long started=System.currentTimeMillis();
         try {
-            if(cycleWakeLock!=null&&!cycleWakeLock.isHeld())cycleWakeLock.acquire(90000);
-            startEnrichment();
+            startEnrichment(); // asynchronous network enrichment does not need the scan's CPU lock
+            acquireCycleWake();
             // Symbol/price matching is not verified contract identity. Research results cannot boost BUY.
             List<WhaleSignal> whales=Collections.emptyList();
             HybridEngine.ScanResult result=HybridEngine.scan(this,whales,cachedCatalyst,prefs);
             if(!running)return;
             long finished=System.currentTimeMillis();
             prefs.edit().putLong("last_scan_at",finished).putLong("scan_duration_ms",finished-started).apply();
-            sendUi(result.status,result.summary+"\n"+prefs.getString("onchain_health","بيانات السلسلة: انتظار الفحص")+"\nمدة الفحص: "+((finished-started)/1000)+" ثانية");
+            sendUi(result.status,result.summary+"\n"+wakeSummary()+"\n"+prefs.getString("onchain_health","بيانات السلسلة: انتظار الفحص")+"\nمدة الفحص: "+((finished-started)/1000)+" ثانية");
             updateServiceNotification("رصد الدقيقة يعمل • فرص الشراء دون فتح التطبيق");
         } catch(Exception ex) {
             if(running)sendUi("تعذر تحديث السوق","انتظار — "+safe(ex.getMessage()));
         } finally {
-            if(cycleWakeLock!=null&&cycleWakeLock.isHeld())cycleWakeLock.release();
+            releaseCycleWake();
             long elapsed=System.currentTimeMillis()-started;
             scheduleNext(Math.max(MarketHttp.retryDelay(),Math.max(5000,15000-elapsed)));
         }

@@ -11,6 +11,9 @@ with zipfile.ZipFile(sys.argv[1]) as z:
     research=json.loads(z.read('assets/research/momentum-summary.json'))
     assert len(research['periods'])==4
     assert research['profitability_proven'] is False
-    for name in [b'MinuteStreams',b'MinuteHistory',b'DailyMomentumEngine',b'ResearchLabActivity',b'PreExplosionEngine',b'HistoricalReplay',b'ReplayActivity',b'EARLY_WATCH']:
+    long=json.loads(z.read('assets/research/scanner-long-summary.json'))
+    assert long['bars']==10042830
+    assert long['recommended_production_buy_enabled'] is False
+    for name in [b'WakeMetrics',b'MinuteStreams',b'MinuteHistory',b'DailyMomentumEngine',b'ResearchLabActivity',b'PreExplosionEngine',b'HistoricalReplay',b'ReplayActivity',b'EARLY_WATCH']:
         assert name in dex,name
     print('Verified packaged datasets, research results and native V6.3 classes')

@@ -1,0 +1,2080 @@
+[
+  {
+    "symbol": "BTCUSDT",
+    "month": "2022-01",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2022-01.zip",
+    "status": "ok",
+    "sha256": "ce0e16e834331e70b3041677c7f409818d5904bb59cb7b880695e4cacd34fc09",
+    "bytes": 2229634
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2022-01",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2022-01.zip",
+    "status": "ok",
+    "sha256": "38386e47208de53dddfcb47490533d19284dd2331099b0679fcf75e7e0eb5b1e",
+    "bytes": 2114115
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2022-01",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2022-01.zip",
+    "status": "ok",
+    "sha256": "51b9fb0b2d31797ac370b0606005b083647ccc5543b6ad23f58ae76ecaddcb88",
+    "bytes": 1638272
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2022-01",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2022-01.zip",
+    "status": "ok",
+    "sha256": "777f7fd0cc255c95ac43c18b7b7cb202e474af86b29e02898d189d296f010d02",
+    "bytes": 1665994
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2022-01",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2022-01.zip",
+    "status": "ok",
+    "sha256": "9cce99be2d511c1a2e73d3bc5806df974f4c101f9a192bb685454e734e7bff55",
+    "bytes": 1587585
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2022-01",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2022-01.zip",
+    "status": "ok",
+    "sha256": "bac1adda1ee7e5bbfd3f69a47dae1a620d86587d5dd2636f255127612d4d93fa",
+    "bytes": 1566479
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2022-01",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2022-01.zip",
+    "status": "ok",
+    "sha256": "34e0f2a7c57a51c3829791b06f546635f859772e3aeabdcce1f9ff3cbb6bbdd5",
+    "bytes": 1497322
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2022-02",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2022-02.zip",
+    "status": "ok",
+    "sha256": "748844587c78902e4c35886620197053ee39f3e7104fbdcbfde00fe829bbfd1a",
+    "bytes": 2011133
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2022-02",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2022-02.zip",
+    "status": "ok",
+    "sha256": "4a316d17bac7b19f6d55e23910479b0354177bead4d6488f5829cb959df85178",
+    "bytes": 1912778
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2022-02",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2022-02.zip",
+    "status": "ok",
+    "sha256": "8d3b2654762a6067c2268196629f7b51f76fd493e465692c0455babd6f37d899",
+    "bytes": 1442532
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2022-02",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2022-02.zip",
+    "status": "ok",
+    "sha256": "83c7caeff6cbf0ac8f505b98be6ed1d07995c838f47cf65c499df6e7bc2da1c5",
+    "bytes": 1549872
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2022-02",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2022-02.zip",
+    "status": "ok",
+    "sha256": "00ac70732b29c808b2834f4e46bacc8d8e87bb1e3529878ee9e32743aa54ce49",
+    "bytes": 1400207
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2022-02",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2022-02.zip",
+    "status": "ok",
+    "sha256": "9e78b29d947f8e6c1e11dfcde9e600fff92b70961ac841437ea57ff0ed3ddba1",
+    "bytes": 1406511
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2022-02",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2022-02.zip",
+    "status": "ok",
+    "sha256": "5711f3cdc28b9988e167e3e91e57e91f8ebbf525339ff89ede0c1fe0d7b7c0d4",
+    "bytes": 1311720
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2022-03",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2022-03.zip",
+    "status": "ok",
+    "sha256": "f8a05f6657cb7f8ac41c047bae65bff74703f058f56517dca28a817d390b82d3",
+    "bytes": 2207992
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2022-03",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2022-03.zip",
+    "status": "ok",
+    "sha256": "41d2ebb5fc88f090ec38e51b785b6621738dac1ce996de14e0f9945024c02f78",
+    "bytes": 2089094
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2022-03",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2022-03.zip",
+    "status": "ok",
+    "sha256": "7fcdca6d8f7616daa731680475e3e87aa372ca39f8e5d2ea12cefa4bc87e88af",
+    "bytes": 1560657
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2022-03",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2022-03.zip",
+    "status": "ok",
+    "sha256": "8ffb1bcfe11c568ede421226fa1e86d477b2fcbb0446b61edf67e29feb9a72ab",
+    "bytes": 1675896
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2022-03",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2022-03.zip",
+    "status": "ok",
+    "sha256": "c6ef29d1541ca1baaad2ebcdc33ed263bee9bda681917438d3e218fc6c488b1d",
+    "bytes": 1520168
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2022-03",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2022-03.zip",
+    "status": "ok",
+    "sha256": "fd479395ba8935087b3cb19de36ee43f2edf165d076bf3bc4412a097ad8fee9c",
+    "bytes": 1520696
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2022-03",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2022-03.zip",
+    "status": "ok",
+    "sha256": "f3a3e542e3e195c3bd1792571c220ad234e056468f3dfd63bf19fbc0ad090380",
+    "bytes": 1382360
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2022-04",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2022-04.zip",
+    "status": "ok",
+    "sha256": "6e840c81076ac25e6acdbfe4aaeb7aa8b1895a70d8111a3c2908c5134072f097",
+    "bytes": 2103010
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2022-04",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2022-04.zip",
+    "status": "ok",
+    "sha256": "f5eefaafeebe9934811c1ccc46acc93e3de342761dc33349ab6917ade9018e5c",
+    "bytes": 2008130
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2022-04",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2022-04.zip",
+    "status": "ok",
+    "sha256": "dac0218a9a54931402c3ec1cc5a0f7c2ab3a473293de3cfa5a3fbc5dff5c6702",
+    "bytes": 1515443
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2022-04",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2022-04.zip",
+    "status": "ok",
+    "sha256": "acd3c0fecc5af5bcf7581a00098a041fed5895b2a3e7f65e9377f218e5ac5e3b",
+    "bytes": 1588704
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2022-04",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2022-04.zip",
+    "status": "ok",
+    "sha256": "797733715f7cd3cf145496876f5ffd27eb7280e29307db4c87ca145308292129",
+    "bytes": 1549464
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2022-04",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2022-04.zip",
+    "status": "ok",
+    "sha256": "6d9d10ae9726db95c4f60c065066605cbc5cabed49873c59e1fb0cc078f006a5",
+    "bytes": 1432699
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2022-04",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2022-04.zip",
+    "status": "ok",
+    "sha256": "e709a80eb916e2a5f25fe57dcbab4beadbc8d7ce5c4e42b4e68f53b67c10702f",
+    "bytes": 1314684
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2022-05",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2022-05.zip",
+    "status": "ok",
+    "sha256": "154311f08aa264e233b0c7b472aa490c8cfd1b6083ba86cf6c18134e50536b89",
+    "bytes": 2216492
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2022-05",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2022-05.zip",
+    "status": "ok",
+    "sha256": "7f3e2df3fc5c365cd678233c27d7a8864855bab0709370ac665d388e5795dfc3",
+    "bytes": 2110136
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2022-05",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2022-05.zip",
+    "status": "ok",
+    "sha256": "1c1f4dcdefd817bb8804bb2c8a59a0643d5d2a4d8c4d5e8ebc07ac8820b5c208",
+    "bytes": 1792295
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2022-05",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2022-05.zip",
+    "status": "ok",
+    "sha256": "d74ec0797f62afb0455d9cb886ca5e72cb4e83ea191ac0032bc0b7aeef63da20",
+    "bytes": 1662019
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2022-05",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2022-05.zip",
+    "status": "ok",
+    "sha256": "a9c380fab2cea6627ad3bbda953ad2fc6a79a5198bc8d679c6308d81bf9a943b",
+    "bytes": 1544464
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2022-05",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2022-05.zip",
+    "status": "ok",
+    "sha256": "eb59b3e449587bc07660cc3e220f7aae5482547c678f391dcea81c9c5100bf14",
+    "bytes": 1511430
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2022-05",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2022-05.zip",
+    "status": "ok",
+    "sha256": "e865d9744e9ecf4ae7969f087d2d1bf92c59d8fbe9ecfb5c09b3560d5c622404",
+    "bytes": 1340530
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2022-06",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2022-06.zip",
+    "status": "ok",
+    "sha256": "0ced8899e9c3b2c098e1c5fc4993250bac22d8684d2d38404310351f35e32c0c",
+    "bytes": 2158139
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2022-06",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2022-06.zip",
+    "status": "ok",
+    "sha256": "c189abf1f43601f3a389819f93a955ba0d96dab19dee0804dc1c741e26977e8c",
+    "bytes": 2056565
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2022-06",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2022-06.zip",
+    "status": "ok",
+    "sha256": "bcb50e9cbd71f5b539d6619082cdde3bdee58e1d31e1777a5d381f8572fdf75a",
+    "bytes": 1739237
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2022-06",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2022-06.zip",
+    "status": "ok",
+    "sha256": "ebe36cdf629a85bbd4437cb6ccc8de4c00e5ebb674c669fbfe9793a40ec13194",
+    "bytes": 1574335
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2022-06",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2022-06.zip",
+    "status": "ok",
+    "sha256": "4bdaa22635a356bf7fee02d16f0e7b9db5b6b0bdf52970a9b127ae41e1a39338",
+    "bytes": 1692317
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2022-06",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2022-06.zip",
+    "status": "ok",
+    "sha256": "95087dc215d8397daa9262c8a4dbd3d22a339d52ef4efc2e7eb8acb48ed813e5",
+    "bytes": 1573445
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2022-06",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2022-06.zip",
+    "status": "ok",
+    "sha256": "1afd4ad0065bb1a08def882f747d5d7c4b2e7eaf62a2b2adf7b6a259914fcbb2",
+    "bytes": 1323040
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2022-07",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2022-07.zip",
+    "status": "ok",
+    "sha256": "b7b9100066d75037063d0798b91fab91d62c348a21888ace2363a75a6089e7cc",
+    "bytes": 2298791
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2022-07",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2022-07.zip",
+    "status": "ok",
+    "sha256": "d536b2ae7c8161736f3f54e6d196ab53c86616e983b6c195ddad02936517e079",
+    "bytes": 2119356
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2022-07",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2022-07.zip",
+    "status": "ok",
+    "sha256": "d9505df58a06740d8119b1d4a069658ae304464e072275a99d01bb9c87b88f12",
+    "bytes": 1732561
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2022-07",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2022-07.zip",
+    "status": "ok",
+    "sha256": "c5d16ce8ad34cf0c4cde151e6706b82bcb0591b227a30027878957849ca4449f",
+    "bytes": 1596371
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2022-07",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2022-07.zip",
+    "status": "ok",
+    "sha256": "8d05271d451bb0d5cab352be04971d317e1bc739bc4cd9f03dcb9bb4a1bc9615",
+    "bytes": 1698671
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2022-07",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2022-07.zip",
+    "status": "ok",
+    "sha256": "f5410ff3298464f77d4ebda7489a43296624c35d17bb55c1f6af38ba269fa73e",
+    "bytes": 1691234
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2022-07",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2022-07.zip",
+    "status": "ok",
+    "sha256": "474840717fcbe8d755306d015d4dadf42765b09ce734b3aa413fcafa21196e1c",
+    "bytes": 1351920
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2022-08",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2022-08.zip",
+    "status": "ok",
+    "sha256": "7517a604803c40cd38b29fb490d7bce83d01e1e4ac9e9ae2bcd52adaea55a291",
+    "bytes": 2318381
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2022-08",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2022-08.zip",
+    "status": "ok",
+    "sha256": "6d5171bf39094bf479c49d7835bd99e4880b497bfcb3ccd655fc9298a7f508d9",
+    "bytes": 2107847
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2022-08",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2022-08.zip",
+    "status": "ok",
+    "sha256": "1278678392fb754c274e7e37dabdca68c401442b4d8bfda32f567e41aae65408",
+    "bytes": 1714234
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2022-08",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2022-08.zip",
+    "status": "ok",
+    "sha256": "2065bb2f4de9812adb2c701e91775ece3c5c81f1fb00d1236e9c32f7da3a0739",
+    "bytes": 1563297
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2022-08",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2022-08.zip",
+    "status": "ok",
+    "sha256": "ac0565cc21fe13e04d52023f18a290994a5145e54eb05a57ea4e52a5c03034a1",
+    "bytes": 1717687
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2022-08",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2022-08.zip",
+    "status": "ok",
+    "sha256": "a6afb60036b5b5b5e494929bdf5a3ee1d13606c6d81f4ea030b89cf29da33aa9",
+    "bytes": 1682760
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2022-08",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2022-08.zip",
+    "status": "ok",
+    "sha256": "768b0365be7aa9232cd1596c0077d11b13becdf1008ac89a90d647c5d2333543",
+    "bytes": 1267859
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2022-09",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2022-09.zip",
+    "status": "ok",
+    "sha256": "72b22ae8bbb91342c672c2915680729ce2e7223d21386de08d4af906e6bb0713",
+    "bytes": 2260540
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2022-09",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2022-09.zip",
+    "status": "ok",
+    "sha256": "2f608ec0e0072c8ec88dc8df798e101af9937702edd37f3447107faa00c84445",
+    "bytes": 2020746
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2022-09",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2022-09.zip",
+    "status": "ok",
+    "sha256": "06ce6736ed9c20bde6dfe27749a9b65162755721dc6bd1274a6b68bb4f4ca590",
+    "bytes": 1646693
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2022-09",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2022-09.zip",
+    "status": "ok",
+    "sha256": "a529d48a7826f5adac1f8a6f06549718d04fdf463783db7ead7134ae6a69bb04",
+    "bytes": 1584509
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2022-09",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2022-09.zip",
+    "status": "ok",
+    "sha256": "c7fe9a1380e552e7ed54723d690594f1b27486bc3bbf8b0f16fadf9e9d7df1ba",
+    "bytes": 1607210
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2022-09",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2022-09.zip",
+    "status": "ok",
+    "sha256": "89d5c4fc705c4b9a81113a4578cd500cb1d36d6f5bc1108cb52551571df5a5d1",
+    "bytes": 1652662
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2022-09",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2022-09.zip",
+    "status": "ok",
+    "sha256": "c44afbecc7f1749003b0c5b00bf759dcf3fac1871392eb27646f2e74cfcc5b2c",
+    "bytes": 1214050
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2022-10",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2022-10.zip",
+    "status": "ok",
+    "sha256": "5c9497d81e565c88256b1b17e86bc7257fc1f4a133ec50109c6a5a9bbd180f3f",
+    "bytes": 2300603
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2022-10",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2022-10.zip",
+    "status": "ok",
+    "sha256": "99648a89a2a713738cf36780f748a6ab9f84737d52fde3728dd59218ac832bc3",
+    "bytes": 2020787
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2022-10",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2022-10.zip",
+    "status": "ok",
+    "sha256": "470c04f3f341046b8b1f07621953bf04b189b1d26b752946b9c6458b0135ae6b",
+    "bytes": 1628119
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2022-10",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2022-10.zip",
+    "status": "ok",
+    "sha256": "ecde9ced9ad0d05c7501d3ac9183a7fab73d2c855df4e49241dd81cdf8f0383a",
+    "bytes": 1628297
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2022-10",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2022-10.zip",
+    "status": "ok",
+    "sha256": "c043e8252e983848c93072e8d5d849b99546aae641d681935c13ec007a0c5cd9",
+    "bytes": 1661547
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2022-10",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2022-10.zip",
+    "status": "ok",
+    "sha256": "d624788147ccca4adaf2ba11c80175637ab745bb76a7d36421a88358b70fe797",
+    "bytes": 1618441
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2022-10",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2022-10.zip",
+    "status": "ok",
+    "sha256": "8a58384743e9504d2f2f5a2a4767cbd4b176717ffda0a76a626d2892f3e37f9f",
+    "bytes": 1138129
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2022-11",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2022-11.zip",
+    "status": "ok",
+    "sha256": "7b7463638505f303ea91ababadff27bbb46c6d448428f99288f5faf790250a71",
+    "bytes": 2241831
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2022-11",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2022-11.zip",
+    "status": "ok",
+    "sha256": "925acf2264f9ffbe1dea1beada4b480eed9bfd7585bebe799a276d7e85ada0df",
+    "bytes": 1994209
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2022-11",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2022-11.zip",
+    "status": "ok",
+    "sha256": "8f115d48c6a88577b746d3be55cd82d061cca5d4c3e88efc5bd512232b256e9f",
+    "bytes": 1606417
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2022-11",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2022-11.zip",
+    "status": "ok",
+    "sha256": "838ef0f8a41d44484e2df9077607b0af33aa7d25263a1beeb1ffcbd471dfb6b9",
+    "bytes": 1587313
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2022-11",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2022-11.zip",
+    "status": "ok",
+    "sha256": "844eaf3478c5a76da4f8aa22857f84e137d68a75d9c746481e7c316863ddddfb",
+    "bytes": 1788056
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2022-11",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2022-11.zip",
+    "status": "ok",
+    "sha256": "c1e4adeb6957ef412c579a2585a333f57b3162e8ab46c27705c0ee5dcc09f052",
+    "bytes": 1726818
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2022-11",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2022-11.zip",
+    "status": "ok",
+    "sha256": "40f003716374c9257d1d575b7fc09cd8cb37026838bd47c06123cabdd7de1c9c",
+    "bytes": 789319
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2022-12",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2022-12.zip",
+    "status": "ok",
+    "sha256": "38f93ad56a5f13491094b0ef965f03cea2d6097cc72b7179489b7d60d5fd446b",
+    "bytes": 2261860
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2022-12",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2022-12.zip",
+    "status": "ok",
+    "sha256": "0a4c1f1a0d983cdf3207737bcff6550e6fa00dd6e0e4abb7a6c686beaca5a58f",
+    "bytes": 1955495
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2022-12",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2022-12.zip",
+    "status": "ok",
+    "sha256": "04749edce5b16de720586d2991b0bcc82d9b90d58a71b61958cff07b21ad696c",
+    "bytes": 1521529
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2022-12",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2022-12.zip",
+    "status": "ok",
+    "sha256": "59621d1076e485e617c232eedddbddf1c4f930687bf5a254bfa45acb09961f9e",
+    "bytes": 1544912
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2022-12",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2022-12.zip",
+    "status": "ok",
+    "sha256": "5e1e85a89bca4e181ff8056801b6e8d0355d93dcd6baf5f10e02284570543043",
+    "bytes": 1716476
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2022-12",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2022-12.zip",
+    "status": "ok",
+    "sha256": "2948d5f7552fcec1756b222b21a61a5a4d6d13cd3d8b16797cf189e2bd7eb8b1",
+    "bytes": 1696457
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2022-12",
+    "period": "stress_history",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2022-12.zip",
+    "status": "missing",
+    "error": "HTTP Error 404: Not Found"
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2025-01",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2025-01.zip",
+    "status": "ok",
+    "sha256": "8d028b2f91aad57d6b693d44449c93f9c4b7044f55f298c8a3ac40ab676dafac",
+    "bytes": 2222830
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2025-01",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2025-01.zip",
+    "status": "ok",
+    "sha256": "04ab6131e9f8ad979676b72115a8cfaf7e4f827b06f44cdf80c840d95016766d",
+    "bytes": 2120787
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2025-01",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2025-01.zip",
+    "status": "ok",
+    "sha256": "80e78e6e4f32c208118f3bb33efc46f6352dff3907c929af2061a5b3a0327647",
+    "bytes": 1859446
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2025-01",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2025-01.zip",
+    "status": "ok",
+    "sha256": "adb07ea7b299df986e8a74fa9525ad5522c795bfacc682526c903bfd17d5de8c",
+    "bytes": 1849207
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2025-01",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2025-01.zip",
+    "status": "ok",
+    "sha256": "29c445e5cee537b5af1026bc1c74dfde3d925d4cfcc9637665260038164baae3",
+    "bytes": 1938175
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2025-01",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2025-01.zip",
+    "status": "ok",
+    "sha256": "40444c148e229ed160232a85066059a6366d774f743a13ba6a48af404eedccef",
+    "bytes": 1814540
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2025-01",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2025-01.zip",
+    "status": "ok",
+    "sha256": "4c0e3a805e57cdd4ac335dad3f29cefc1c7b320e056f8be420334b0e50905e79",
+    "bytes": 1745189
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2025-02",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2025-02.zip",
+    "status": "ok",
+    "sha256": "26b3795072983a66bdbe8327e0d5e71069bdd5ca831d4da3850ba68ef7a991ef",
+    "bytes": 1993970
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2025-02",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2025-02.zip",
+    "status": "ok",
+    "sha256": "5ec2fb4e87e29241745ee7e9449fb86f4f44bad96508a80a1af0e308d73c6f5a",
+    "bytes": 1930330
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2025-02",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2025-02.zip",
+    "status": "ok",
+    "sha256": "211276878319052d5f8075ef3eba8707840bde271d71cff12e3f35c2308de50a",
+    "bytes": 1652940
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2025-02",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2025-02.zip",
+    "status": "ok",
+    "sha256": "2f3a926688aa36a940e2052fcc55464ea7f034cc9ee62552e4210639fe0153c1",
+    "bytes": 1662785
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2025-02",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2025-02.zip",
+    "status": "ok",
+    "sha256": "48217552eabe65ca213acdc3e9e807a6e1d0f5d1e4d4db3ff2f62f7fef65655f",
+    "bytes": 1712037
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2025-02",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2025-02.zip",
+    "status": "ok",
+    "sha256": "f1d55099679e848ac1ba178b041314c22cdb7119dd2c31f86007aec543fa5ef2",
+    "bytes": 1698044
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2025-02",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2025-02.zip",
+    "status": "ok",
+    "sha256": "09ba4da12a79c73f5af36670188dd1e3b4d02e1b23d97445148fd4e4f0fa6112",
+    "bytes": 1496003
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2025-03",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2025-03.zip",
+    "status": "ok",
+    "sha256": "e333601b6c721434f3cdd6670ffde2371bef7946572864c49ba6431a690ab1ca",
+    "bytes": 2215591
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2025-03",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2025-03.zip",
+    "status": "ok",
+    "sha256": "609346fc0dc8f8f1cf283c5cb373d1bb25f26f1716fc67c3883d2176ce9cf40b",
+    "bytes": 2096749
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2025-03",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2025-03.zip",
+    "status": "ok",
+    "sha256": "0f65ae699a79d633ed6747bb46089cb7f3c9ce4761a58181cc6ef74f90199edb",
+    "bytes": 1829639
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2025-03",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2025-03.zip",
+    "status": "ok",
+    "sha256": "46d8e32361471192470a749d45b3fb167b4329e45a4b15d22110ceec1618f151",
+    "bytes": 1812441
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2025-03",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2025-03.zip",
+    "status": "ok",
+    "sha256": "7a6c5a607cf5c70b4e2ecd8f0ca20b5d300bb809b57f436dbd0e8dbaa52854bd",
+    "bytes": 1854492
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2025-03",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2025-03.zip",
+    "status": "ok",
+    "sha256": "46fb881dc2f4572675208b94eb317db05cd39e8c175524430d6dcd1753f0e177",
+    "bytes": 1787567
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2025-03",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2025-03.zip",
+    "status": "ok",
+    "sha256": "ad38cd3ea284b3d7532caab8b839d2bee41865162c4919cd069a7585817fa85d",
+    "bytes": 1475700
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2025-04",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2025-04.zip",
+    "status": "ok",
+    "sha256": "4103d48887f9f5ec04144b190314ec31db9e3094674e5d53a3436b338854848f",
+    "bytes": 2120466
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2025-04",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2025-04.zip",
+    "status": "ok",
+    "sha256": "32505b36565f7c446a3946dc6ea2f511e71d0f72c13cca2b09bb83307f198f8e",
+    "bytes": 2029272
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2025-04",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2025-04.zip",
+    "status": "ok",
+    "sha256": "ca00b7563c3bcd060cef6baf2229f7a469fa8265eada45cff8b658d5975cfc70",
+    "bytes": 1703338
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2025-04",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2025-04.zip",
+    "status": "ok",
+    "sha256": "a36194224399ccb1a53e19610de4c2a0dd8be4cf0d85893005b1893c37b28590",
+    "bytes": 1772440
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2025-04",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2025-04.zip",
+    "status": "ok",
+    "sha256": "4f4457d4120a43f7dcade10a935ec1bd2f8cd6a60fbb78108025dfd5e1986b7e",
+    "bytes": 1774396
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2025-04",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2025-04.zip",
+    "status": "ok",
+    "sha256": "b1f68c45d264b00d896ece7db76a306d74d3da1e28e7afffdc373e2a83e58d87",
+    "bytes": 1677817
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2025-04",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2025-04.zip",
+    "status": "ok",
+    "sha256": "38984e02ff3b4acffd75f06ce711862ec019101ecdf9b81e8fec44f3c09531ce",
+    "bytes": 1303146
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2025-05",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2025-05.zip",
+    "status": "ok",
+    "sha256": "7f95bf97e3ccfbb55cd002f124a54dc1726ced7cfd54e6fd200e59845ca95d5c",
+    "bytes": 2184868
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2025-05",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2025-05.zip",
+    "status": "ok",
+    "sha256": "743268912388656e3c53d21e6e4b6c2b155c1b1f67c7bcbdae5e14cc3d9c633c",
+    "bytes": 2125837
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2025-05",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2025-05.zip",
+    "status": "ok",
+    "sha256": "25918f1cf84407c5fa0f1e695774c48630e5a34079e44b0887cac6e391b3686b",
+    "bytes": 1784003
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2025-05",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2025-05.zip",
+    "status": "ok",
+    "sha256": "0e17b5a7e1d0e8598e694a8c763d0224f730fbf82970719f4dc1cb2b4e48b48d",
+    "bytes": 1878961
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2025-05",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2025-05.zip",
+    "status": "ok",
+    "sha256": "f0009a70af9c6a7a50c4bca705178931adbe87334f0f5ae8c9ea5284c461a6c3",
+    "bytes": 1875258
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2025-05",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2025-05.zip",
+    "status": "ok",
+    "sha256": "dec3727fe9b593d940daf38687e965226f5645095be63e776329763dce21b0e2",
+    "bytes": 1774551
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2025-05",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2025-05.zip",
+    "status": "ok",
+    "sha256": "2abac92a1b6b34372d7855785040226081fcdf3fea34f7a8fcc5b7e5aceb2901",
+    "bytes": 1433406
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2025-06",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2025-06.zip",
+    "status": "ok",
+    "sha256": "f95f6169e253d38fb321c87984c827878634250cdcc3ff84fc3507f036bcabbd",
+    "bytes": 2074513
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2025-06",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2025-06.zip",
+    "status": "ok",
+    "sha256": "eb7641c42f642697524ce45f64c92bcc33a751b6ade791f91f70e3ec52880a70",
+    "bytes": 2034318
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2025-06",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2025-06.zip",
+    "status": "ok",
+    "sha256": "cace0df538c936c2b08fceee3e077a37ef80f792052b3f7dbe9fc14ff384a5f0",
+    "bytes": 1675747
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2025-06",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2025-06.zip",
+    "status": "ok",
+    "sha256": "f54e89eb4911d54c17143d32f223cf892113cc1db7c0e482fde3a2ef4941d75c",
+    "bytes": 1782177
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2025-06",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2025-06.zip",
+    "status": "ok",
+    "sha256": "e57bb49ddee5f20506131ba85c222289ae60636b1e69fb50cd42f41b2f8a3e9c",
+    "bytes": 1749893
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2025-06",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2025-06.zip",
+    "status": "ok",
+    "sha256": "7c65bdac47fdb8d72d39ebb086cc2894980f6a96c8996b3836b908c703c11fe1",
+    "bytes": 1650490
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2025-06",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2025-06.zip",
+    "status": "ok",
+    "sha256": "e62eca472cb182b71291d73a1365c0a37f6c590f9903e99c21c61219c9c909d3",
+    "bytes": 1147691
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2025-07",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2025-07.zip",
+    "status": "ok",
+    "sha256": "3377e023fe252418cfaf46c9e23b3f0d1e56fb2fd89b4191fc66262b947a0ee2",
+    "bytes": 2136490
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2025-07",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2025-07.zip",
+    "status": "ok",
+    "sha256": "b95c721b528260d865585f0723d287c836f2f22bb681ac45e0c56eaaf0047bd9",
+    "bytes": 2130574
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2025-07",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2025-07.zip",
+    "status": "ok",
+    "sha256": "071b0c252dc835da6e360482de18fe5a82e6064ceb83a3193a1280cbbbf40f44",
+    "bytes": 1792361
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2025-07",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2025-07.zip",
+    "status": "ok",
+    "sha256": "93036a494c26e7296cc96070a1ae2aecc1839a992f05fd40191b35775a13991b",
+    "bytes": 1927404
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2025-07",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2025-07.zip",
+    "status": "ok",
+    "sha256": "ea9c5d3cfb54cbe9854d3501d457a204f14d9fa17a314458848e8b784c29ba2f",
+    "bytes": 1879183
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2025-07",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2025-07.zip",
+    "status": "ok",
+    "sha256": "3e3eceb915513fc5908b3844b72b50fee3be2288dcdf7649e5150418880c71ff",
+    "bytes": 1770599
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2025-07",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2025-07.zip",
+    "status": "ok",
+    "sha256": "b0e94db585ee7ffe7057ebd1fa7fa57578ca1f5cd7cb0f1eb0b043c920534e55",
+    "bytes": 1321609
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2025-08",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2025-08.zip",
+    "status": "ok",
+    "sha256": "11da1c7db8949cbdcbb757531756eda55f2a3d663cfac671c5d1a8a87911318f",
+    "bytes": 2150048
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2025-08",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2025-08.zip",
+    "status": "ok",
+    "sha256": "aaebc0e2baa7d7dcfcf6eb3eeb681b55a2e746dad86e758be0af7fca4391c480",
+    "bytes": 2162576
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2025-08",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2025-08.zip",
+    "status": "ok",
+    "sha256": "248bf83a4a53457b2218ef50d756885a5f417bdf0e8e33f1dc39b300bc22fa78",
+    "bytes": 1817379
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2025-08",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2025-08.zip",
+    "status": "ok",
+    "sha256": "3525f0f8100e0943d2791022b2739b8f8a67f9bbe3b6a0e98e4c80ebcb111884",
+    "bytes": 1904689
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2025-08",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2025-08.zip",
+    "status": "ok",
+    "sha256": "ec309073517e94c3b9f211d4968241eac851b5f7b6003cb40dbd4aa98ba43c0e",
+    "bytes": 1878374
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2025-08",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2025-08.zip",
+    "status": "ok",
+    "sha256": "91ffb4196da228244d96d72fb4a6a6196b5d816cee9a85600e3a83a5253d25de",
+    "bytes": 1784783
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2025-08",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2025-08.zip",
+    "status": "ok",
+    "sha256": "b1be6ccd06151e9c62dc1c2f7d13c07dd98e4be5921770b38a16f37f6b42f03f",
+    "bytes": 1268021
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2025-09",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2025-09.zip",
+    "status": "ok",
+    "sha256": "52bb4a4a52afbcc0af77e3eb92c114bf810982ca63bf02f8fe15062e59c5f44b",
+    "bytes": 2045189
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2025-09",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2025-09.zip",
+    "status": "ok",
+    "sha256": "2912831352b3e194ac38f7a66a373ea78f138dfd4fe5a3ac25acb80c5ccaa0ec",
+    "bytes": 2040217
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2025-09",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2025-09.zip",
+    "status": "ok",
+    "sha256": "a306c02aa4c5bfb2cf1b6bb6db88fa5273283ff17d7281e3a963cba1639c6f3f",
+    "bytes": 1695432
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2025-09",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2025-09.zip",
+    "status": "ok",
+    "sha256": "ccbf9cbff5114b17730d636736a0cf43d10890c47fd717c570acd855ed0eca65",
+    "bytes": 1798060
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2025-09",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2025-09.zip",
+    "status": "ok",
+    "sha256": "dc7b806fccf9fe45d50b0d43a016e19849f7485ac2517ec1f2da96b67b8e4729",
+    "bytes": 1814733
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2025-09",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2025-09.zip",
+    "status": "ok",
+    "sha256": "f61537a60c89e03653a528f85977c115829415a2066e090a730b32e3fa18904e",
+    "bytes": 1657001
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2025-09",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2025-09.zip",
+    "status": "ok",
+    "sha256": "30858ff0a9696e4ed537d78970f56c661f0aa801eb0b11b85bbbe01e3359907c",
+    "bytes": 1325263
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2025-10",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2025-10.zip",
+    "status": "ok",
+    "sha256": "985d878cacbfdde85c9e0da2e8830ab913fe01bfdcde6e488563d8194df11f6b",
+    "bytes": 2216628
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2025-10",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2025-10.zip",
+    "status": "ok",
+    "sha256": "a384d1bea37e4f59f7cae491a6f3f2dffe262259a4a0bc9324310a9aef16a843",
+    "bytes": 2145592
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2025-10",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2025-10.zip",
+    "status": "ok",
+    "sha256": "d8437030d4f82ed6788da1ac8d34563912b9246b760f51c6b7ab00f164fef5b8",
+    "bytes": 1768074
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2025-10",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2025-10.zip",
+    "status": "ok",
+    "sha256": "62d243fdd90cfaabc9ddaf9f18b92c20cae0961904e03aaedbe6a611452ddc83",
+    "bytes": 1893876
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2025-10",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2025-10.zip",
+    "status": "ok",
+    "sha256": "89f1752ce73fea4428d5ecff528c8fe93ccba1ec83c7a721eee9de51e48c8c12",
+    "bytes": 1875209
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2025-10",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2025-10.zip",
+    "status": "ok",
+    "sha256": "35f2df22a5f4893229d939c0a406ce95509e19a92826bc6db346a482e26c7d39",
+    "bytes": 1779275
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2025-10",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2025-10.zip",
+    "status": "ok",
+    "sha256": "528be2d1e312e23d6d9c0e61c9e9bd8fba98a6a6a0179b32e4865887e2777c63",
+    "bytes": 1365833
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2025-11",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2025-11.zip",
+    "status": "ok",
+    "sha256": "c54159d1216ab07f040a96d6678748e8746ac4200cba373fb6b758f2cdd1e5e5",
+    "bytes": 2165376
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2025-11",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2025-11.zip",
+    "status": "ok",
+    "sha256": "30b80de8cbbd68edf2b2bf76154f60e6edb0f8365e08e6d5afc63657e26e0f7c",
+    "bytes": 2074392
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2025-11",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2025-11.zip",
+    "status": "ok",
+    "sha256": "e550aa57efd407f79458f3d22d9c823639acaa61dfcd53f28f4cd97874977c98",
+    "bytes": 1685271
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2025-11",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2025-11.zip",
+    "status": "ok",
+    "sha256": "057714b020871ce17c7161cd24c844bacc8191fc6051b4e65103619f26934453",
+    "bytes": 1834384
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2025-11",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2025-11.zip",
+    "status": "ok",
+    "sha256": "cd6528452630714e586a2913d58bad1796f9fbfddb1eb0a7f3d46f5adcd6c2de",
+    "bytes": 1778706
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2025-11",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2025-11.zip",
+    "status": "ok",
+    "sha256": "74e0a4ea11b6bd56834bcbff22bace0c60260d46b9adbbd2c9a5da0f6c895c94",
+    "bytes": 1731030
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2025-11",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2025-11.zip",
+    "status": "ok",
+    "sha256": "6a71b90cc21057508bb87d7d3ffd17c4120aabe6ce36e99b85be3c623bff5c11",
+    "bytes": 1137523
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2025-12",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2025-12.zip",
+    "status": "ok",
+    "sha256": "7b47647352b01356dcd678a1438efb8baac03ed798785ed2179d428aab0cca9b",
+    "bytes": 2154846
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2025-12",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2025-12.zip",
+    "status": "ok",
+    "sha256": "57b653e4ff3558fae8d2e6da616c40e6cfad4002f131584f82ae7a80bd228293",
+    "bytes": 2079108
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2025-12",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2025-12.zip",
+    "status": "ok",
+    "sha256": "5a5264141cdd21a16fc5e498333e8bd2edd1adff922c64917b19f95a32d78e7c",
+    "bytes": 1673419
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2025-12",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2025-12.zip",
+    "status": "ok",
+    "sha256": "1135342ebc45fd42a1d344882e08a44b2e8ad08f21f07a937ad48b5e313a932d",
+    "bytes": 1807107
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2025-12",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2025-12.zip",
+    "status": "ok",
+    "sha256": "8d108055cf07b601984111d7df391db4330daa40542eee40fdfe9b3fa0a8f392",
+    "bytes": 1746411
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2025-12",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2025-12.zip",
+    "status": "ok",
+    "sha256": "e0218d722dab5c25ae260f928d48ddb47980c53bb9e1eacec0256f0a60739b8e",
+    "bytes": 1690128
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2025-12",
+    "period": "validation",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2025-12.zip",
+    "status": "ok",
+    "sha256": "08da1b3286d474c8d04e3598e3e56a3204f4d9003aa22dac4c4dc72843d8a2ce",
+    "bytes": 1207930
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2026-01",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2026-01.zip",
+    "status": "ok",
+    "sha256": "d28b369da32a6ea84ba0af517b1847ab67b2fcc1e0e111c1b24d56ae07240cb9",
+    "bytes": 2127988
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2026-01",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2026-01.zip",
+    "status": "ok",
+    "sha256": "cadd060ab73bd03fee94708b78738144da76d007fc2170d8ad2cec678de7a654",
+    "bytes": 2068379
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2026-01",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2026-01.zip",
+    "status": "ok",
+    "sha256": "4690a066eb3cb03bef3790f96858272236d549ce987c1c2701b6699d75f86cde",
+    "bytes": 1665278
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2026-01",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2026-01.zip",
+    "status": "ok",
+    "sha256": "5e8ad6e007bd823daac2e5749cf3360dfe3e01b63a62613c5baf7874cf549bd2",
+    "bytes": 1824338
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2026-01",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2026-01.zip",
+    "status": "ok",
+    "sha256": "4950fb43efe016da18cf29f2d7675a8d4fb694963eb871741b019f797633537f",
+    "bytes": 1769524
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2026-01",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2026-01.zip",
+    "status": "ok",
+    "sha256": "ef6c453a18f74a6d2d470f936cbc0b4869dfd92a5f1733096266bb741df29a3d",
+    "bytes": 1706182
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2026-01",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2026-01.zip",
+    "status": "ok",
+    "sha256": "4527d1ff7b59703774bd48bb94b7e1b31c81555396a5b30b3525739c2b3798d2",
+    "bytes": 1163607
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2026-02",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2026-02.zip",
+    "status": "ok",
+    "sha256": "cee2e913ed07e02834e2387c65ca430fe3576f620588bad8a02229238f385407",
+    "bytes": 2021779
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2026-02",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2026-02.zip",
+    "status": "ok",
+    "sha256": "1ddb64d08739a40b7f66a37bccf5ca5fec58339c7f01e83311086116f41b445f",
+    "bytes": 1918913
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2026-02",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2026-02.zip",
+    "status": "ok",
+    "sha256": "56a05789ae7ae04167e84ecb8bdfc181a91224da94ee462c56f6d96d610ad341",
+    "bytes": 1506912
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2026-02",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2026-02.zip",
+    "status": "ok",
+    "sha256": "27f418db27fdca46f507a6bc1e79f4613309aaa43327f554ed8d753c8120bc12",
+    "bytes": 1686023
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2026-02",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2026-02.zip",
+    "status": "ok",
+    "sha256": "bcf1d323cc4fa5b078da5c74ee1259780143814f43c7e5ae013658ce7a534025",
+    "bytes": 1614127
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2026-02",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2026-02.zip",
+    "status": "ok",
+    "sha256": "90bde58c6d7804e7738629c1dfafb79d72162724ff4c573931387399cff016a8",
+    "bytes": 1534408
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2026-02",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2026-02.zip",
+    "status": "ok",
+    "sha256": "4fa685f424855a573f9319e3c006514fea35c891798d828505ac29147dea1a73",
+    "bytes": 1016546
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2026-03",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2026-03.zip",
+    "status": "ok",
+    "sha256": "a2c1e689d39aa7877e218f436f15162e9a4436778a377d32e9d9b81b081381cd",
+    "bytes": 2213444
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2026-03",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2026-03.zip",
+    "status": "ok",
+    "sha256": "5747c9f1f76be7afbf9513d50ea65ff6e979fa9684c75a775b6974e64c751844",
+    "bytes": 2086704
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2026-03",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2026-03.zip",
+    "status": "ok",
+    "sha256": "79bff8b12be9e6687ad6fbc6999000244747fbf96b51785835049d9e6675ca55",
+    "bytes": 1626692
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2026-03",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2026-03.zip",
+    "status": "ok",
+    "sha256": "abce895ac39184541f9d91000570680503f95c076c7b5a2647060ccc72e176dc",
+    "bytes": 1801249
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2026-03",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2026-03.zip",
+    "status": "ok",
+    "sha256": "6dc36b26071b10e1d4a92eef546627562f35d874b71261aa0f25eeef336a6428",
+    "bytes": 1752506
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2026-03",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2026-03.zip",
+    "status": "ok",
+    "sha256": "a764ab37d34af087f97a1c7753f6feb6914f7fc2eea9dc64f927b70c6b67eff9",
+    "bytes": 1648780
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2026-03",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2026-03.zip",
+    "status": "ok",
+    "sha256": "0a3c17b263a6660f932b5f8b7f7e43adcce75a76e2648347435113e271afbb18",
+    "bytes": 1052220
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2026-04",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2026-04.zip",
+    "status": "ok",
+    "sha256": "318afd4f5acfbcfbb40fbe727a77eee8e9e7b54d8941589c78a32283d90b4a01",
+    "bytes": 2088776
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2026-04",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2026-04.zip",
+    "status": "ok",
+    "sha256": "8a2f0a2907764827ca3c52416bd9357c5d6213f3816fadbd0515bf504ea75ffd",
+    "bytes": 1980853
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2026-04",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2026-04.zip",
+    "status": "ok",
+    "sha256": "e270624a9150b568c964d24f6b85e4c130faa9cd65f238e3b4068bea7bcb0c76",
+    "bytes": 1535225
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2026-04",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2026-04.zip",
+    "status": "ok",
+    "sha256": "fa1bc3a2dabaabd5e5fed3deff698ad92dcf3524c3b0297dec2f8b5d890d7b2c",
+    "bytes": 1694562
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2026-04",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2026-04.zip",
+    "status": "ok",
+    "sha256": "71b6ccd21abe4d4053a65418fb4984bcdfeb87e13b8073d4de6eb062cb689d4f",
+    "bytes": 1675222
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2026-04",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2026-04.zip",
+    "status": "ok",
+    "sha256": "22741a217419d68ed0b4f4f75b6b9ef2e1ee6ce0b60a70aefc860e493bbf7e30",
+    "bytes": 1552478
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2026-04",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2026-04.zip",
+    "status": "ok",
+    "sha256": "942ac09d7636ffc1c6c0d0fd3401528f90824dc5a0decf6852ed99edfdb7c581",
+    "bytes": 993067
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2026-05",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2026-05.zip",
+    "status": "ok",
+    "sha256": "62983d93c35e26ec6c29116c629e443b7ddfe3d301aca83331ff58112199d8d0",
+    "bytes": 2120776
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2026-05",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2026-05.zip",
+    "status": "ok",
+    "sha256": "bc0e625d18c0fa5378cecd0119aa20721b8830c24c3a55094f4c4c966ff8f710",
+    "bytes": 2023074
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2026-05",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2026-05.zip",
+    "status": "ok",
+    "sha256": "be95bc2bcc0ebdccd7d824ed780aa79ea06e6595ecaa0dc1192039dc3372a9c0",
+    "bytes": 1559260
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2026-05",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2026-05.zip",
+    "status": "ok",
+    "sha256": "56908ba1323042af99a041e6862e57bf6ea2615f163984d6f94bebe7f72f962b",
+    "bytes": 1751883
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2026-05",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2026-05.zip",
+    "status": "ok",
+    "sha256": "6d9eedc643d21a867085c4e7c8b7ee58fc6a7a796d604a19d364415f7d8949bc",
+    "bytes": 1744973
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2026-05",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2026-05.zip",
+    "status": "ok",
+    "sha256": "68783c22ae1071254ab76ed9652e14cdf87268fedae5c9a595bbab437e51b077",
+    "bytes": 1615520
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2026-05",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2026-05.zip",
+    "status": "ok",
+    "sha256": "32847574c2d5cee4559589d9967f9918cd648ea6b35b378defcaff80f9a9a642",
+    "bytes": 1132804
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2026-06",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2026-06.zip",
+    "status": "ok",
+    "sha256": "c8e1d5e70b766dd2312fc9cd7085785bb25708e27e75c21a5a5aaba61a6d07f5",
+    "bytes": 2092027
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2026-06",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2026-06.zip",
+    "status": "ok",
+    "sha256": "770fdf44aac01dbe136e5b37a10501e57069af4048e76fbb3a3a2de2e9662934",
+    "bytes": 1996139
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2026-06",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2026-06.zip",
+    "status": "ok",
+    "sha256": "90f68034260729d4f48b88ad7422b8798b4e8d4c16390cbb3db23d3b742b8396",
+    "bytes": 1555967
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2026-06",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2026-06.zip",
+    "status": "ok",
+    "sha256": "90cecd3b80ace2abbe3382e12f1ab7fc8c368f16a64860a74a8f74abf3f838d4",
+    "bytes": 1730977
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2026-06",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2026-06.zip",
+    "status": "ok",
+    "sha256": "18959935b2baf50c44130ac222114e2bcdee9c2450d4798107cf6f85137dc350",
+    "bytes": 1659031
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2026-06",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2026-06.zip",
+    "status": "ok",
+    "sha256": "ef17d6bcf0624911718c2101be37764b8b58c071c80e5e66fb55c9c0bb6e69c6",
+    "bytes": 1591924
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2026-06",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2026-06.zip",
+    "status": "ok",
+    "sha256": "fd211db070b5fc60e65a764af2b2dd17af186c6d0702d29a7f061f4077b66e18",
+    "bytes": 1067190
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2026-07",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2026-07.zip",
+    "status": "ok",
+    "sha256": "3ef15c84353da48e1c7c5fd99b9751cb036bf8986ed47f7cd1be63359c0d4f6b",
+    "bytes": 2112275
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2026-07",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2026-07.zip",
+    "status": "ok",
+    "sha256": "1ad273218d6c33fd62515198276f00c0656ae002c0d1d9ab10cca0f5d0f7adc2",
+    "bytes": 2027161
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2026-07",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2026-07.zip",
+    "status": "ok",
+    "sha256": "856c6ae6f62b0ba1a0a43ebc6ecc3d2f2cfc7b72807331a4384f8c014c4f6d9e",
+    "bytes": 1530529
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2026-07",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2026-07.zip",
+    "status": "ok",
+    "sha256": "835f0da43f23c0d43431c81f9f5976794484b95c21b075b8de3a38c5b29eed16",
+    "bytes": 1715690
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2026-07",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2026-07.zip",
+    "status": "ok",
+    "sha256": "1cf28dc7d7e466bd7be0f2da698cecf32542d1044c1a6d316106453de2934368",
+    "bytes": 1647431
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2026-07",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2026-07.zip",
+    "status": "ok",
+    "sha256": "fd20ac07d99f42a6d040a3564338605b0ddf829c812389d226140f1fff3e3623",
+    "bytes": 1608323
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2026-07",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2026-07.zip",
+    "status": "ok",
+    "sha256": "c1d8228c243e8f1f51dc41ecf368192b24f87f90b6cb333872d8cef458e60be5",
+    "bytes": 982557
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2026-08",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2026-08.zip",
+    "status": "ok",
+    "sha256": "acab442e02745177063031d402929703ae983715010064b40cf811c4beb843d4",
+    "bytes": 2084946
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2026-08",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2026-08.zip",
+    "status": "ok",
+    "sha256": "f2f2fe8da85467fb8ec8185e07f16f3af9f4ebcb266633ba494e76ac73c40c0c",
+    "bytes": 2005311
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2026-08",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2026-08.zip",
+    "status": "ok",
+    "sha256": "03e8cf5a9874442e2fd9981cc60588c0beed6ed8b47ff657c3ec6c397d8bb93b",
+    "bytes": 1567738
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2026-08",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2026-08.zip",
+    "status": "ok",
+    "sha256": "c2d64e7fccc79a915659e4453b6423f49d9fbec2cf3ce8b4fcb33852c2c1f5cf",
+    "bytes": 1747173
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2026-08",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2026-08.zip",
+    "status": "ok",
+    "sha256": "ac6c9f0ecd41f903dab63c15076ed5c981b39021300d2a61d6b414312ac59a4b",
+    "bytes": 1648424
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2026-08",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2026-08.zip",
+    "status": "ok",
+    "sha256": "f68a83b1d9866bf54fd4ac116cd3ddbcf1017e78be429791731f5fe8f15198e4",
+    "bytes": 1586457
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2026-08",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2026-08.zip",
+    "status": "ok",
+    "sha256": "a9ae5d8b178fdba6a973d8e836a3c52c561bdd3674bfee104826b1f52d35435b",
+    "bytes": 870337
+  },
+  {
+    "symbol": "BTCUSDT",
+    "month": "2026-09",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2026-09.zip",
+    "status": "ok",
+    "sha256": "7a021fb5981cfdb1a56457d68fa81360ab27350c981ddfe63112b2322df44b56",
+    "bytes": 2054117
+  },
+  {
+    "symbol": "ETHUSDT",
+    "month": "2026-09",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ETHUSDT/1m/ETHUSDT-1m-2026-09.zip",
+    "status": "ok",
+    "sha256": "827b46043bdc877d542edf8ff178dc0411cfa166a56fa73f2f850ad06c951b50",
+    "bytes": 1988611
+  },
+  {
+    "symbol": "ADAUSDT",
+    "month": "2026-09",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/ADAUSDT/1m/ADAUSDT-1m-2026-09.zip",
+    "status": "ok",
+    "sha256": "bb4d8a12037c66a1ef18a6f686ef90ec532dd1015d94dcbd4a219a2c1d2cdf3b",
+    "bytes": 1599029
+  },
+  {
+    "symbol": "XRPUSDT",
+    "month": "2026-09",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/XRPUSDT/1m/XRPUSDT-1m-2026-09.zip",
+    "status": "ok",
+    "sha256": "70f33c0a260df972a5e4179ad052880c944b4bb1a84136c193a3ea4d946ac52e",
+    "bytes": 1782683
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "month": "2026-09",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/DOGEUSDT/1m/DOGEUSDT-1m-2026-09.zip",
+    "status": "ok",
+    "sha256": "4a14f7aaeef51e69d26107b8b78814e273789f7838aac62721bf895ac783a19a",
+    "bytes": 1698707
+  },
+  {
+    "symbol": "LTCUSDT",
+    "month": "2026-09",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/LTCUSDT/1m/LTCUSDT-1m-2026-09.zip",
+    "status": "ok",
+    "sha256": "c2d1171dc24605b8635b9ae1589e1bd580c8bb7b9f9dc831d9354d7fd831fbdf",
+    "bytes": 1647092
+  },
+  {
+    "symbol": "FTTUSDT",
+    "month": "2026-09",
+    "period": "confirmation_retrospective",
+    "url": "https://data.binance.vision/data/spot/monthly/klines/FTTUSDT/1m/FTTUSDT-1m-2026-09.zip",
+    "status": "ok",
+    "sha256": "95548d89f8a35cdb2d29df55f4a4d62c223d501672364e5c57faa7365898d2e6",
+    "bytes": 960471
+  }
+]

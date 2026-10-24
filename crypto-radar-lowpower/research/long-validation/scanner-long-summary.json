@@ -1,0 +1,652 @@
+{
+  "protocol": "radar-long-v1-20261024",
+  "profitability_proven": false,
+  "independent_forward_validation": false,
+  "passed_historical_variants": [],
+  "production_buy_enabled": false,
+  "periods": {
+    "stress_history": {
+      "0": {
+        "signals": 2956,
+        "evaluated": 2946,
+        "missing": 10,
+        "months": 12,
+        "events": 5244,
+        "detected": 99,
+        "missed": 5145,
+        "net60": -0.3126632068834352,
+        "stress60": -0.5066684912805839,
+        "baseline60": -0.3063743078884929,
+        "baselineStress": -0.505114162273795,
+        "excess": -0.0062888989949422824,
+        "stressExcess": -0.0015543290067888682,
+        "negative": 2115,
+        "positive": 831,
+        "false_target_alerts": 2760,
+        "worst_net": -6.5021130494,
+        "best_net": 10.7670169514,
+        "net_ci97_5": [
+          -0.3514724849647889,
+          -0.2737651097281059
+        ],
+        "excess_ci97_5": [
+          -0.04666593626181061,
+          0.03419643098162239
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      },
+      "1": {
+        "signals": 2917,
+        "evaluated": 2907,
+        "missing": 10,
+        "months": 12,
+        "events": 5244,
+        "detected": 96,
+        "missed": 5148,
+        "net60": -0.3103839995363261,
+        "stress60": -0.5056414614491916,
+        "baseline60": -0.31029456458080495,
+        "baselineStress": -0.5077571607314414,
+        "excess": -8.943495552116154e-05,
+        "stressExcess": 0.00211569928224975,
+        "negative": 2090,
+        "positive": 817,
+        "false_target_alerts": 2728,
+        "worst_net": -6.5021130494,
+        "best_net": 10.7670169514,
+        "net_ci97_5": [
+          -0.34816645405493785,
+          -0.2727502083383981
+        ],
+        "excess_ci97_5": [
+          -0.04044704345857306,
+          0.03848464363596364
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      }
+    },
+    "validation": {
+      "0": {
+        "signals": 2567,
+        "evaluated": 2566,
+        "missing": 1,
+        "months": 12,
+        "events": 5303,
+        "detected": 100,
+        "missed": 5203,
+        "net60": -0.30682737986664066,
+        "stress60": -0.50866022484053,
+        "baseline60": -0.3002485791960639,
+        "baselineStress": -0.49860322372057675,
+        "excess": -0.0065788006705767565,
+        "stressExcess": -0.010057001119953224,
+        "negative": 1807,
+        "positive": 759,
+        "false_target_alerts": 2373,
+        "worst_net": -5.5525889369,
+        "best_net": 7.4905628393,
+        "net_ci97_5": [
+          -0.360397006887235,
+          -0.25493265101283075
+        ],
+        "excess_ci97_5": [
+          -0.05579022017259406,
+          0.04327590208979672
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      },
+      "1": {
+        "signals": 2536,
+        "evaluated": 2535,
+        "missing": 1,
+        "months": 12,
+        "events": 5303,
+        "detected": 97,
+        "missed": 5206,
+        "net60": -0.30934877032473374,
+        "stress60": -0.5129302938889152,
+        "baseline60": -0.2891705312751874,
+        "baselineStress": -0.4890745263775543,
+        "excess": -0.020178239049546354,
+        "stressExcess": -0.023855767511360926,
+        "negative": 1790,
+        "positive": 745,
+        "false_target_alerts": 2350,
+        "worst_net": -5.5525889369,
+        "best_net": 8.0486549197,
+        "net_ci97_5": [
+          -0.3656363859958099,
+          -0.25734100340671656
+        ],
+        "excess_ci97_5": [
+          -0.07037006962503647,
+          0.030385026196526024
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      }
+    },
+    "confirmation_retrospective": {
+      "0": {
+        "signals": 1815,
+        "evaluated": 1808,
+        "missing": 7,
+        "months": 9,
+        "events": 2394,
+        "detected": 38,
+        "missed": 2356,
+        "net60": -0.3155542598115044,
+        "stress60": -0.5274615437245022,
+        "baseline60": -0.2996026692048672,
+        "baselineStress": -0.4982069914918695,
+        "excess": -0.0159515906066372,
+        "stressExcess": -0.02925455223263268,
+        "negative": 1342,
+        "positive": 466,
+        "false_target_alerts": 1738,
+        "worst_net": -6.1991982654,
+        "best_net": 5.6625028784,
+        "net_ci97_5": [
+          -0.36019771539777473,
+          -0.2728254991322961
+        ],
+        "excess_ci97_5": [
+          -0.06179033643999519,
+          0.029483071794593273
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      },
+      "1": {
+        "signals": 1801,
+        "evaluated": 1794,
+        "missing": 7,
+        "months": 9,
+        "events": 2394,
+        "detected": 38,
+        "missed": 2356,
+        "net60": -0.32068993880055746,
+        "stress60": -0.5302439163461539,
+        "baseline60": -0.297748078588796,
+        "baselineStress": -0.49670444578762546,
+        "excess": -0.022941860211761478,
+        "stressExcess": -0.033539470558528406,
+        "negative": 1335,
+        "positive": 459,
+        "false_target_alerts": 1727,
+        "worst_net": -6.1991982654,
+        "best_net": 5.6625028784,
+        "net_ci97_5": [
+          -0.36381789032998657,
+          -0.2788354555514083
+        ],
+        "excess_ci97_5": [
+          -0.06787382790049017,
+          0.021377420289149348
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      }
+    }
+  },
+  "by_symbol": {
+    "BTCUSDT": {
+      "0": {
+        "signals": 898,
+        "evaluated": 894,
+        "missing": 4,
+        "months": 33,
+        "events": 586,
+        "detected": 11,
+        "missed": 575,
+        "net60": -0.3118552059365772,
+        "stress60": -0.5193255249324384,
+        "baseline60": -0.2986362275762864,
+        "baselineStress": -0.49819317080391495,
+        "excess": -0.01321897836029079,
+        "stressExcess": -0.02113235412852349,
+        "negative": 690,
+        "positive": 204,
+        "false_target_alerts": 867,
+        "worst_net": -2.8627138818,
+        "best_net": 4.4182560531,
+        "net_ci97_5": [
+          -0.35843002664986295,
+          -0.2681216535191944
+        ],
+        "excess_ci97_5": [
+          -0.056216713590240275,
+          0.02987475597055381
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      },
+      "1": {
+        "signals": 895,
+        "evaluated": 891,
+        "missing": 4,
+        "months": 33,
+        "events": 586,
+        "detected": 11,
+        "missed": 575,
+        "net60": -0.31255300650538725,
+        "stress60": -0.5189830266006734,
+        "baseline60": -0.3077974979690236,
+        "baselineStress": -0.5078951989762065,
+        "excess": -0.00475550853636364,
+        "stressExcess": -0.011087827624466917,
+        "negative": 689,
+        "positive": 202,
+        "false_target_alerts": 864,
+        "worst_net": -2.8627138818,
+        "best_net": 4.4182560531,
+        "net_ci97_5": [
+          -0.36216102478722423,
+          -0.26810967538261127
+        ],
+        "excess_ci97_5": [
+          -0.05053621662371143,
+          0.03801245423609232
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      }
+    },
+    "ETHUSDT": {
+      "0": {
+        "signals": 1271,
+        "evaluated": 1268,
+        "missing": 3,
+        "months": 33,
+        "events": 1406,
+        "detected": 28,
+        "missed": 1378,
+        "net60": -0.31519658807736595,
+        "stress60": -0.518989561637224,
+        "baseline60": -0.2974799229991325,
+        "baselineStress": -0.4965917665754732,
+        "excess": -0.01771666507823344,
+        "stressExcess": -0.02239779506175077,
+        "negative": 943,
+        "positive": 325,
+        "false_target_alerts": 1199,
+        "worst_net": -3.4672928204,
+        "best_net": 5.6625028784,
+        "net_ci97_5": [
+          -0.3619320274672036,
+          -0.27068263792553837
+        ],
+        "excess_ci97_5": [
+          -0.06262239273036029,
+          0.024268419090504242
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      },
+      "1": {
+        "signals": 1265,
+        "evaluated": 1262,
+        "missing": 3,
+        "months": 33,
+        "events": 1406,
+        "detected": 29,
+        "missed": 1377,
+        "net60": -0.3158984997949287,
+        "stress60": -0.5205081452158479,
+        "baseline60": -0.29409348423795567,
+        "baselineStress": -0.4927477750684628,
+        "excess": -0.021805015556973006,
+        "stressExcess": -0.027760370147385083,
+        "negative": 939,
+        "positive": 323,
+        "false_target_alerts": 1193,
+        "worst_net": -3.4672928204,
+        "best_net": 5.6625028784,
+        "net_ci97_5": [
+          -0.36440971564378266,
+          -0.27098141986790153
+        ],
+        "excess_ci97_5": [
+          -0.06642925385932738,
+          0.01948114631878927
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      }
+    },
+    "ADAUSDT": {
+      "0": {
+        "signals": 1284,
+        "evaluated": 1280,
+        "missing": 4,
+        "months": 33,
+        "events": 2318,
+        "detected": 49,
+        "missed": 2269,
+        "net60": -0.31246072198398445,
+        "stress60": -0.5163378663632031,
+        "baseline60": -0.29630357280359376,
+        "baselineStress": -0.49367411762992186,
+        "excess": -0.016157149180390684,
+        "stressExcess": -0.022663748733281253,
+        "negative": 886,
+        "positive": 394,
+        "false_target_alerts": 1195,
+        "worst_net": -6.5021130494,
+        "best_net": 9.5164842228,
+        "net_ci97_5": [
+          -0.379088693338116,
+          -0.24564440470308033
+        ],
+        "excess_ci97_5": [
+          -0.08925282122101784,
+          0.05724606576685973
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      },
+      "1": {
+        "signals": 1265,
+        "evaluated": 1261,
+        "missing": 4,
+        "months": 33,
+        "events": 2318,
+        "detected": 49,
+        "missed": 2269,
+        "net60": -0.305271992140682,
+        "stress60": -0.5107208802517843,
+        "baseline60": -0.3088371218733545,
+        "baselineStress": -0.5050704038763679,
+        "excess": 0.0035651297326724785,
+        "stressExcess": -0.00565047637541638,
+        "negative": 875,
+        "positive": 386,
+        "false_target_alerts": 1179,
+        "worst_net": -6.5021130494,
+        "best_net": 9.5164842228,
+        "net_ci97_5": [
+          -0.3739124927491692,
+          -0.238496559197398
+        ],
+        "excess_ci97_5": [
+          -0.06706890967862879,
+          0.07217405684322262
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      }
+    },
+    "XRPUSDT": {
+      "0": {
+        "signals": 956,
+        "evaluated": 954,
+        "missing": 2,
+        "months": 33,
+        "events": 1674,
+        "detected": 24,
+        "missed": 1650,
+        "net60": -0.30078467034926626,
+        "stress60": -0.5062679545907757,
+        "baseline60": -0.2922240154018868,
+        "baselineStress": -0.4889810284313417,
+        "excess": -0.008560654947379454,
+        "stressExcess": -0.017286926159433946,
+        "negative": 664,
+        "positive": 290,
+        "false_target_alerts": 891,
+        "worst_net": -5.5525889369,
+        "best_net": 10.7670169514,
+        "net_ci97_5": [
+          -0.37143613787855007,
+          -0.23020201006511012
+        ],
+        "excess_ci97_5": [
+          -0.07243772645489346,
+          0.05754108789005029
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      },
+      "1": {
+        "signals": 936,
+        "evaluated": 934,
+        "missing": 2,
+        "months": 33,
+        "events": 1674,
+        "detected": 23,
+        "missed": 1651,
+        "net60": -0.2990521991293362,
+        "stress60": -0.5014610033857602,
+        "baseline60": -0.2882685308486081,
+        "baselineStress": -0.4863768589749465,
+        "excess": -0.010783668280728131,
+        "stressExcess": -0.015084144410813682,
+        "negative": 651,
+        "positive": 283,
+        "false_target_alerts": 873,
+        "worst_net": -5.5525889369,
+        "best_net": 10.7670169514,
+        "net_ci97_5": [
+          -0.37018006416579946,
+          -0.2275125763846181
+        ],
+        "excess_ci97_5": [
+          -0.07494811160636262,
+          0.05409591050408684
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      }
+    },
+    "DOGEUSDT": {
+      "0": {
+        "signals": 1152,
+        "evaluated": 1150,
+        "missing": 2,
+        "months": 33,
+        "events": 2306,
+        "detected": 65,
+        "missed": 2241,
+        "net60": -0.24958168343591305,
+        "stress60": -0.45011159872034784,
+        "baseline60": -0.3105110698486087,
+        "baselineStress": -0.5095100058646087,
+        "excess": 0.06092938641269566,
+        "stressExcess": 0.05939840714426087,
+        "negative": 789,
+        "positive": 361,
+        "false_target_alerts": 1059,
+        "worst_net": -4.87103964,
+        "best_net": 7.1935939038,
+        "net_ci97_5": [
+          -0.32041640539558425,
+          -0.17704776293901364
+        ],
+        "excess_ci97_5": [
+          -0.00817743933475193,
+          0.13199431048308782
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      },
+      "1": {
+        "signals": 1137,
+        "evaluated": 1135,
+        "missing": 2,
+        "months": 33,
+        "events": 2306,
+        "detected": 63,
+        "missed": 2243,
+        "net60": -0.2494674335981498,
+        "stress60": -0.4516977656285463,
+        "baseline60": -0.2974923556837004,
+        "baselineStress": -0.49847857192634365,
+        "excess": 0.04802492208555062,
+        "stressExcess": 0.04678080629779735,
+        "negative": 779,
+        "positive": 356,
+        "false_target_alerts": 1048,
+        "worst_net": -4.87103964,
+        "best_net": 7.1935939038,
+        "net_ci97_5": [
+          -0.3187528629693357,
+          -0.1790601859875894
+        ],
+        "excess_ci97_5": [
+          -0.014924622968729309,
+          0.11642838593375171
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      }
+    },
+    "LTCUSDT": {
+      "0": {
+        "signals": 1120,
+        "evaluated": 1118,
+        "missing": 2,
+        "months": 33,
+        "events": 1704,
+        "detected": 35,
+        "missed": 1669,
+        "net60": -0.3178109975029517,
+        "stress60": -0.5105491007652952,
+        "baseline60": -0.3067963771898032,
+        "baselineStress": -0.50617675249678,
+        "excess": -0.011014620313148538,
+        "stressExcess": -0.0043723482685152915,
+        "negative": 812,
+        "positive": 306,
+        "false_target_alerts": 1056,
+        "worst_net": -6.1991982654,
+        "best_net": 7.4905628393,
+        "net_ci97_5": [
+          -0.402531134854146,
+          -0.22762284307367633
+        ],
+        "excess_ci97_5": [
+          -0.09363157803350701,
+          0.07511271518847634
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      },
+      "1": {
+        "signals": 1113,
+        "evaluated": 1111,
+        "missing": 2,
+        "months": 33,
+        "events": 1704,
+        "detected": 33,
+        "missed": 1671,
+        "net60": -0.3303314338957696,
+        "stress60": -0.522126636688929,
+        "baseline60": -0.2908514676035103,
+        "baselineStress": -0.49027078939036906,
+        "excess": -0.03947996629225925,
+        "stressExcess": -0.03185584729855995,
+        "negative": 810,
+        "positive": 301,
+        "false_target_alerts": 1053,
+        "worst_net": -6.1991982654,
+        "best_net": 7.4905628393,
+        "net_ci97_5": [
+          -0.4107927675767238,
+          -0.24626610550764058
+        ],
+        "excess_ci97_5": [
+          -0.11970088166530587,
+          0.04698430329278584
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      }
+    },
+    "FTTUSDT": {
+      "0": {
+        "signals": 657,
+        "evaluated": 656,
+        "missing": 1,
+        "months": 26,
+        "events": 2947,
+        "detected": 25,
+        "missed": 2922,
+        "net60": -0.4134896453565549,
+        "stress60": -0.6049510198981708,
+        "baseline60": -0.32374466075731706,
+        "baselineStress": -0.5227812382637195,
+        "excess": -0.08974498459923785,
+        "stressExcess": -0.08216978163445132,
+        "negative": 480,
+        "positive": 176,
+        "false_target_alerts": 604,
+        "worst_net": -4.5811145021,
+        "best_net": 4.0589390701,
+        "net_ci97_5": [
+          -0.5453420895399337,
+          -0.3179591114818604
+        ],
+        "excess_ci97_5": [
+          -0.21266550269886889,
+          0.005077686402593428
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      },
+      "1": {
+        "signals": 643,
+        "evaluated": 642,
+        "missing": 1,
+        "months": 26,
+        "events": 2947,
+        "detected": 23,
+        "missed": 2924,
+        "net60": -0.4209470994200935,
+        "stress60": -0.6183756836339563,
+        "baseline60": -0.3183237982947041,
+        "baselineStress": -0.5154605299258567,
+        "excess": -0.10262330112538942,
+        "stressExcess": -0.10291515370809967,
+        "negative": 472,
+        "positive": 170,
+        "false_target_alerts": 595,
+        "worst_net": -4.5811145021,
+        "best_net": 4.0589390701,
+        "net_ci97_5": [
+          -0.559958006346614,
+          -0.3218517179953741
+        ],
+        "excess_ci97_5": [
+          -0.22941745649827322,
+          0.0008780793922855896
+        ],
+        "accepted": false,
+        "reason": "fails one or more preregistered criteria; not enabled"
+      }
+    }
+  },
+  "data_files": {
+    "ok": 230,
+    "missing": 1,
+    "error": 0
+  },
+  "bars": 10042830,
+  "limitations": "fixed seven-symbol panel is not all-market representative or free of selection bias; exclude no losses; historical periods may be familiar from prior daily research; no microstructure fill claims; no thresholds may be changed after results",
+  "unassessed_engines": [
+    "Hybrid ranking and real quote stability/spread",
+    "EarlyWhale aggregate orders",
+    "Catalyst historical publication arrivals",
+    "manual Follow/TradeManager user entries",
+    "PhaseShadow prospective calibration"
+  ],
+  "execution_model": "open two bars after signal bar (one minute delay after close); stress open four bars after signal (three minutes delay); open 60 minutes after entry; no optimized stop or target; no overlapping signals within 6h per symbol per variant",
+  "protocol_sha256": "243a54f8461928635e98497fb6808f83e3812e0d8d036d0cd6ff79e383a24480",
+  "source_checksums": {
+    "trades.csv": "142fcb7d2ae4ffe175d75e69000f6ba0ec91f28d39860b9e368d4747a81da8a6",
+    "coverage.csv": "2d9c8738a0c126002ad5edcffc970b031782dcfc652147c2b3b54346afb275f4",
+    "manifest.json": "1d6f5c6585ca72caa46631b167964e3aa9b374de7c68d02e1e509f26baaa4134"
+  }
+}
