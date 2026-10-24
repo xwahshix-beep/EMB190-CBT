@@ -295,6 +295,8 @@ public final class HybridEngine {
             // Revalidate UI state as well, even when notification cooldown is active.
             try {
                 quoteRequests++;
+                String eligibility=TradingStatus.reason(c.symbol);
+                if(eligibility!=null){c.liveState="WAIT";c.tradeTriggered=false;c.waitReason=eligibility;logDecision(prefs,c.symbol,c.analysis.pre,"MARKET_STATUS",eligibility,System.currentTimeMillis());continue;}
                 long quoteAt=System.currentTimeMillis();
                 JSONObject quote=new JSONObject(readEarlyUrl(API+"/api/v3/ticker/bookTicker?symbol="+c.symbol));
                 double bid=quote.getDouble("bidPrice"),ask=quote.getDouble("askPrice");

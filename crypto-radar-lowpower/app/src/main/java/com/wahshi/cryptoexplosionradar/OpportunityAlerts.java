@@ -12,6 +12,9 @@ public final class OpportunityAlerts {
  public static boolean send(Context context,SharedPreferences prefs,String symbol,double price,double low,double high,long quoteAt,long signalAt,EntryWindow window,PreExplosionEngine.Result evidence){
   synchronized(FollowGate.LOCK){
    if(!BuyAlertPolicy.inScope(prefs.getBoolean("notify_all_buys",true),FollowGate.active(prefs),symbol)){prefs.edit().putString("push_status","مستبعد من نطاق التنبيهات: "+symbol).apply();return false;}
+   String eligibility=TradingStatus.reason(symbol);
+   prefs.edit().putLong("market_status_checked_"+symbol,TradingStatus.checkedAt()).apply();
+   if(eligibility!=null){prefs.edit().putString("push_status",symbol+": "+eligibility).apply();return false;}
    long checked=System.currentTimeMillis();
    if(!MinuteStreams.ready(symbol,checked)){prefs.edit().putString("push_status","مؤجل حتى اكتمال استعادة البيانات: "+symbol).apply();return false;}
    if(window==null||window.reason(price,checked)!=null)return false;
