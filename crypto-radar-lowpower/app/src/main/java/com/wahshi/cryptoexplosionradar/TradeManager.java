@@ -93,13 +93,13 @@ public final class TradeManager {
     }
 
     private static void notifyExit(Context c, TradeState t) {
-        notify(c, 26000 + Math.abs(t.symbol.hashCode() % 2000), "🔴 بيع / خروج — " + t.symbol,
+        notify(c, 26000 + Math.abs(t.symbol.hashCode() % 2000), "🔴 متابعة ورقية: خروج — " + t.symbol,
                 "السعر " + fmt(t.price) + " • كسر مستوى الحماية " + fmt(t.protect), Color.rgb(255,90,90));
     }
 
     private static void notifyHold(Context c, TradeState t) {
-        notify(c, 24000 + Math.abs(t.symbol.hashCode() % 2000), "🔵 احتفاظ — " + t.symbol,
-                "الصفقة ما زالت سليمة • " + String.format(Locale.US, "%+.2f%%", t.pnlPct), Color.rgb(94,168,255));
+        notify(c, 24000 + Math.abs(t.symbol.hashCode() % 2000), "🔵 متابعة ورقية: احتفاظ — " + t.symbol,
+                "السعر أعلى من مستوى الحماية الورقي • " + String.format(Locale.US, "%+.2f%%", t.pnlPct), Color.rgb(94,168,255));
     }
 
     private static void notify(Context c, int id, String title, String body, int color) {

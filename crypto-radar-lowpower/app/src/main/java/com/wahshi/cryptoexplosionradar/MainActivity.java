@@ -63,7 +63,7 @@ public class MainActivity extends Activity {
             .setMessage(PhaseShadow.report(prefs().getAll(),System.currentTimeMillis())+"\n"+prefs().getString("v66_phase_error",""))
             .setPositiveButton("إغلاق",null).setNeutralButton("تصدير سجل البحث",(d,w)->{
                 Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);
-                i.setType("application/json");i.putExtra(Intent.EXTRA_TITLE,"Radar-V66-shadow-"+System.currentTimeMillis()+".json");
+                i.setType("application/json");i.putExtra(Intent.EXTRA_TITLE,"Radar-phase-shadow-"+System.currentTimeMillis()+".json");
                 startActivityForResult(i,EXPORT_PHASE);
             }).show();
     }
@@ -81,7 +81,7 @@ public class MainActivity extends Activity {
                     }
                     runOnUiThread(()->feedback("تم حفظ CSV"));return;
                 }
-                org.json.JSONObject out=new org.json.JSONObject().put("schema","phase-shadow-v1").put("app","6.7-audit").put("exportedAt",System.currentTimeMillis())
+                org.json.JSONObject out=new org.json.JSONObject().put("schema","phase-shadow-v1").put("app","6.8-evidence").put("exportedAt",System.currentTimeMillis())
                     .put("description","Frozen per-symbol calibration; activity only, not BUY. Hourly samples capped at 72 per symbol. Gross closed-minute price returns, no fills or costs.");
                 org.json.JSONObject symbols=new org.json.JSONObject();
                 for(java.util.Map.Entry<String,?> e:snapshot.entrySet())if(e.getKey().startsWith("v66_phase_")){
@@ -111,7 +111,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(9, 12, 17));
 
         TextView title = new TextView(this);
-        title.setText("🎯 Explosion Radar V6.7");
+        title.setText("🎯 Explosion Radar V6.8");
         title.setTextColor(Color.WHITE);
         title.setTextSize(22);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
@@ -200,8 +200,8 @@ public class MainActivity extends Activity {
             }).setNegativeButton("إلغاء",null).show();
         });
         Button outcomes=new Button(this);outcomes.setText("📊 نتائج الرصد بعد 5 / 15 / 60 دقيقة");
-        outcomes.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("تقييم الرصد • V6.7")
-            .setMessage(OutcomeLedger.report(prefs().getString("v65_outcomes","[]"),System.currentTimeMillis()))
+        outcomes.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("بطاقة الأداء • V6.8")
+            .setMessage(PerformanceCard.report(prefs().getString("v65_outcomes","[]"),System.currentTimeMillis()))
             .setPositiveButton("إغلاق",null).show());
         Button alerts=new Button(this);alerts.setText("🔔 إعدادات الإشعارات / اختبار");
         alerts.setOnClickListener(v -> new AlertDialog.Builder(this).setTitle("نطاق إشعارات الشراء")
@@ -213,7 +213,7 @@ public class MainActivity extends Activity {
 
         Button toolsMenu=new Button(this);toolsMenu.setText("☰ الأدوات والتقارير والإشعارات");
         toolsMenu.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("الأدوات")
-            .setItems(new String[]{"الاختبار التاريخي","مختبر الزخم اليومي","سجل قبول ورفض الإشارات","لماذا لم تظهر العملة؟","نتائج 5 / 15 / 60 دقيقة","إعدادات الإشعارات / اختبار","حالة الاتصال وتغطية الفحص","اختبار ربع الساعة (تجريبي)","تصدير سجل الإشارات CSV"},(d,w)->{
+            .setItems(new String[]{"الاختبار التاريخي","مختبر الزخم اليومي","سجل قبول ورفض الإشارات","لماذا لم تظهر العملة؟","بطاقة أداء المحرك","إعدادات الإشعارات / اختبار","حالة الاتصال وتغطية الفحص","اختبار ربع الساعة (تجريبي)","تصدير سجل الإشارات CSV"},(d,w)->{
                 Button[] actions={replay,research,log,audit,outcomes,alerts};
                 if(w<actions.length)actions[w].performClick();
                 else if(w==7)showPhaseShadow();
@@ -272,6 +272,7 @@ public class MainActivity extends Activity {
         // One page scroll: large fonts and short screens cannot collapse the coin viewport.
         scroll.addView(root);
         setContentView(scroll);
+        inspectAlert(getIntent());
     }
 
     private SpannableString styleDetails(String text) {
@@ -442,6 +443,15 @@ public class MainActivity extends Activity {
         details.setText(styleDetails(text));
         savedSignals.setText(styleDetails(SignalChecks.history(p)));
     }
+    private void inspectAlert(Intent intent){
+        if(intent==null||!intent.hasExtra("alertExpires"))return;
+        long expiry=intent.getLongExtra("alertExpires",0);String symbol=intent.getStringExtra("alertSymbol");
+        intent.removeExtra("alertExpires");
+        boolean expired=System.currentTimeMillis()>=expiry;
+        new AlertDialog.Builder(this).setTitle(expired?"انتهت صلاحية التنبيه":"لقطة إشعار سابقة")
+            .setMessage(symbol+"\n"+(expired?"انتهت الصلاحية؛ يلزم تحليل جديد.":"بقاء التنبيه ضمن مدته لا يثبت استمرار شروط الدخول؛ راجع آخر حالة وسعر في الرادار.")+"\nهذا ليس أمر تداول.").setPositiveButton("فهمت",null).show();
+    }
+    @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);setIntent(intent);inspectAlert(intent);}
     @Override protected void onResume(){super.onResume();fastUiHandler.removeCallbacks(fastUiRefresh);fastUiHandler.post(fastUiRefresh);}
     @Override protected void onPause(){fastUiHandler.removeCallbacks(fastUiRefresh);super.onPause();}
     private void restoreSavedState() {

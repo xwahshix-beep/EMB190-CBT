@@ -4,7 +4,7 @@ import java.util.*;
 /** Allowlisted CSV only. Never exports preferences or secrets wholesale. */
 public final class ResearchExport {
  private ResearchExport(){}
- private static final String[] KEYS={"symbol","state","observedAt","closedAt","price","score","vol","trades","z","buyShare","quote5","extension","reason","audit","m5","m15","m60","quoteAt","signalAt"};
+ private static final String[] KEYS={"rules","engine","sampleMax","sampleMin","sampleCount","maxGapMs","lastSampleAt","symbol","state","observedAt","closedAt","price","score","vol","trades","z","buyShare","quote5","extension","reason","audit","m5","m15","m60","quoteAt","signalAt"};
  static String cell(Object value){
   if(value==null||value==JSONObject.NULL)return "\"\"";
   String s=String.valueOf(value);

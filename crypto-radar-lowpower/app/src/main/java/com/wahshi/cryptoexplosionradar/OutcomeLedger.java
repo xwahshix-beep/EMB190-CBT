@@ -4,10 +4,17 @@ import java.util.*;
 /** Forward observations only. Missing windows stay missing; prices are not fills. */
 public final class OutcomeLedger {
  private OutcomeLedger(){}
+ public static final String RULES="pre-explosion-v6-frozen-1";
  static final int[] MINUTES={5,15,60};
  public static String observe(String json,String symbol,double price,long priceAt,long now){
   try{JSONArray a=new JSONArray(json);
    for(int i=0;i<a.length();i++){JSONObject e=a.getJSONObject(i);if(!symbol.equals(e.optString("symbol")))continue;
+    long start=e.getLong("at"),last=e.optLong("lastSampleAt",start);
+    if(e.has("rules")&&price>0&&Double.isFinite(price)&&priceAt>last&&priceAt>start&&priceAt<=start+3600000&&priceAt<=now&&now-priceAt<=75000){
+     double r=100*(price/e.getDouble("price")-1);
+     e.put("sampleMax",Math.max(e.optDouble("sampleMax",0),r)).put("sampleMin",Math.min(e.optDouble("sampleMin",0),r));
+     e.put("maxGapMs",Math.max(e.optLong("maxGapMs",0),priceAt-last)).put("lastSampleAt",priceAt).put("sampleCount",e.optInt("sampleCount",0)+1);
+    }
     for(int m:MINUTES){String k="m"+m;long due=e.getLong("at")+m*60000L;
      if(e.has(k))continue;
      if(price>0&&Double.isFinite(price)&&priceAt>=due&&priceAt<=due+90000&&priceAt<=now&&now-priceAt<=75000){
@@ -17,13 +24,14 @@ public final class OutcomeLedger {
    }return a.toString();
   }catch(Exception ex){return json;}
  }
- public static String start(String json,String symbol,String state,double price,long now){
+ public static String start(String json,String symbol,String state,double price,long now){return start(json,symbol,state,price,now,"غير مسجل");}
+ public static String start(String json,String symbol,String state,double price,long now,String reason){
   if(!(price>0)||!Double.isFinite(price)||!(state.equals("BUY")||state.equals("WATCH")||state.equals("EARLY_WATCH")))return json;
   try{JSONArray a=new JSONArray(json),out=new JSONArray();
    for(int i=0;i<a.length();i++){JSONObject e=a.getJSONObject(i);
     if(symbol.equals(e.optString("symbol"))&&state.equals(e.optString("state"))&&now-e.getLong("at")<3600000)return json;
    }
-   out.put(new JSONObject().put("symbol",symbol).put("state",state).put("price",price).put("at",now));
+   out.put(new JSONObject().put("symbol",symbol).put("state",state).put("price",price).put("at",now).put("rules",RULES).put("engine","PreExplosion+EntryGuard").put("reason",reason).put("sampleMax",0).put("sampleMin",0).put("sampleCount",0).put("lastSampleAt",now));
    for(int i=0;i<a.length()&&out.length()<1000;i++){JSONObject e=a.getJSONObject(i);if(now-e.getLong("at")<=7L*86400000)out.put(e);}
    return out.toString();
   }catch(Exception ex){return json;}

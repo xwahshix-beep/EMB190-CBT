@@ -228,7 +228,7 @@ public final class HybridEngine {
                 synchronized(HybridEngine.class){
                     String outcomes=OutcomeLedger.observe(prefs.getString("v65_outcomes","[]"),c.symbol,a.lastClose,a.pre.closedAt,c.checkedAt);
                     if("WATCH".equals(a.pre.state) || "EARLY_WATCH".equals(a.pre.state))
-                        outcomes=OutcomeLedger.start(outcomes,c.symbol,a.pre.state,a.lastClose,c.checkedAt);
+                        outcomes=OutcomeLedger.start(outcomes,c.symbol,a.pre.state,a.lastClose,c.checkedAt,a.pre.reason);
                     prefs.edit().putString("v65_outcomes",outcomes).apply();
                 }
                 // Isolated observational experiment: failures cannot change the live decision path.
@@ -247,7 +247,7 @@ public final class HybridEngine {
                 double total = c.score + a.score;
                 boolean confirmedBuy = a.pre.state.equals("BUY") && !c.catalystNegative;
                 if(confirmedBuy){
-                    String guard=a.window.reason(a.lastClose,c.checkedAt);
+                    String guard=a.window.reason(a.lastClose,c.checkedAt,a.pre.reason);
                     if(guard!=null){c.waitReason=guard;logDecision(prefs,c.symbol,a.pre,"WAIT",guard,c.checkedAt);continue;}
                 }
                 if (confirmedBuy) {
@@ -311,7 +311,7 @@ public final class HybridEngine {
                     if(!stable.buy){c.liveState="WAIT";c.tradeTriggered=false;logDecision(prefs,c.symbol,c.analysis.pre,"WAIT",stable.reason,checked);continue;}
                     c.displayUntil=stable.until;
                     logDecision(prefs,c.symbol,c.analysis.pre,"BUY","Verified quote and stability: "+stable.reason,checked);
-                    synchronized(HybridEngine.class){prefs.edit().putString("v65_outcomes",OutcomeLedger.start(prefs.getString("v65_outcomes","[]"),c.symbol,"BUY",stable.price,checked)).apply();}
+                    synchronized(HybridEngine.class){prefs.edit().putString("v65_outcomes",OutcomeLedger.start(prefs.getString("v65_outcomes","[]"),c.symbol,"BUY",stable.price,checked,ResearchExport.explanation(c.analysis.pre))).apply();}
                     OpportunityAlerts.send(context,prefs,c.symbol,c.lastPrice,c.entryLow,c.entryHigh,stable.quoteAt,c.liveSignalAt,c.analysis.window,c.analysis.pre);
                 } else c.waitReason=c.lastPrice>c.entryHigh?"فات نطاق الدخول":"انتظار دخول السعر في النطاق";
             } catch(Exception ignored) {c.liveState="WAIT";c.waitReason="تعذر التحقق من السعر الحالي";}
