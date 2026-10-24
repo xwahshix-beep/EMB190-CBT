@@ -111,7 +111,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(9, 12, 17));
 
         TextView title = new TextView(this);
-        title.setText("🎯 Explosion Radar V6.8");
+        title.setText("🎯 Explosion Radar "+BuildConfig.VERSION_NAME);
         title.setTextColor(Color.WHITE);
         title.setTextSize(22);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
@@ -200,7 +200,7 @@ public class MainActivity extends Activity {
             }).setNegativeButton("إلغاء",null).show();
         });
         Button outcomes=new Button(this);outcomes.setText("📊 نتائج الرصد بعد 5 / 15 / 60 دقيقة");
-        outcomes.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("بطاقة الأداء • V6.8")
+        outcomes.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("بطاقة الأداء • "+BuildConfig.VERSION_NAME)
             .setMessage(PerformanceCard.report(prefs().getString("v65_outcomes","[]"),System.currentTimeMillis()))
             .setPositiveButton("إغلاق",null).show());
         Button alerts=new Button(this);alerts.setText("🔔 إعدادات الإشعارات / اختبار");
