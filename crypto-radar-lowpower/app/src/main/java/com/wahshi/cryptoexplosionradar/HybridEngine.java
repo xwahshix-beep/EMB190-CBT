@@ -367,7 +367,7 @@ public final class HybridEngine {
                 : armedCount > 0
                 ? "🎯 ARMED • انتظار التأكيد • " + armedCount + " مرشح"
                 : candidates.isEmpty()
-                ? "Hybrid V4.2.3 • مراقبة السوق"
+                ? "Explosion Radar " + BuildConfig.VERSION_NAME + " • مراقبة السوق"
                 : "🔎 Early Hunt • " + candidates.size() + " مرشح";
         out.summary = formatSummary(candidates, armedCount, activeCount)
                 + "\n\n📌 مرشحون رُصدوا سابقًا (تاريخي، ليست إشارة شراء حالية):\n" + DecisionLedger.recent(prefs.getString("v6_recent", "{}"),now,8)

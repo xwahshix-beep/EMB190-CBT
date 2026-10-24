@@ -10,8 +10,8 @@ android {
         applicationId 'com.wahshi.cryptoexplosionradar'
         minSdk 26
         targetSdk 34
-        versionCode 73
-        versionName "6.9-recovery"
+        versionCode 74
+        versionName "6.9.1-audit"
     }
 
     buildFeatures { buildConfig true }

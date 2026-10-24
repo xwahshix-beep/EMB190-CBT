@@ -54,11 +54,8 @@ public class ScannerService extends Service {
 
     private static final long NORMAL_INTERVAL_MS = 20 * 60_000L;
     private static final long WATCH_INTERVAL_MS = 10 * 60_000L;
-    private static final long ERROR_RETRY_MS = 12 * 60_000L;
-    private static final long ALERT_COOLDOWN_MS = 4 * 60 * 60_000L;
 
-    private static final int ROTATING_BATCH = 24;
-    private static final int QUIET_PRIORITY = 12;
+    private static final int ONCHAIN_BATCH = 3;
     private static final double MIN_BINANCE_24H_QUOTE_USDT = 1_500_000.0;
     private static final double MAX_EARLY_24H_CHANGE = 8.0;
     private static final double MIN_DEX_LIQUIDITY_USD = 100_000.0;
@@ -165,8 +162,8 @@ public class ScannerService extends Service {
         running = true;
         MinuteStreams.start();
         prefs.edit().putBoolean("radar_enabled", true).putBoolean("service_alive", true).apply();
-        startForeground(SERVICE_NOTIFICATION_ID, buildServiceNotification("Hybrid Explosion Radar V4.2.3 يعمل • Background wake"));
-        sendUi("🐋⚡ Hybrid Explosion Radar V4.2.3", "أول فحص مجاني On-chain خلال ثوانٍ…");
+        startForeground(SERVICE_NOTIFICATION_ID, buildServiceNotification("Explosion Radar " + BuildConfig.VERSION_NAME + " يعمل"));
+        sendUi("Explosion Radar " + BuildConfig.VERSION_NAME, "أول فحص مجاني On-chain خلال ثوانٍ…");
         scheduleFollow(0);
         scheduleNext(2_000L);
     }
@@ -180,7 +177,7 @@ public class ScannerService extends Service {
         prefs.edit().putBoolean("radar_enabled", false).putBoolean("service_alive", false).apply();
         if (alarmManager != null && tickIntent != null) alarmManager.cancel(tickIntent);
         if (cycleWakeLock != null && cycleWakeLock.isHeld()) cycleWakeLock.release();
-        sendUi("الرادار متوقف", "تم إيقاف Hybrid Explosion Radar V4.2.3 بواسطة المستخدم.");
+        sendUi("الرادار متوقف", "تم إيقاف Explosion Radar بواسطة المستخدم.");
         if (Build.VERSION.SDK_INT >= 24) stopForeground(STOP_FOREGROUND_REMOVE); else stopForeground(true);
         stopSelf();
     }
@@ -238,13 +235,17 @@ public class ScannerService extends Service {
             List<WhaleSignal> signals = cachedWhaleSignals;
             if (whaleDue) {
                 List<BinanceTicker> batch = selectBatch(all);
-                batch=new ArrayList<>(batch.subList(0,Math.min(3,batch.size())));
+
                 List<WhaleSignal> fresh = new ArrayList<>();
+                int attempted = 0, failures = 0;
                 int mapped = 0;
                 int directOnChain = 0;
 
                 for (BinanceTicker bt : batch) {
                     if (!running) break;
+                    attempted++;
+                    // Persist only actual attempts; a failed provider must not starve the next symbol.
+                    prefs.edit().putString("onchain_after_symbol",bt.symbol).apply();
                     try {
                         DexToken token = resolveDexToken(bt);
                         if (token == null) continue;
@@ -259,8 +260,9 @@ public class ScannerService extends Service {
                             ws = analyzeEvmTransfers(bt, token);
                         }
                         if (ws != null) fresh.add(ws);
-                    } catch (Exception ignored) {
-                        // Public on-chain providers are best-effort per token.
+                    } catch (Exception failure) {
+                        failures++;
+                        recordEnrichmentError("onchain", failure);
                     }
                 }
 
@@ -268,7 +270,9 @@ public class ScannerService extends Service {
                 cachedWhaleSignals = fresh;
                 signals = fresh;
                 lastWhaleScanAt = now;
-                lastWhaleScanned = batch.size();
+                lastWhaleScanned = attempted;
+                prefs.edit().putString("onchain_health", "فُحص " + attempted + " • أخطاء " + failures
+                    + " • نتائج بحثية فقط: هوية العقد غير موثقة").apply();
                 lastWhaleMapped = mapped;
                 lastWhaleOnChain = directOnChain;
             }
@@ -279,12 +283,16 @@ public class ScannerService extends Service {
             }
             whaleCadence = whaleWatch ? WATCH_INTERVAL_MS : NORMAL_INTERVAL_MS;
 
-            cachedCatalyst = CatalystEngine.scan(this, all, signals, prefs);
+            cachedCatalyst = CatalystEngine.scan(this, all, Collections.emptyList(), prefs);
             java.util.List<String> earlySymbols=new java.util.ArrayList<>();
             for(BinanceTicker t:all)earlySymbols.add(t.symbol);
             HybridEngine.refreshEarly(earlySymbols,prefs);
 
-            }catch(Exception ignored){/* Optional enrichment cannot block discovery. */}
+            }catch(Exception failure){
+                cachedWhaleSignals = new ArrayList<>();
+                recordEnrichmentError("enrichment", failure);
+                prefs.edit().putString("onchain_health", "تعذر تحديث بيانات السلسلة — غير متاحة للإشارات").apply();
+            }
         });
     }
 
@@ -294,12 +302,13 @@ public class ScannerService extends Service {
         try {
             if(cycleWakeLock!=null&&!cycleWakeLock.isHeld())cycleWakeLock.acquire(90000);
             startEnrichment();
-            List<WhaleSignal> whales=System.currentTimeMillis()-lastWhaleScanAt<900000?cachedWhaleSignals:Collections.emptyList();
+            // Symbol/price matching is not verified contract identity. Research results cannot boost BUY.
+            List<WhaleSignal> whales=Collections.emptyList();
             HybridEngine.ScanResult result=HybridEngine.scan(this,whales,cachedCatalyst,prefs);
             if(!running)return;
             long finished=System.currentTimeMillis();
             prefs.edit().putLong("last_scan_at",finished).putLong("scan_duration_ms",finished-started).apply();
-            sendUi(result.status,result.summary+"\nمدة الفحص: "+((finished-started)/1000)+" ثانية");
+            sendUi(result.status,result.summary+"\n"+prefs.getString("onchain_health","بيانات السلسلة: انتظار الفحص")+"\nمدة الفحص: "+((finished-started)/1000)+" ثانية");
             updateServiceNotification("رصد الدقيقة يعمل • فرص الشراء دون فتح التطبيق");
         } catch(Exception ex) {
             if(running)sendUi("تعذر تحديث السوق","انتظار — "+safe(ex.getMessage()));
@@ -331,27 +340,21 @@ public class ScannerService extends Service {
         return out;
     }
 
+    private void recordEnrichmentError(String stage, Exception failure) {
+        // Do not log credentials, URLs, provider bodies or wallet addresses.
+        String kind=failure.getClass().getSimpleName();
+        android.util.Log.w("RadarData",stage+": "+kind);
+        prefs.edit().putString("enrichment_error",stage+": "+kind)
+            .putLong("enrichment_error_at",System.currentTimeMillis()).apply();
+    }
+
     private List<BinanceTicker> selectBatch(List<BinanceTicker> all) {
-        if (all.isEmpty()) return all;
-        LinkedHashMap<String, BinanceTicker> chosen = new LinkedHashMap<>();
-
-        List<BinanceTicker> quiet = new ArrayList<>(all);
-        quiet.sort(Comparator.comparingDouble(a -> Math.abs(a.change24)));
-        for (int i = 0; i < Math.min(QUIET_PRIORITY, quiet.size()); i++) {
-            chosen.put(quiet.get(i).symbol, quiet.get(i));
-        }
-
-        List<BinanceTicker> alphabetical = new ArrayList<>(all);
-        alphabetical.sort(Comparator.comparing(a -> a.symbol));
-        int cursor = prefs.getInt("rotation_cursor", 0);
-        if (cursor >= alphabetical.size()) cursor = 0;
-        int take = Math.min(ROTATING_BATCH, alphabetical.size());
-        for (int i = 0; i < take; i++) {
-            BinanceTicker t = alphabetical.get((cursor + i) % alphabetical.size());
-            chosen.put(t.symbol, t);
-        }
-        prefs.edit().putInt("rotation_cursor", (cursor + take) % alphabetical.size()).apply();
-        return new ArrayList<>(chosen.values());
+        Map<String,BinanceTicker> bySymbol=new HashMap<>();
+        for(BinanceTicker t:all) bySymbol.put(t.symbol,t);
+        List<BinanceTicker> batch=new ArrayList<>();
+        for(String symbol:FairRotation.next(bySymbol.keySet(),prefs.getString("onchain_after_symbol",""),ONCHAIN_BATCH))
+            batch.add(bySymbol.get(symbol));
+        return batch;
     }
 
     private DexToken resolveDexToken(BinanceTicker bt) throws Exception {
@@ -375,7 +378,7 @@ public class ScannerService extends Service {
             double price = parseDouble(p.optString("priceUsd", "0"));
             if (price <= 0) continue;
             double diff = Math.abs(price / bt.last - 1.0) * 100.0;
-            if (diff > 8.0) continue; // protects against same-symbol clones/wrong contracts.
+            if (diff > 8.0) continue; // Heuristic only; does NOT verify contract identity or safety.
 
             JSONObject liq = p.optJSONObject("liquidity");
             double liquidity = liq == null ? 0 : liq.optDouble("usd", 0);
@@ -490,116 +493,79 @@ public class ScannerService extends Service {
     }
 
     private WhaleSignal analyzeSolanaTopHolders(BinanceTicker bt, DexToken token) throws Exception {
-        JSONObject root = solRpc("getTokenLargestAccounts", new JSONArray()
-                .put(token.address)
-                .put(new JSONObject().put("commitment", "confirmed")));
-        JSONObject result = root.optJSONObject("result");
-        if (result == null) return null;
-        JSONArray values = result.optJSONArray("value");
-        if (values == null || values.length() == 0) return null;
-
-        JSONObject supplyRoot = solRpc("getTokenSupply", new JSONArray()
-                .put(token.address)
-                .put(new JSONObject().put("commitment", "confirmed")));
-        JSONObject supplyResult = supplyRoot.optJSONObject("result");
-        JSONObject supplyValue = supplyResult == null ? null : supplyResult.optJSONObject("value");
-        double totalSupply = supplyValue == null ? 0 : parseDouble(supplyValue.optString("uiAmountString", "0"));
-        if (totalSupply <= 0) return null;
-
-        JSONObject current = new JSONObject();
-        Map<String, Double> currentAmount = new LinkedHashMap<>();
-        for (int i = 0; i < values.length(); i++) {
-            JSONObject a = values.optJSONObject(i);
-            if (a == null) continue;
-            String account = a.optString("address", "");
-            double amount = parseDouble(a.optString("uiAmountString", "0"));
-            if (account.isEmpty() || amount <= 0) continue;
-            current.put(account, amount);
-            currentAmount.put(account, amount);
-        }
-
-        String key = "sol_snapshot_" + token.address;
-        String oldText = prefs.getString(key, "");
-        prefs.edit().putString(key, current.toString()).apply();
-        if (oldText.isEmpty()) return null; // first observation establishes the baseline.
-
-        JSONObject old;
-        try { old = new JSONObject(oldText); } catch (Exception e) { return null; }
-        double threshold = dynamicWhaleThreshold(token.liquidityUsd);
-        List<String> changedAccounts = new ArrayList<>();
-        Map<String, Double> deltaUsdByAccount = new HashMap<>();
-
-        for (Map.Entry<String, Double> e : currentAmount.entrySet()) {
-            String account = e.getKey();
-            if (!old.has(account)) continue; // do not treat a newly-entered top-20 account as zero baseline.
-            double nowAmount = e.getValue();
-            double prevAmount = old.optDouble(account, nowAmount);
-            double share = nowAmount / totalSupply;
-            if (share > 0.12) continue; // treasury/exchange/vesting-like concentration guard.
-            double deltaUsd = (nowAmount - prevAmount) * token.priceUsd;
-            if (deltaUsd >= threshold) {
-                changedAccounts.add(account);
-                deltaUsdByAccount.put(account, deltaUsd);
+        long now=System.currentTimeMillis();
+        String key="sol_cohort_v2_"+token.address;
+        JSONObject old=new JSONObject(prefs.getString(key,"{}"));
+        JSONObject largest=solRpc("getTokenLargestAccounts",new JSONArray().put(token.address)
+            .put(new JSONObject().put("commitment","finalized"))).getJSONObject("result");
+        long minimumSlot=Math.max(old.optLong("slot",0),largest.getJSONObject("context").getLong("slot"));
+        JSONObject supply=solRpc("getTokenSupply",new JSONArray().put(token.address)
+            .put(new JSONObject().put("commitment","finalized"))).getJSONObject("result");
+        minimumSlot=Math.max(minimumSlot,supply.getJSONObject("context").getLong("slot"));
+        JSONObject supplyValue=supply.getJSONObject("value");
+        BigDecimal totalSupply=new BigDecimal(supplyValue.getString("amount")).movePointLeft(supplyValue.getInt("decimals"));
+        if(totalSupply.signum()<=0) throw new IllegalStateException("Invalid supply");
+        JSONArray top=largest.getJSONArray("value");
+        Set<String> topAddresses=new java.util.LinkedHashSet<>();
+        for(int i=0;i<top.length();i++) topAddresses.add(top.getJSONObject(i).getString("address"));
+        Set<String> union=new java.util.LinkedHashSet<>(topAddresses);
+        JSONObject previous=old.optJSONObject("accounts");
+        if(previous!=null) union.addAll(previous.keySet());
+        if(union.isEmpty() || union.size()>40) { prefs.edit().remove(key).apply(); return null; }
+        JSONObject result=solRpc("getMultipleAccounts",new JSONArray().put(new JSONArray(union))
+            .put(new JSONObject().put("encoding","jsonParsed").put("commitment","finalized")
+                .put("minContextSlot",minimumSlot))).getJSONObject("result");
+        long slot=result.getJSONObject("context").getLong("slot");
+        JSONArray values=result.getJSONArray("value");
+        if(slot<minimumSlot || values.length()!=union.size()) throw new IllegalStateException("Incomplete cohort");
+        JSONObject current=new JSONObject(), next=new JSONObject();
+        int i=0;
+        for(String address:union) {
+            JSONObject account=values.optJSONObject(i++);
+            if(account==null) {
+                // A missing/closed account is unknown, not an assumed zero balance.
+                prefs.edit().remove(key).apply();
+                throw new IllegalStateException("Missing cohort account");
             }
+            JSONObject info=account.getJSONObject("data").getJSONObject("parsed").getJSONObject("info");
+            if(!token.address.equals(info.getString("mint"))) throw new IllegalStateException("Mint mismatch");
+            JSONObject amount=info.getJSONObject("tokenAmount");
+            BigDecimal balance=new BigDecimal(amount.getString("amount")).movePointLeft(amount.getInt("decimals"));
+            if(balance.signum()<0) throw new IllegalStateException("Invalid balance");
+            JSONObject record=new JSONObject().put("owner",info.getString("owner")).put("amount",balance.toPlainString());
+            current.put(address,record);
+            if(topAddresses.contains(address)) next.put(address,record);
         }
-        if (changedAccounts.size() < 2) return null;
-
-        Map<String, Double> ownerNet = resolveSolanaOwners(changedAccounts, deltaUsdByAccount);
-        List<Double> ownerDeltas = new ArrayList<>(ownerNet.values());
-        ownerDeltas.sort(Collections.reverseOrder());
-        int whales = 0;
-        double combined = 0;
-        double largest = 0;
-        for (double v : ownerDeltas) {
-            if (v < threshold) continue;
-            whales++;
-            combined += v;
-            largest = Math.max(largest, v);
+        Map<String,BigDecimal> net=HolderNet.calculate(old,current,now,slot);
+        // Baseline contains current top 20; next observation also queries those leaving the top 20.
+        prefs.edit().putString(key,new JSONObject().put("at",now).put("slot",slot).put("accounts",next).toString()).apply();
+        double threshold=dynamicWhaleThreshold(token.liquidityUsd);
+        int whales=0; double combined=0, largestUsd=0;
+        Map<String,BigDecimal> ownerBalances=new HashMap<>();
+        for(String address:current.keySet()) {
+            JSONObject record=current.getJSONObject(address);
+            String owner=record.getString("owner");
+            ownerBalances.put(owner,ownerBalances.getOrDefault(owner,BigDecimal.ZERO).add(new BigDecimal(record.getString("amount"))));
         }
-
-        double required = Math.max(75_000.0, threshold * 2.4);
-        if (whales < 2 || combined < required) return null;
-
-        WhaleSignal s = new WhaleSignal();
-        s.symbol = bt.base;
-        s.chain = "solana";
-        s.wallets = whales;
-        s.netUsd = combined;
-        s.largestUsd = largest;
-        s.change24 = bt.change24;
-        s.source = "top-holder balance increases";
-        s.score = scoreCommon(bt, token, whales, combined, threshold);
-        s.strong = s.score >= 4.75 && whales >= 3;
-        return s;
-    }
-
-    private Map<String, Double> resolveSolanaOwners(List<String> accounts, Map<String, Double> deltaByAccount) throws Exception {
-        Map<String, Double> out = new HashMap<>();
-        JSONArray addresses = new JSONArray();
-        for (String a : accounts) addresses.put(a);
-        JSONArray params = new JSONArray().put(addresses)
-                .put(new JSONObject().put("encoding", "jsonParsed").put("commitment", "confirmed"));
-        JSONObject root = solRpc("getMultipleAccounts", params);
-        JSONObject result = root.optJSONObject("result");
-        JSONArray values = result == null ? null : result.optJSONArray("value");
-        if (values == null) return out;
-
-        for (int i = 0; i < values.length() && i < accounts.size(); i++) {
-            JSONObject accountObj = values.optJSONObject(i);
-            if (accountObj == null) continue;
-            JSONObject data = accountObj.optJSONObject("data");
-            JSONObject parsed = data == null ? null : data.optJSONObject("parsed");
-            JSONObject info = parsed == null ? null : parsed.optJSONObject("info");
-            String owner = info == null ? "" : info.optString("owner", "");
-            if (owner.isEmpty()) continue;
-            double delta = deltaByAccount.getOrDefault(accounts.get(i), 0.0);
-            out.put(owner, out.getOrDefault(owner, 0.0) + delta);
+        for(Map.Entry<String,BigDecimal> change:net.entrySet()) {
+            // Concentration guard applies AFTER signed owner aggregation, never to individual legs.
+            if(ownerBalances.get(change.getKey()).compareTo(totalSupply.multiply(new BigDecimal("0.12")))>0) continue;
+            double usd=change.getValue().multiply(BigDecimal.valueOf(token.priceUsd)).doubleValue();
+            if(!Double.isFinite(usd) || usd<threshold) continue;
+            whales++; combined+=usd; largestUsd=Math.max(largestUsd,usd);
         }
-        return out;
+        if(whales<2 || combined<Math.max(75000,threshold*2.4)) return null;
+        WhaleSignal signal=new WhaleSignal();
+        signal.symbol=bt.base; signal.chain="solana"; signal.wallets=whales;
+        signal.netUsd=combined; signal.largestUsd=largestUsd; signal.change24=bt.change24;
+        signal.source="زيادة صافية في حسابات مرصودة فقط؛ تغطية جزئية؛ ليست إثبات شراء أو هوية عقد";
+        signal.score=scoreCommon(bt,token,whales,combined,threshold);
+        signal.strong=false; // unverified identity and partial coverage: research only
+        return signal;
     }
 
     private double scoreCommon(BinanceTicker bt, DexToken token, int wallets, double combined, double threshold) {
-        double score = 2.0; // at least two independently observed large accumulators already required.
+        double score = 2.0; // Distinct owner addresses are not proof of economically independent buyers.
         if (wallets >= 3) score += 0.75;
         if (wallets >= 5) score += 0.35;
         if (combined >= Math.max(250_000.0, threshold * 4.0)) score += 0.75;
@@ -608,56 +574,6 @@ public class ScannerService extends Service {
         if (token.buys1h > token.sells1h * 1.10 && token.buys1h >= 8) score += 0.50;
         if (token.liquidityUsd >= 1_000_000.0) score += 0.25;
         return score;
-    }
-
-    private void maybeAlert(WhaleSignal s) {
-        if (s.score < 3.5) return;
-        String key = "alert_" + s.chain + "_" + s.symbol;
-        long last = prefs.getLong(key, 0L);
-        String lastTier = prefs.getString(key + "_tier", "");
-        long now = System.currentTimeMillis();
-        String tier = s.strong ? "strong" : "watch";
-        boolean upgrade = s.strong && !"strong".equals(lastTier);
-        if (!upgrade && now - last < ALERT_COOLDOWN_MS) return;
-        prefs.edit().putLong(key, now).putString(key + "_tier", tier).apply();
-
-        String title = s.strong
-                ? "🐋🔥 تجميع حيتان محتمل قوي — " + s.symbol + "/USDT"
-                : "🐋 تجميع حيتان محتمل — " + s.symbol + "/USDT";
-        String body = s.wallets + " محافظ مستقلة • صافي +" + money(s.netUsd)
-                + " • " + s.chain.toUpperCase(Locale.US)
-                + " • 24h " + String.format(Locale.US, "%+.2f%%", s.change24);
-        postWhaleNotification(s.symbol, title, body);
-    }
-
-    private String formatSignals(int scanned, int mapped, int onchain, List<WhaleSignal> signals, long next) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("فحص هذه الدورة: ").append(scanned).append(" زوج Binance Spot")
-                .append(" • تطابق عقد: ").append(mapped)
-                .append(" • On-chain مباشر: ").append(onchain).append("\n");
-        sb.append("الدورة التالية تقريبًا خلال ").append(next / 60_000L).append(" دقيقة.\n\n");
-
-        if (signals.isEmpty()) {
-            sb.append("لا يوجد تجميع حيتان متعدد المحافظ يستوفي الشروط الآن.\n\n")
-                    .append("البرنامج لا يعتبر زيادة الحجم أو الاختراق السعري حوتًا. يجب أن يرى صافي زيادة كبيرة فعلية في عدة محافظ مستقلة.");
-            return sb.toString();
-        }
-
-        int n = Math.min(6, signals.size());
-        for (int i = 0; i < n; i++) {
-            WhaleSignal s = signals.get(i);
-            sb.append(i + 1).append(". ").append(s.symbol).append("/USDT")
-                    .append(s.strong ? "  🐋🔥" : "  🐋")
-                    .append("\n   Chain: ").append(s.chain)
-                    .append(" • Wallets: ").append(s.wallets)
-                    .append(" • Net +").append(money(s.netUsd))
-                    .append(" • Largest +").append(money(s.largestUsd))
-                    .append("\n   24h ").append(String.format(Locale.US, "%+.2f%%", s.change24))
-                    .append(" • Score ").append(String.format(Locale.US, "%.2f", s.score))
-                    .append("\n   Source: ").append(s.source).append("\n\n");
-        }
-        sb.append("تنبيه Whale ≠ أمر شراء؛ هو رصد سلوك on-chain فقط.");
-        return sb.toString();
     }
 
     private int erc20Decimals(String rpc, String token) throws Exception {
@@ -778,7 +694,7 @@ public class ScannerService extends Service {
         Intent open = new Intent(this, MainActivity.class);
         PendingIntent pi = PendingIntent.getActivity(this, 1, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, SERVICE_CHANNEL) : new Notification.Builder(this);
-        return b.setContentTitle("Hybrid Explosion Radar V4.2.3")
+        return b.setContentTitle("Explosion Radar " + BuildConfig.VERSION_NAME)
                 .setContentText(text)
                 .setSmallIcon(R.drawable.app_icon)
                 .setContentIntent(pi)
@@ -791,7 +707,7 @@ public class ScannerService extends Service {
         ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(SERVICE_NOTIFICATION_ID, buildServiceNotification(text));
     }
 
-    private void postWhaleNotification(String symbol, String title, String body) { }
+
 
     private void sendUi(String status, String details) {
         long now = System.currentTimeMillis();

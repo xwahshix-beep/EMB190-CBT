@@ -1,6 +1,7 @@
 package com.wahshi.cryptoexplosionradar;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -25,7 +26,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 public final class TradeManager {
     private static final String API = "https://api.binance.com";
-    private static final String CHANNEL = "hybrid_buy_alerts_v42";
+    private static final String CHANNEL = "paper_follow_alerts_v1";
     private TradeManager() {}
 
     public static class TradeState {
@@ -49,6 +50,7 @@ public final class TradeManager {
                 TradeState t = evaluate(symbol, prefs);
                 if (t != null) {
                     out.add(t);
+                    prefs.edit().remove("follow_error_"+symbol).remove("follow_error_at_"+symbol).apply();
                     String prev = prefs.getString("follow_state_" + symbol, "");
                     if (!t.state.equals(prev)) {
                         prefs.edit().putString("follow_state_" + symbol, t.state).apply();
@@ -56,7 +58,11 @@ public final class TradeManager {
                         else if ("HOLD".equals(t.state) && !prev.isEmpty() && !"HOLD".equals(prev)) notifyHold(context, t);
                     }
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception failure) {
+                android.util.Log.w("PaperFollow", "Price update failed: "+failure.getClass().getSimpleName());
+                prefs.edit().putString("follow_error_"+symbol,"تعذر تحديث السعر — لا قرار جديد")
+                    .putLong("follow_error_at_"+symbol,System.currentTimeMillis()).apply();
+            }
         }
         return out;
     }
@@ -66,7 +72,7 @@ public final class TradeManager {
         double initialStop = Double.longBitsToDouble(prefs.getLong("follow_stop_" + symbol, Double.doubleToLongBits(0.0)));
         if (entry <= 0) return null;
         double price = currentPrice(symbol);
-        JSONArray rows = new JSONArray(readUrl(API + "/api/v3/klines?symbol=" + symbol + "&interval=15m&limit=20"));
+        JSONArray rows = new JSONArray(readUrl(API + "/api/v3/klines?symbol=" + encodeSymbol(symbol) + "&interval=15m&limit=20"));
         double recentLow = Double.MAX_VALUE;
         int from = Math.max(0, rows.length() - 5);
         for (int i = from; i < rows.length(); i++) {
@@ -103,27 +109,30 @@ public final class TradeManager {
     }
 
     private static void notify(Context c, int id, String title, String body, int color) {
+        NotificationManager manager=(NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE);
+        if(manager==null) return;
+        if(Build.VERSION.SDK_INT>=26) manager.createNotificationChannel(new NotificationChannel(
+            CHANNEL,"المتابعة الورقية",NotificationManager.IMPORTANCE_DEFAULT));
         Intent open = new Intent(c, MainActivity.class);
         PendingIntent pi = PendingIntent.getActivity(c, id, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(c, CHANNEL) : new Notification.Builder(c);
         Notification n = b.setContentTitle(title).setContentText(body).setStyle(new Notification.BigTextStyle().bigText(body))
                 .setSmallIcon(R.drawable.app_icon).setContentIntent(pi).setAutoCancel(true).setColor(color).build();
-        ((NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE)).notify(id, n);
+        manager.notify(id, n);
     }
 
     public static double currentPrice(String symbol) throws Exception {
-        JSONObject j = new JSONObject(readUrl(API + "/api/v3/ticker/price?symbol=" + symbol));
-        return Double.parseDouble(j.optString("price", "0"));
+        JSONObject j = new JSONObject(readUrl(API + "/api/v3/ticker/price?symbol=" + encodeSymbol(symbol)));
+        double price=Double.parseDouble(j.getString("price"));
+        if(!Double.isFinite(price)||price<=0) throw new IllegalStateException("Invalid price");
+        return price;
     }
 
-    private static String readUrl(String u) throws Exception {
-        HttpsURLConnection c = (HttpsURLConnection)new URL(u).openConnection();
-        c.setConnectTimeout(8000); c.setReadTimeout(12000); c.setRequestProperty("User-Agent", "ExplosionRadar/"+BuildConfig.VERSION_NAME);
-        InputStream in = c.getResponseCode() >= 200 && c.getResponseCode() < 300 ? c.getInputStream() : c.getErrorStream();
-        BufferedReader br = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
-        StringBuilder sb = new StringBuilder(); String line; while ((line=br.readLine())!=null) sb.append(line); br.close(); c.disconnect();
-        return sb.toString();
+    private static String encodeSymbol(String symbol) throws Exception {
+        if(symbol==null || symbol.trim().isEmpty()) throw new IllegalArgumentException("Missing symbol");
+        return java.net.URLEncoder.encode(symbol,StandardCharsets.UTF_8.name());
     }
+    private static String readUrl(String u) throws Exception { return MarketHttp.read(u); }
     private static String fmt(double x) {
         if (x >= 1000) return String.format(Locale.US,"%.2f",x);
         if (x >= 1) return String.format(Locale.US,"%.4f",x);
