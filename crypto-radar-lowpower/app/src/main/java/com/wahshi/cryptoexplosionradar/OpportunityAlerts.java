@@ -16,7 +16,7 @@ public final class OpportunityAlerts {
    prefs.edit().putLong("market_status_checked_"+symbol,TradingStatus.checkedAt()).apply();
    if(eligibility!=null){prefs.edit().putString("push_status",symbol+": "+eligibility).apply();return false;}
    long checked=System.currentTimeMillis();
-   if(!MinuteStreams.ready(symbol,checked)){prefs.edit().putString("push_status","مؤجل حتى اكتمال استعادة البيانات: "+symbol).apply();return false;}
+   if(evidence!=null&&!MinuteStreams.ready(symbol,checked)){prefs.edit().putString("push_status","مؤجل حتى اكتمال استعادة البيانات: "+symbol).apply();return false;}
    if(window==null||window.reason(price,checked)!=null)return false;
    if(low<window.entryLow()-1e-10||high>window.entryHigh()+1e-10)return false;
    NotificationManager nm=(NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
