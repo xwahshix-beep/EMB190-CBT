@@ -510,7 +510,7 @@ public class ScannerService extends Service {
         for(int i=0;i<top.length();i++) topAddresses.add(top.getJSONObject(i).getString("address"));
         Set<String> union=new java.util.LinkedHashSet<>(topAddresses);
         JSONObject previous=old.optJSONObject("accounts");
-        if(previous!=null) union.addAll(previous.keySet());
+        if(previous!=null) for(java.util.Iterator<String> keys=previous.keys();keys.hasNext();) union.add(keys.next());
         if(union.isEmpty() || union.size()>40) { prefs.edit().remove(key).apply(); return null; }
         JSONObject result=solRpc("getMultipleAccounts",new JSONArray().put(new JSONArray(union))
             .put(new JSONObject().put("encoding","jsonParsed").put("commitment","finalized")
@@ -542,7 +542,8 @@ public class ScannerService extends Service {
         double threshold=dynamicWhaleThreshold(token.liquidityUsd);
         int whales=0; double combined=0, largestUsd=0;
         Map<String,BigDecimal> ownerBalances=new HashMap<>();
-        for(String address:current.keySet()) {
+        for(java.util.Iterator<String> keys=current.keys();keys.hasNext();) {
+            String address=keys.next();
             JSONObject record=current.getJSONObject(address);
             String owner=record.getString("owner");
             ownerBalances.put(owner,ownerBalances.getOrDefault(owner,BigDecimal.ZERO).add(new BigDecimal(record.getString("amount"))));

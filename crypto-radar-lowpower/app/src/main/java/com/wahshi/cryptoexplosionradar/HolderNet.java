@@ -15,7 +15,8 @@ public final class HolderNet {
         JSONObject accounts=old.optJSONObject("accounts");
         if(accounts==null) return net;
         Set<String> invalidOwners=new HashSet<>();
-        for(String key: accounts.keySet()) {
+        for(java.util.Iterator<String> keys=accounts.keys();keys.hasNext();) {
+            String key=keys.next();
             JSONObject before=accounts.getJSONObject(key), after=current.optJSONObject(key);
             String owner=before.getString("owner");
             if(after==null) return Collections.emptyMap(); // incomplete cohort: no inference
