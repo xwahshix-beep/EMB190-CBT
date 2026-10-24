@@ -1,0 +1,5 @@
+# 6.9.3 research-only default
+
+OpportunityAlerts.send is the shared market and selected-coin BUY notification path. It reads the packaged scanner-long-summary.json recommended_production_buy_enabled key before processing and again before notify. Only literal boolean true permits it; absent, malformed, unreadable or false blocks. User preferences cannot override it. The packaged value is false. Existing tagged BUY notifications are cleared on activity/service entry and blocked sends. Tests of the notification channel remain available and explicitly say they are not trading signals. Watch/exit paper monitoring remains, labelled research.
+
+HMAC: the 6.9.1 static DEX audit traced implementations to Okio (Buffer, ByteString, HashingSink/Source), the dependency of OkHttp. There were no direct application-package HMAC calls. See long-validation/apk-security-audit.json for exact inspected APK hash and calls. This is not dynamic traffic verification. No signing or order endpoint has been added.

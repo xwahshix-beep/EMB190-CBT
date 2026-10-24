@@ -100,6 +100,7 @@ public class MainActivity extends Activity {
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        ProductionGate.clearBlocked(this);
         if (Build.VERSION.SDK_INT >= 33
                 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 7);
@@ -206,7 +207,7 @@ public class MainActivity extends Activity {
         Button alerts=new Button(this);alerts.setText("🔔 إعدادات الإشعارات / اختبار");
         alerts.setOnClickListener(v -> new AlertDialog.Builder(this).setTitle("نطاق إشعارات الشراء")
             .setItems(new String[]{"كل إشارات الشراء المؤكدة","العملة المتابعة فقط","إرسال إشعار تجريبي","إعدادات إشعارات Android"},(d,which)->{
-                if(which<2){prefs().edit().putBoolean("notify_all_buys",which==0).apply();feedback(which==0?"تنبيهات جميع إشارات الشراء مفعلة":"تنبيهات العملة المتابعة فقط");renderDetails();}
+                if(which<2){prefs().edit().putBoolean("notify_all_buys",which==0).apply();feedback(which==0?"تم حفظ النطاق؛ يبقى قفل الإنتاج مطبقًا":"تنبيهات العملة المتابعة فقط");renderDetails();}
                 else if(which==2)feedback(OpportunityAlerts.test(this));
                 else{Intent i=new Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS);i.putExtra(android.provider.Settings.EXTRA_APP_PACKAGE,getPackageName());startActivity(i);}
             }).setNegativeButton("إغلاق",null).show());
@@ -276,7 +277,7 @@ public class MainActivity extends Activity {
     }
 
     private SpannableString styleDetails(String text) {
-        SpannableString sp = new SpannableString(text);
+        SpannableString sp = new SpannableString("بحث غير مثبت — ليس توصية تداول\n"+text);
         styleAll(sp, "🟢 شراء", Color.rgb(89, 220, 135), true);
         styleAll(sp, "🟡 انتظار", Color.rgb(245, 183, 43), true);
         styleAll(sp, "🔵 احتفاظ", Color.rgb(94, 168, 255), true);
@@ -332,9 +333,9 @@ public class MainActivity extends Activity {
         EditText coin=new EditText(this);coin.setSingleLine(true);coin.setHint("BTCUSDT");
         coin.setText(selectedSymbol);
         AlertDialog dialog=new AlertDialog.Builder(this).setTitle("⭐ العملة المختارة")
-            .setMessage("مراقبة: متابعة الإشارات. الشراء الآن: جلب سعر العرض من Binance وتسجيله لمتابعة الصفقة داخل الرادار فقط؛ لا ينفذ أمر شراء في حسابك.")
+            .setMessage("مراقبة: متابعة الإشارات. تسجيل دخول ورقي: جلب سعر العرض من Binance وتسجيله لمتابعة الصفقة داخل الرادار فقط؛ لا ينفذ أمر شراء في حسابك.")
             .setView(coin).setNegativeButton("إلغاء",(d,w)->feedback("تم إلغاء العملية"))
-            .setNeutralButton("الشراء الآن",null).setPositiveButton("مراقبة",null).create();
+            .setNeutralButton("تسجيل دخول ورقي",null).setPositiveButton("مراقبة",null).create();
         dialog.setOnCancelListener(d -> feedback("تم إلغاء العملية"));
         dialog.setOnShowListener(d -> {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
@@ -356,7 +357,7 @@ public class MainActivity extends Activity {
     private void followCurrent(String symbol) {
         final long request=++quoteRequest;
         final long generation=prefs().getLong("follow_generation",0);
-        AlertDialog loading=new AlertDialog.Builder(this).setTitle("الشراء الآن — "+symbol)
+        AlertDialog loading=new AlertDialog.Builder(this).setTitle("تسجيل دخول ورقي — "+symbol)
             .setMessage("جارٍ جلب سعر العرض مباشرة من Binance…\nسيُسجّل للمتابعة فقط، وقد يختلف عن سعر تنفيذك الفعلي.")
             .setNegativeButton("إلغاء",(d,w)->{quoteRequest++;feedback("تم إلغاء جلب السعر؛ لم تُسجّل صفقة");}).create();
         loading.setOnCancelListener(d -> {quoteRequest++;feedback("تم إلغاء جلب السعر؛ لم تُسجّل صفقة");});
@@ -438,7 +439,8 @@ public class MainActivity extends Activity {
         if(coverageAt>0)coverage="عمر تقرير التغطية: "+Math.max(0,(now-coverageAt)/1000)+" ثانية\n"+coverage;
         if(!enabled)coverage="الرادار متوقف — التقرير السابق فقط\n"+coverage;
         else if(coverageAt>0&&now-coverageAt>120000)coverage="⚠ تقرير قديم؛ قد تكون دورة الفحص متأخرة أو البيانات متعذرة\n"+coverage;
-        coverage="تنبيهات الشراء: "+(p.getBoolean("notify_all_buys",true)?"كل الإشارات المؤكدة":"العملة المتابعة فقط")+"\n"+p.getString("push_status","لم يُسجّل إرسال إشعار بعد")+"\n"+coverage;
+        coverage=(ProductionGate.enabled(this)?"بحث غير مثبت — ليس توصية":ProductionGate.MESSAGE)+"\n"+coverage;
+        coverage="نطاق التنبيهات المطلوب (لا يتجاوز قفل الإنتاج): "+(p.getBoolean("notify_all_buys",true)?"كل الإشارات المؤكدة":"العملة المتابعة فقط")+"\n"+p.getString("push_status","لم يُسجّل إرسال إشعار بعد")+"\n"+coverage;
         scanCoverage.setText(coverage);
         details.setText(styleDetails(text));
         savedSignals.setText(styleDetails(SignalChecks.history(p)));
@@ -487,7 +489,7 @@ public class MainActivity extends Activity {
         android.app.NotificationChannel ch=nm.getNotificationChannel(OpportunityAlerts.CHANNEL);
         if(nm.areNotificationsEnabled()&&(ch==null||ch.getImportance()!=0))return;
         new AlertDialog.Builder(this).setTitle("تفعيل إشعارات الشراء")
-            .setMessage("اسمح بإشعارات التطبيق وقناة فرص الشراء المؤكدة حتى تصلك التنبيهات.")
+            .setMessage("اسمح بإشعارات التطبيق وقناة الإشارات البحثية حتى تصلك التنبيهات.")
             .setNegativeButton("لاحقًا",null)
             .setPositiveButton("الإعدادات",(d,w)->{
                 Intent i=new Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS);

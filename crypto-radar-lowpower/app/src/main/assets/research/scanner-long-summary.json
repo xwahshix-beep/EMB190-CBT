@@ -649,5 +649,5 @@
     "manifest.json": "1d6f5c6585ca72caa46631b167964e3aa9b374de7c68d02e1e509f26baaa4134"
   },
   "recommended_production_buy_enabled": false,
-  "deployment_note": "Research result only; this JSON does not control live application alerts."
+  "deployment_note": "ProductionGate reads recommended_production_buy_enabled before every BUY notification. Missing, malformed or non-boolean values disable BUY pushes. Research display and paper tracking remain available."
 }

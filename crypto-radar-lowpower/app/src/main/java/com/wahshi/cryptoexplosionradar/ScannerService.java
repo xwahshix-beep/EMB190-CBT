@@ -128,6 +128,7 @@ public class ScannerService extends Service {
     }
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
+        ProductionGate.clearBlocked(this);
         String action = intent == null ? null : intent.getAction();
         if (ACTION_STOP.equals(action)) {
             stopScanner();
@@ -324,7 +325,7 @@ public class ScannerService extends Service {
             long finished=System.currentTimeMillis();
             prefs.edit().putLong("last_scan_at",finished).putLong("scan_duration_ms",finished-started).apply();
             sendUi(result.status,result.summary+"\n"+wakeSummary()+"\n"+prefs.getString("onchain_health","بيانات السلسلة: انتظار الفحص")+"\nمدة الفحص: "+((finished-started)/1000)+" ثانية");
-            updateServiceNotification("رصد الدقيقة يعمل • فرص الشراء دون فتح التطبيق");
+            updateServiceNotification("رصد بحثي يعمل • تنبيهات الشراء تخضع لقفل الإنتاج");
         } catch(Exception ex) {
             if(running)sendUi("تعذر تحديث السوق","انتظار — "+safe(ex.getMessage()));
         } finally {

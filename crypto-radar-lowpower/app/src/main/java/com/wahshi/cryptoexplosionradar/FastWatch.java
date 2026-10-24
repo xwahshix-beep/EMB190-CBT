@@ -51,7 +51,7 @@ public final class FastWatch {
      nm.createNotificationChannel(new NotificationChannel("selected_watch_v53","Selected coin Watch / Buy / Exit",NotificationManager.IMPORTANCE_HIGH));
      if(!nm.areNotificationsEnabled())return;
      PendingIntent pi=PendingIntent.getActivity(context,FollowGate.ALERT,new Intent(context,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
-     String title=(result.state.equals("EXIT")?"🔴 خروج":"🐋 مراقبة مبكرة")+" — "+symbol;
+     String title="بحث غير مثبت — "+(result.state.equals("EXIT")?"🔴 خروج":"🐋 مراقبة مبكرة")+" — "+symbol;
      nm.notify(FollowGate.ALERT,new Notification.Builder(context,"selected_watch_v53").setSmallIcon(R.drawable.app_icon).setContentTitle(title).setContentText(detail).setStyle(new Notification.BigTextStyle().bigText(detail)).setContentIntent(pi).setAutoCancel(true).build());
      prefs.edit().putString("fast_alert_state",result.state).putLong("fast_alert_at",now).apply();
     }
