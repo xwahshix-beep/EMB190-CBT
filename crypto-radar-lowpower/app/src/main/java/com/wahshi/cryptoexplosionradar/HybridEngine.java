@@ -247,7 +247,7 @@ public final class HybridEngine {
                 double total = c.score + a.score;
                 boolean confirmedBuy = a.pre.state.equals("BUY") && !c.catalystNegative;
                 if(confirmedBuy){
-                    String guard=a.window.reason(a.lastClose,c.checkedAt,a.pre.reason);
+                    String guard=a.window.reason(a.lastClose,c.checkedAt);
                     if(guard!=null){c.waitReason=guard;logDecision(prefs,c.symbol,a.pre,"WAIT",guard,c.checkedAt);continue;}
                 }
                 if (confirmedBuy) {
