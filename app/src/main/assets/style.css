@@ -3,3 +3,4 @@
 @media(max-width:360px){.field-value{font-size:11px}.screen-title{font-size:10px}.field-label{font-size:7px}.key{min-height:35px}.brand small{display:none}}
 
 @media(max-width:650px){.display-assembly{grid-template-columns:28px minmax(0,1fr) 28px}.lsk{height:32px;margin-top:2px}}
+@media(max-width:650px){.intro{display:none}main{padding-top:12px}.display-row{height:39px}.line-keys{grid-template-rows:repeat(6,39px)}.key{min-height:34px}.unit-footer{margin-top:12px}}
