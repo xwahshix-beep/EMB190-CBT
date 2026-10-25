@@ -1,0 +1,78 @@
+name: E175 MCDU APK
+on:
+  push:
+    branches: [e175-mcdu-trainer-20261026]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: e175-mcdu-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Test training engine
+        run: node test-engine.cjs
+      - name: Install build SDK
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Build APK
+        run: gradle --no-daemon assembleDebug
+      - name: Verify package and signing
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk E175-MCDU-WAHSHI-1.0.0.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging E175-MCDU-WAHSHI-1.0.0.apk > apk-metadata.txt
+          grep -q "package: name='com.wahshi.e175mcdu'" apk-metadata.txt
+          grep -q "versionName='1.0.0'" apk-metadata.txt
+          grep -q 'application-icon' apk-metadata.txt
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose E175-MCDU-WAHSHI-1.0.0.apk > signature-verification.txt
+          sha256sum E175-MCDU-WAHSHI-1.0.0.apk > SHA256SUMS.txt
+      - name: Upload verified APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: E175-MCDU-WAHSHI-1.0.0
+          path: |
+            E175-MCDU-WAHSHI-1.0.0.apk
+            apk-metadata.txt
+            signature-verification.txt
+            SHA256SUMS.txt
+          retention-days: 30
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Android launch smoke test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            adb install E175-MCDU-WAHSHI-1.0.0.apk
+            adb shell am start -W -n com.wahshi.e175mcdu/.MainActivity
+            sleep 8
+            adb shell pidof com.wahshi.e175mcdu
+            adb shell uiautomator dump /sdcard/window.xml
+            adb pull /sdcard/window.xml android-ui.xml
+            grep -q 'Your next flight starts here' android-ui.xml
+            adb logcat -d -s AndroidRuntime:E > android-runtime.txt
+            test ! -s android-runtime.txt || ! grep -q 'FATAL EXCEPTION' android-runtime.txt
+      - name: Upload Android smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Android-smoke-evidence
+          path: |
+            android-ui.xml
+            android-runtime.txt

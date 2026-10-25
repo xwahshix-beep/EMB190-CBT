@@ -1,0 +1,12 @@
+feature,area,priority,original,clone,notes
+Scratchpad and line select,input,must,yes,yes,Custom simplified behavior
+Route editing,planning,must,yes,yes,Synthetic training data
+Offline Android package,platform,must,unknown,yes,Bundled assets
+Guided exercise,training,must,unknown,yes,Custom eight steps
+Local persistence,session,must,unknown,yes,Device local only
+Manual performance entries,performance,should,yes,partial,No calculations
+Direct-to selection,navigation,should,yes,partial,No flight guidance
+Departure and arrival,planning,should,yes,partial,Synthetic choices only
+AIRAC database,navigation,could,yes,skip,No licensed navigation data
+Exact OEM page fidelity,interface,could,yes,skip,Operator guide and software load not supplied
+Radio tuning,radio,could,yes,skip,Scope screen only

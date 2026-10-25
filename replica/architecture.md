@@ -1,0 +1,4 @@
+# Architecture
+Android Java Activity + bundled HTML/CSS/JavaScript. No third-party runtime libraries or remote assets. Native WebView serves only bundled assets on a fixed HTTPS origin via shouldInterceptRequest. File/content access and mixed content disabled; no INTERNET permission; no JavaScript/native bridge. External HTTPS reference links handed to browser.
+One versioned browser-local plan per app installation. No server, SQL, API, auth or cloud sync required. Validation in Trainer engine; renderer uses textContent for user entries. Reset requires confirmation. Route edits invalidate activation. Direct-to is a review/confirm state; no actual flight guidance.
+Risks: installed system WebView version, data removed on uninstall, unknown airline FMS load, limited fidelity. Build: Gradle 8.9, AGP 8.7.3, Java17, compile/target SDK35, minimum26. Debug-signed personal test distribution; not a Play Store release signing setup.

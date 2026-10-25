@@ -1,0 +1,2 @@
+# Design
+Original cockpit-inspired navy/teal/amber design, CSS tokens in style.css. No OEM logo/assets. CSS hardware-like keys; monospace display; responsive vertical phone layout. Real buttons with aria labels, scratchpad input, focus outlines, status regions, modal confirmations. Distinct muted labels vs cyan entered values. Guided mode highlights next applicable line select. English only; BY:WAHSHI attribution. Original vector launcher icon: aircraft silhouette above keypad.

@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict');const {Trainer}=require('./app/src/main/assets/engine.js');let n=0;function test(name,fn){fn();n++;console.log('PASS '+name);}const enter=(t,v,s,i)=>{t.scratch=v;t.select(s,i);};
+test('blank route cannot activate',()=>{let t=new Trainer();t.activate();assert.equal(t.plan.active,false);assert.match(t.error,/ENTER ROUTE/);});
+test('invalid and equal airports rejected; scratch retained',()=>{let t=new Trainer();enter(t,'XXXX','L',1);assert.equal(t.plan.origin,'');assert.equal(t.scratch,'XXXX');enter(t,'OOMS','L',1);enter(t,'OOMS','R',1);assert.equal(t.plan.destination,'');});
+function example(){let t=new Trainer();enter(t,'OOMS','L',1);enter(t,'OMDB','R',1);enter(t,'WH175','L',2);t.cycle(1);enter(t,'DEM01','L',1);return t;}
+test('guided flow reaches 8/8',()=>{let t=example();t.nav('PERF');enter(t,'32','L',1);enter(t,'5','R',1);enter(t,'FL300','L',2);t.nav('ROUTE');t.select('R',6);assert.equal(t.steps().filter(Boolean).length,8);});
+test('range checks reject invalid performance',()=>{let t=example();t.nav('PERF');for(const bad of ['ABC','-20','99','30TONS']){enter(t,bad,'L',1);assert.equal(t.plan.zfw,'');}enter(t,'32','L',1);assert.equal(t.plan.zfw,'32');});
+test('duplicate and non-demo fixes rejected',()=>{let t=example();enter(t,'DEM01','L',5);assert.equal(t.plan.waypoints.length,1);enter(t,'REAL','L',5);assert.equal(t.plan.waypoints.length,1);});
+test('editing active plan invalidates activation',()=>{let t=example();t.activate();t.nav('PERF');enter(t,'5','R',1);assert.equal(t.plan.active,false);});
+test('direct-to requires confirmation and supports cancel',()=>{let t=example();t.activate();t.nav('DIR');enter(t,'DEM01','L',1);assert.equal(t.plan.direct,'');t.select('L',6);assert.equal(t.pending,null);enter(t,'DEM01','L',1);t.select('R',6);assert.equal(t.plan.direct,'DEM01');assert.equal(t.page,'FPL');});
+test('delete route fix clears direct selection',()=>{let t=example();t.activate();t.plan.direct='DEM01';t.nav('FPL');enter(t,'DELETE','L',1);assert.equal(t.plan.direct,'');assert.equal(t.plan.waypoints.length,0);assert.equal(t.plan.active,false);});
+test('pagination and bound of 12 fixes',()=>{let t=example();for(let i=2;i<=12;i++){t.scratch='DEM'+String(i).padStart(2,'0');t.addWaypoint();}t.scratch='DEM13';assert.equal(t.addWaypoint(),false);t.nav('FPL');t.cycle(-1);assert.equal(t.sub,3);assert.equal(t.rows().number,'4/4');});
+test('all pages have 6 rows',()=>{let t=example();for(const p of ['INDEX','ROUTE','FPL','PERF','NAV','DEP','ARR','DIR','RADIO','PROG']){t.nav(p);assert.equal(t.rows().rows.length,6);}});
+test('session restore preserves route',()=>{let t=example();t.activate();let x=new Trainer(JSON.parse(JSON.stringify(t.serialize())));assert.deepEqual(x.plan,t.plan);});
+test('clear error preserves input then removes character',()=>{let t=new Trainer();t.scratch='BAD';t.error='INVALID';t.key('CLR');assert.equal(t.scratch,'BAD');t.key('CLR');assert.equal(t.scratch,'BA');});
+console.log(n+' tests passed');
