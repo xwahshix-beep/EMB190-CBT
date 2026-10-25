@@ -69,7 +69,10 @@ jobs:
             adb shell pidof com.wahshi.e175mcdu
             adb shell uiautomator dump /sdcard/window.xml
             adb pull /sdcard/window.xml android-ui.xml
-            grep -q 'MCDU scratchpad' android-ui.xml
+            adb exec-out screencap -p > android-launch.png
+            adb logcat -d -s MCDU:I > android-dom-check.txt
+            cat android-dom-check.txt
+            grep -q 'MCDU_READY' android-dom-check.txt
             adb logcat -d -s AndroidRuntime:E > android-runtime.txt
             test ! -s android-runtime.txt || ! grep -q 'FATAL EXCEPTION' android-runtime.txt
       - name: Upload Android smoke evidence
@@ -80,3 +83,5 @@ jobs:
           path: |
             android-ui.xml
             android-runtime.txt
+            android-dom-check.txt
+            android-launch.png
