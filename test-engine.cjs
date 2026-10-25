@@ -12,4 +12,5 @@ test('pagination and bound of 12 fixes',()=>{let t=example();for(let i=2;i<=12;i
 test('all pages have 6 rows',()=>{let t=example();for(const p of ['INDEX','ROUTE','FPL','PERF','NAV','DEP','ARR','DIR','RADIO','PROG']){t.nav(p);assert.equal(t.rows().rows.length,6);}});
 test('session restore preserves route',()=>{let t=example();t.activate();let x=new Trainer(JSON.parse(JSON.stringify(t.serialize())));assert.deepEqual(x.plan,t.plan);});
 test('clear error preserves input then removes character',()=>{let t=new Trainer();t.scratch='BAD';t.error='INVALID';t.key('CLR');assert.equal(t.scratch,'BAD');t.key('CLR');assert.equal(t.scratch,'BA');});
+test('route page deletion clears direct fix',()=>{let t=example();t.plan.direct='DEM01';enter(t,'DELETE','L',1);assert.equal(t.plan.direct,'');});
 console.log(n+' tests passed');
