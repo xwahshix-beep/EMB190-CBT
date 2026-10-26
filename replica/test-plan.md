@@ -1,0 +1,1 @@
+18 Node engine checks pass: original 13 plus COM entry/swap, COM rejection, NAV entry/rejection, octal transponder, radio persistence/pagination. Browser QA: physical key layout, RADIO edit/swap, RTE reachability, brightness, menu. Android build, signing and launch smoke required before delivery.

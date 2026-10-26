@@ -25,3 +25,6 @@ F04 restore local session, load demo or reset with confirmation.
 Six line-select keys per side, scratchpad, function keys, alpha/numeric keyboard, page indicator, guided progress, confirmation dialogs. One local plan entity; no accounts or backend. Current load and airline specifics unknown.
 ## Exclusions
 Real AIRAC/procedures, performance model, flight dynamics, radio tuning, sensors, exact software-load match. No original proprietary assets or binary analysis. No real-user testimonials collected.
+
+## 1.1 reference update
+User-provided 209498.jpg is authoritative for visible physical layout and initial RADIO page. It does not establish exact device part number, software load, RADIO page 2 or other page behavior. Layout and initial values observed; interaction logic inferred and labelled simplified. No reference image is shipped.

@@ -33,19 +33,19 @@ jobs:
         run: gradle --no-daemon assembleDebug
       - name: Verify package and signing
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk E175-MCDU-WAHSHI-1.0.0.apk
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging E175-MCDU-WAHSHI-1.0.0.apk > apk-metadata.txt
+          cp app/build/outputs/apk/debug/app-debug.apk E175-MCDU-WAHSHI-1.1.0.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging E175-MCDU-WAHSHI-1.1.0.apk > apk-metadata.txt
           grep -q "package: name='com.wahshi.e175mcdu'" apk-metadata.txt
-          grep -q "versionName='1.0.0'" apk-metadata.txt
+          grep -q "versionName='1.1.0'" apk-metadata.txt
           grep -q 'application-icon' apk-metadata.txt
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose E175-MCDU-WAHSHI-1.0.0.apk > signature-verification.txt
-          sha256sum E175-MCDU-WAHSHI-1.0.0.apk > SHA256SUMS.txt
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose E175-MCDU-WAHSHI-1.1.0.apk > signature-verification.txt
+          sha256sum E175-MCDU-WAHSHI-1.1.0.apk > SHA256SUMS.txt
       - name: Upload verified APK
         uses: actions/upload-artifact@v4
         with:
-          name: E175-MCDU-WAHSHI-1.0.0
+          name: E175-MCDU-WAHSHI-1.1.0
           path: |
-            E175-MCDU-WAHSHI-1.0.0.apk
+            E175-MCDU-WAHSHI-1.1.0.apk
             apk-metadata.txt
             signature-verification.txt
             SHA256SUMS.txt
@@ -63,7 +63,7 @@ jobs:
           profile: pixel_6
           disable-animations: true
           script: |
-            adb install E175-MCDU-WAHSHI-1.0.0.apk
+            adb install E175-MCDU-WAHSHI-1.1.0.apk
             adb shell am start -W -n com.wahshi.e175mcdu/.MainActivity
             sleep 8
             adb shell pidof com.wahshi.e175mcdu

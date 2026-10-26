@@ -13,4 +13,9 @@ test('all pages have 6 rows',()=>{let t=example();for(const p of ['INDEX','ROUTE
 test('session restore preserves route',()=>{let t=example();t.activate();let x=new Trainer(JSON.parse(JSON.stringify(t.serialize())));assert.deepEqual(x.plan,t.plan);});
 test('clear error preserves input then removes character',()=>{let t=new Trainer();t.scratch='BAD';t.error='INVALID';t.key('CLR');assert.equal(t.scratch,'BAD');t.key('CLR');assert.equal(t.scratch,'BA');});
 test('route page deletion clears direct fix',()=>{let t=example();t.plan.direct='DEM01';enter(t,'DELETE','L',1);assert.equal(t.plan.direct,'');});
+test('COM standby entry and active swap',()=>{let t=new Trainer();t.nav('RADIO');enter(t,'123.450','L',2);assert.equal(t.radio.stby1,'123.450');t.select('L',1);assert.equal(t.radio.com1,'123.450');assert.equal(t.radio.stby1,'118.150');});
+test('bad COM channel rejected without changing radio',()=>{let t=new Trainer();t.nav('RADIO');for(const x of ['ABC','99.500','118.123','140.000']){enter(t,x,'R',2);assert.equal(t.radio.stby2,'121.850');}});
+test('NAV frequency stores and rejects invalid step',()=>{let t=new Trainer();t.nav('RADIO');enter(t,'110.50','L',3);assert.equal(t.radio.nav1,'110.50');enter(t,'110.51','L',3);assert.equal(t.radio.nav1,'110.50');});
+test('transponder octal validation',()=>{let t=new Trainer();t.nav('RADIO');enter(t,'1289','R',5);assert.equal(t.radio.xpdr,'4436');enter(t,'1200','R',5);assert.equal(t.radio.xpdr,'1200');});
+test('radio persistence and second page',()=>{let t=new Trainer();t.nav('RADIO');enter(t,'125.000','L',2);const x=new Trainer(t.serialize());assert.equal(x.radio.stby1,'125.000');t.cycle(1);assert.equal(t.rows().number,'2 / 2');});
 console.log(n+' tests passed');

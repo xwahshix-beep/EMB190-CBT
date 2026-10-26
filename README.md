@@ -1,5 +1,5 @@
 # E175 MCDU Familiarization — BY:WAHSHI
-English offline Android trainer. Install the APK on Android 8+. First release 1.0.0. No account, internet permission, native libraries or remote assets. This is a custom simplified practice tool, not a certified simulator or an exact Honeywell software-load reproduction.
+English offline Android trainer. Install the APK on Android 8+. First release 1.1.0. No account, internet permission, native libraries or remote assets. This is a custom simplified practice tool, not a certified simulator or an exact Honeywell software-load reproduction.
 
 Practice: type OOMS → L1; OMDB → R1; WH175 → L2. NEXT → DEM01 → L1. PERF → 32 → L1; 5 → R1; 300 → L2. ROUTE → R6 activates. FPL reviews. DIR accepts a route fix and requires confirmation. Data and numerical examples are synthetic/illustrative, never operational.
 
@@ -8,3 +8,6 @@ Build: Java17, Android SDK35, Gradle8.9, `gradle assembleDebug`. Tests: `node te
 Replica workflow source attribution: https://github.com/Jakeschincariol/replica-skill (MIT), revision 77c9436fb3d18c3d58169efb8caf4fe906b0dc51. Application source was written fresh; no upstream code or assets embedded.
 
 Sources and fidelity limits: replica/recon.md and in-app Scope & references.
+
+## Reference-layout edition
+Physical panel layout follows user-supplied 209498.jpg, rebuilt in CSS without embedding the image. Default page RADIO recreates observed labels and initial values. Alpha keys are on the left in six columns; numeric keys on the right. BRT/DIM and knob adjust display brightness. Radio interactions are custom training abstractions (25 kHz COM and 50 kHz NAV entry, swap, squawk). No load-specific procedural fidelity is claimed. CB/DLK/TRS and RADIO page 2 display explicit scope notices. Open the hamburger menu for guided mode, reset, demo, and references.
