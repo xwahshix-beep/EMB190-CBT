@@ -44,7 +44,7 @@ public final class MicroResearch {
   t.ratio=base>0?recent/(base/10):0;t.share=recent>0?buy/recent:0;t.change=first>0?100*(price/first-1):0;
   String raw=received-t.started<330000?"WARMUP":t.ratio>=2.5&&t.share>=.65&&active>=3&&t.change>=.10?"WATCH":"WAIT";
   // Immediate data/execution guards always override hysteresis.
-  if("WATCH".equals(raw)&&(received-t.bookAt>3000||!t.executable||t.change>1.5))raw="BLOCKED";
+  if(("WATCH".equals(raw)||"WATCH".equals(t.state))&&(received-t.bookAt>3000||!t.executable||t.change>1.5))raw="BLOCKED";
   String before=t.state;
   if(raw.equals("WATCH")){
    t.badAt=0;if(!raw.equals(t.pending)){t.pending=raw;t.pendingAt=received;}

@@ -14,12 +14,12 @@ public final class MicroResearchTest {
   JSONObject f=frame(m,START+388000);check(f.getString("state").equals("WATCH"),"persistent flow confirms after ten seconds");
   long at=f.getLong("at");m.trade("XUSDT",195,at,at+2000,200,100,false);check(frame(m,at+2000).getLong("at")==at,"duplicate trade ignored");
   m.trade("XUSDT",196,at-10000,at+2000,200,100,false);check(frame(m,at+2000).getLong("at")==at,"out of order ignored");
-  m.trade("XUSDT",196,at+6000,at+6000,100.75,8,false);check(frame(m,at+6000).getString("state").equals("BLOCKED"),"stale depth cancels immediately");
-  check(root(m,at+6000).getJSONArray("events").length()>=3,"history persists after cancellation");
-  m.book("XUSDT",1000,side(99,100),side(101,100),at+8000);m.trade("XUSDT",197,at+8000,at+8000,100.78,8,false);
-  check(frame(m,at+8000).getString("guard").equals("WIDE_SPREAD"),"spread blocks");
-  m.reset(at+10000);m.select(Arrays.asList("XUSDT"),at+10000);m.trade("XUSDT",1,at+12000,at+12000,100,1,false);
-  check(frame(m,at+12000).getString("state").equals("WARMUP"),"reconnection restarts warmup");
+  m.trade("XUSDT",196,at+60000,at+60000,100.75,8,false);check(frame(m,at+60000).getString("state").equals("BLOCKED"),"stale depth overrides weak-flow hysteresis immediately");
+  check(root(m,at+60000).getJSONArray("events").length()>=3,"history persists after cancellation");
+  m.book("XUSDT",1000,side(99,100),side(101,100),at+62000);m.trade("XUSDT",197,at+62000,at+62000,100.78,8,false);
+  check(frame(m,at+62000).getString("guard").equals("WIDE_SPREAD"),"spread blocks");
+  m.reset(at+64000);m.select(Arrays.asList("XUSDT"),at+64000);m.trade("XUSDT",1,at+66000,at+66000,100,1,false);
+  check(frame(m,at+66000).getString("state").equals("WARMUP"),"reconnection restarts warmup");
   JSONObject sample=new JSONObject().put("symbol","XUSDT").put("at",START).put("status","PENDING_ENTRY").put("cohort","fixed_15m").put("micro","WATCH");
   MicroResearch paper=new MicroResearch(new JSONObject().put("paper",new JSONArray().put(sample)).toString());paper.select(Arrays.asList("XUSDT"),START);
   paper.book("XUSDT",1,side(99.99,100),side(100.01,100),START+500);check(root(paper,START+500).getJSONArray("paper").getJSONObject(0).getString("status").equals("PENDING_ENTRY"),"no same instant fill");
