@@ -7,6 +7,8 @@ with zipfile.ZipFile(sys.argv[1]) as z:
         data=gzip.decompress(z.read(path))
         assert hashlib.sha256(data).hexdigest()==row['sha256'],path
         assert len(data.splitlines())==row['rows'],path
+    flow=json.loads(z.read('assets/research/flow-transition-replay.json'))
+    assert flow['productionBuyEnabled'] is False and flow['symbols']==10 and flow['bars']==69680
     dex=b''.join(z.read(p) for p in z.namelist() if p.endswith('.dex'))
     research=json.loads(z.read('assets/research/momentum-summary.json'))
     assert len(research['periods'])==4
@@ -14,6 +16,6 @@ with zipfile.ZipFile(sys.argv[1]) as z:
     long=json.loads(z.read('assets/research/scanner-long-summary.json'))
     assert long['bars']==10042830
     assert long['recommended_production_buy_enabled'] is False
-    for name in [b'ProductionGate',b'ProductionPolicy',b'WakeMetrics',b'MinuteStreams',b'MinuteHistory',b'DailyMomentumEngine',b'ResearchLabActivity',b'PreExplosionEngine',b'HistoricalReplay',b'ReplayActivity',b'EARLY_WATCH']:
+    for name in [b'FlowTransitionEngine',b'FlowResearch',b'FlowTiming',b'ProductionGate',b'ProductionPolicy',b'WakeMetrics',b'MinuteStreams',b'MinuteHistory',b'DailyMomentumEngine',b'ResearchLabActivity',b'PreExplosionEngine',b'HistoricalReplay',b'ReplayActivity',b'EARLY_WATCH']:
         assert name in dex,name
     print('Verified packaged datasets, research results and native V6.3 classes')

@@ -238,6 +238,18 @@ public final class HybridEngine {
                     String updated=PhaseShadow.update(old,a.phaseRows,c.checkedAt);
                     if(!old.equals(updated))prefs.edit().putString(key,updated).apply();
                 } catch(Exception ex) { prefs.edit().putString("v66_phase_error","تعذر تحديث الاختبار: "+c.symbol).apply(); }
+                // Causal challenger runs on the same closed candles; preserve baseline and production gate.
+                try {
+                    List<PreExplosionEngine.Bar> flowBars=new ArrayList<>();
+                    for(int k=0;k<a.phaseRows.length();k++){
+                        JSONArray row=a.phaseRows.getJSONArray(k);if(row.getLong(6)>=c.checkedAt)continue;
+                        flowBars.add(new PreExplosionEngine.Bar(row.getLong(0),row.getDouble(1),row.getDouble(2),row.getDouble(3),row.getDouble(4),row.getDouble(7),row.getLong(8),row.getDouble(10)));
+                    }
+                    FlowTransitionEngine.Result flow=FlowTransitionEngine.evaluate(flowBars,flowBars.size()-1);
+                    String saved=prefs.getString(FlowResearch.KEY,"{}");
+                    String updated=FlowResearch.update(saved,c.symbol,flow,a.pre.state,c.checkedAt,MinuteStreams.timing(c.symbol,flow.closedAt,c.checkedAt));
+                    if(!saved.equals(updated))prefs.edit().putString(FlowResearch.KEY,updated).remove("flow_research_error").apply();
+                } catch(Exception ex){prefs.edit().putString("flow_research_error","تعذر تحديث محرك التحول: "+c.symbol).apply();}
                 // Watch states precede the breakout: do not gate them on the BUY entry window.
                 c.armed=a.pre.state.equals("WATCH")||a.pre.state.equals("EARLY_WATCH");
                 if(c.armed)armedCount++;

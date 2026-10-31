@@ -1,0 +1,279 @@
+{
+  "protocol": "All bundled files, frozen rules; historical exploratory sample, not independent validation. Discovery comparison, no executable BUY claim. 15-minute spacing per symbol/model; next-minute open to minute 15 close; fee 0.10% + slippage 0.05% each side. Stress: two extra minutes delay, same 15-minute holding period, fee 0.10% + slippage 0.15% each side. No spread/depth/fill simulation. Fixed 15-minute control is descriptive, not matched causal treatment. Correlated observations; no portfolio return.",
+  "productionBuyEnabled": false,
+  "rules": "flow-transition-1",
+  "results": [
+    {
+      "meanStressPct": -0.4951437437896723,
+      "symbol": "ADAUSDT",
+      "meanGrossPct": -0.004907505266221375,
+      "observations": 60,
+      "model": "baseline",
+      "meanNetPct": -0.30444347879013733,
+      "netPositive": 15
+    },
+    {
+      "meanStressPct": -0.5593154599131148,
+      "symbol": "ADAUSDT",
+      "meanGrossPct": -0.07335590863483403,
+      "observations": 51,
+      "model": "transition",
+      "meanNetPct": -0.37268684450512546,
+      "netPositive": 10
+    },
+    {
+      "meanStressPct": -0.5238073757966352,
+      "symbol": "ADAUSDT",
+      "meanGrossPct": -0.024506246329914955,
+      "observations": 455,
+      "model": "fixed_15m_control",
+      "meanNetPct": -0.3239835116928813,
+      "netPositive": 89
+    },
+    {
+      "meanStressPct": -0.3089527079412208,
+      "symbol": "BATUSDT",
+      "meanGrossPct": 0.23348178964468957,
+      "observations": 34,
+      "model": "baseline",
+      "meanNetPct": -0.06676828061884948,
+      "netPositive": 11
+    },
+    {
+      "meanStressPct": -0.21151736976877628,
+      "symbol": "BATUSDT",
+      "meanGrossPct": 0.416444826551919,
+      "observations": 30,
+      "model": "transition",
+      "meanNetPct": 0.11564668927817304,
+      "netPositive": 13
+    },
+    {
+      "meanStressPct": -0.4324647062207524,
+      "symbol": "BATUSDT",
+      "meanGrossPct": 0.059477765002243034,
+      "observations": 455,
+      "model": "fixed_15m_control",
+      "meanNetPct": -0.2402510750327114,
+      "netPositive": 133
+    },
+    {
+      "meanStressPct": -0.5799506312657396,
+      "symbol": "BNBUSDT",
+      "meanGrossPct": -0.05189190577886289,
+      "observations": 44,
+      "model": "baseline",
+      "meanNetPct": -0.35128713721437416,
+      "netPositive": 6
+    },
+    {
+      "meanStressPct": -0.5746183805802845,
+      "symbol": "BNBUSDT",
+      "meanGrossPct": -0.06870145521601426,
+      "observations": 38,
+      "model": "transition",
+      "meanNetPct": -0.36804633353288985,
+      "netPositive": 3
+    },
+    {
+      "meanStressPct": -0.5183736869286801,
+      "symbol": "BNBUSDT",
+      "meanGrossPct": -0.01932305497772419,
+      "observations": 455,
+      "model": "fixed_15m_control",
+      "meanNetPct": -0.31881584662532075,
+      "netPositive": 11
+    },
+    {
+      "meanStressPct": -0.5205318822263156,
+      "symbol": "BTCUSDT",
+      "meanGrossPct": 0.019262116259803896,
+      "observations": 35,
+      "model": "baseline",
+      "meanNetPct": -0.28034625752829184,
+      "netPositive": 5
+    },
+    {
+      "meanStressPct": -0.5227178367532328,
+      "symbol": "BTCUSDT",
+      "meanGrossPct": -0.04458862768902007,
+      "observations": 43,
+      "model": "transition",
+      "meanNetPct": -0.34400573614327057,
+      "netPositive": 3
+    },
+    {
+      "meanStressPct": -0.5096147078415798,
+      "symbol": "BTCUSDT",
+      "meanGrossPct": -0.011113422853265876,
+      "observations": 455,
+      "model": "fixed_15m_control",
+      "meanNetPct": -0.31063080650922226,
+      "netPositive": 12
+    },
+    {
+      "meanStressPct": -0.568820139183454,
+      "symbol": "ETHUSDT",
+      "meanGrossPct": -0.09272339231898119,
+      "observations": 50,
+      "model": "baseline",
+      "meanNetPct": -0.3919963127613594,
+      "netPositive": 3
+    },
+    {
+      "meanStressPct": -0.519869842553342,
+      "symbol": "ETHUSDT",
+      "meanGrossPct": -0.007997338462568353,
+      "observations": 42,
+      "model": "transition",
+      "meanNetPct": -0.30752405637032,
+      "netPositive": 4
+    },
+    {
+      "meanStressPct": -0.5198497739525468,
+      "symbol": "ETHUSDT",
+      "meanGrossPct": -0.021269816614308705,
+      "observations": 455,
+      "model": "fixed_15m_control",
+      "meanNetPct": -0.32075677672430075,
+      "netPositive": 17
+    },
+    {
+      "meanStressPct": -0.5420983844057689,
+      "symbol": "KAIAUSDT",
+      "meanGrossPct": -0.032536936402653704,
+      "observations": 16,
+      "model": "baseline",
+      "meanNetPct": -0.33199014577937963,
+      "netPositive": 5
+    },
+    {
+      "meanStressPct": -0.07051850210337204,
+      "symbol": "KAIAUSDT",
+      "meanGrossPct": 1.0118143042505683,
+      "observations": 16,
+      "model": "transition",
+      "meanNetPct": 0.7092327336936551,
+      "netPositive": 8
+    },
+    {
+      "meanStressPct": -0.4268398834194063,
+      "symbol": "KAIAUSDT",
+      "meanGrossPct": 0.07131387491174193,
+      "observations": 455,
+      "model": "fixed_15m_control",
+      "meanNetPct": -0.22845042027022155,
+      "netPositive": 96
+    },
+    {
+      "meanStressPct": -0.3215969772525634,
+      "symbol": "MAGICUSDT",
+      "meanGrossPct": 0.39258954140049473,
+      "observations": 32,
+      "model": "baseline",
+      "meanNetPct": 0.09186286279420426,
+      "netPositive": 11
+    },
+    {
+      "meanStressPct": -0.48891207504977724,
+      "symbol": "MAGICUSDT",
+      "meanGrossPct": 0.31983293209767283,
+      "observations": 20,
+      "model": "transition",
+      "meanNetPct": 0.019324196404922243,
+      "netPositive": 7
+    },
+    {
+      "meanStressPct": -0.3569523295038753,
+      "symbol": "MAGICUSDT",
+      "meanGrossPct": 0.1425060785903346,
+      "observations": 455,
+      "model": "fixed_15m_control",
+      "meanNetPct": -0.15747147331757433,
+      "netPositive": 151
+    },
+    {
+      "meanStressPct": -0.5173398330237499,
+      "symbol": "STRKUSDT",
+      "meanGrossPct": -0.07137160772200417,
+      "observations": 75,
+      "model": "baseline",
+      "meanNetPct": -0.3707084875790494,
+      "netPositive": 18
+    },
+    {
+      "meanStressPct": -0.2593439668523142,
+      "symbol": "STRKUSDT",
+      "meanGrossPct": 0.07684503878879126,
+      "observations": 60,
+      "model": "transition",
+      "meanNetPct": -0.22293582503184334,
+      "netPositive": 16
+    },
+    {
+      "meanStressPct": -0.4536275860589827,
+      "symbol": "STRKUSDT",
+      "meanGrossPct": 0.044962843210741336,
+      "observations": 455,
+      "model": "fixed_15m_control",
+      "meanNetPct": -0.2547225172781576,
+      "netPositive": 126
+    },
+    {
+      "meanStressPct": -0.5950109946438622,
+      "symbol": "XRPUSDT",
+      "meanGrossPct": -0.11437316145002183,
+      "observations": 52,
+      "model": "baseline",
+      "meanNetPct": -0.41358122986305185,
+      "netPositive": 5
+    },
+    {
+      "meanStressPct": -0.5605517790445185,
+      "symbol": "XRPUSDT",
+      "meanGrossPct": -0.09259342603701014,
+      "observations": 52,
+      "model": "transition",
+      "meanNetPct": -0.3918667357942631,
+      "netPositive": 4
+    },
+    {
+      "meanStressPct": -0.5192661941663866,
+      "symbol": "XRPUSDT",
+      "meanGrossPct": -0.020952932818610197,
+      "observations": 455,
+      "model": "fixed_15m_control",
+      "meanNetPct": -0.32044084215614776,
+      "netPositive": 33
+    },
+    {
+      "meanStressPct": -0.4250794916587729,
+      "symbol": "ZKUSDT",
+      "meanGrossPct": 0.15570282813091083,
+      "observations": 40,
+      "model": "baseline",
+      "meanNetPct": -0.14431425472919507,
+      "netPositive": 11
+    },
+    {
+      "meanStressPct": -0.486555946589617,
+      "symbol": "ZKUSDT",
+      "meanGrossPct": 0.003953957895209262,
+      "observations": 32,
+      "model": "transition",
+      "meanNetPct": -0.29560856020132864,
+      "netPositive": 7
+    },
+    {
+      "meanStressPct": -0.4710765592021021,
+      "symbol": "ZKUSDT",
+      "meanGrossPct": 0.029877986609626206,
+      "observations": 455,
+      "model": "fixed_15m_control",
+      "meanNetPct": -0.26976218708965316,
+      "netPositive": 140
+    }
+  ],
+  "bars": 69680,
+  "symbols": 10
+}

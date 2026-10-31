@@ -49,7 +49,28 @@ public class MainActivity extends Activity {
         }
     };
 
-    private static final int EXPORT_PHASE=660,EXPORT_AUDIT=670;
+    private static final int EXPORT_FLOW=610,EXPORT_PHASE=660,EXPORT_AUDIT=670;
+    private String flowReplaySummary(){
+        try(java.io.InputStream in=getAssets().open("research/flow-transition-replay.json")){
+            java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();byte[] buf=new byte[4096];int count;
+            while((count=in.read(buf))!=-1)bytes.write(buf,0,count);
+            org.json.JSONObject result=new org.json.JSONObject(bytes.toString("UTF-8"));org.json.JSONArray rows=result.getJSONArray("results");
+            StringBuilder out=new StringBuilder("اختبار استكشافي محفوظ: "+result.getLong("bars")+" شمعة / "+result.getInt("symbols")+" عملات\n");
+            for(String model:new String[]{"baseline","transition"}){int n=0;double net=0,stress=0;
+                for(int j=0;j<rows.length();j++){org.json.JSONObject r=rows.getJSONObject(j);if(!model.equals(r.getString("model")))continue;int k=r.getInt("observations");if(k==0)continue;n+=k;net+=k*r.getDouble("meanNetPct");stress+=k*r.getDouble("meanStressPct");}
+                out.append(model.equals("baseline")?"السابق":"الجديد").append(String.format(java.util.Locale.US," • %d رصد • متوسط صافي %+.3f%% • ضغط %+.3f%%\n",n,n==0?0:net/n,n==0?0:stress/n));
+            }
+            return out+"دخول افتتاح الدقيقة التالية؛ احتفاظ 15 دقيقة؛ رسوم 0.10% وانزلاق 0.05% لكل طرف. الضغط: تأخير دقيقتين إضافيتين وانزلاق 0.15%. ليست محفظة أو تحققًا مستقلاً؛ لم تثبت الربحية.";
+        }catch(Exception e){return "نتيجة الإعادة التاريخية غير متاحة؛ لا تفترض نجاح المحرك.";}
+    }
+    private void showFlowResearch(){
+        new AlertDialog.Builder(this).setTitle("التحول وتتابع الشراء • مقارنة حية")
+            .setMessage(flowReplaySummary()+"\n\n"+FlowResearch.report(prefs().getString(FlowResearch.KEY,"{}"),System.currentTimeMillis())+"\n"+prefs().getString("flow_research_error",""))
+            .setPositiveButton("إغلاق",null).setNeutralButton("تصدير المقارنة",(d,w)->{
+                Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");
+                i.putExtra(Intent.EXTRA_TITLE,"Radar-flow-research-"+System.currentTimeMillis()+".json");startActivityForResult(i,EXPORT_FLOW);
+            }).show();
+    }
     private void exportAudit(){
         new AlertDialog.Builder(this).setTitle("تصدير سجل CSV")
             .setMessage("يشمل آخر 300 قرار خلال 24 ساعة، ورصد الأسعار حتى 1000 سجل / 7 أيام، وتسليم الإشعارات حتى 500 سجل / 7 أيام. قد يُحذف الأقدم عند بلوغ الحد؛ هذا ليس أرشيفًا كاملًا. النتائج قبل التكاليف وليست صفقات. الأوقات بالمللي ثانية UTC. القيم القديمة غير المسجلة تبقى فارغة.")
@@ -69,11 +90,20 @@ public class MainActivity extends Activity {
     }
     @Override protected void onActivityResult(int request,int result,Intent data){
         super.onActivityResult(request,result,data);
-        if((request!=EXPORT_PHASE&&request!=EXPORT_AUDIT)||result!=RESULT_OK||data==null||data.getData()==null)return;
+        if((request!=EXPORT_PHASE&&request!=EXPORT_AUDIT&&request!=EXPORT_FLOW)||result!=RESULT_OK||data==null||data.getData()==null)return;
         final android.net.Uri uri=data.getData();
         final java.util.Map<String,?> snapshot=prefs().getAll();
         new Thread(()->{
             try{
+                if(request==EXPORT_FLOW){
+                    Object value=snapshot.get(FlowResearch.KEY);
+                    org.json.JSONObject out=new org.json.JSONObject(value==null?"{}":String.valueOf(value));
+                    out.put("app",BuildConfig.VERSION_NAME).put("exportedAt",System.currentTimeMillis());
+                    try(java.io.OutputStream stream=getContentResolver().openOutputStream(uri,"wt")){
+                        if(stream==null)throw new java.io.IOException("No output stream");stream.write(out.toString(2).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    }
+                    runOnUiThread(()->feedback("تم حفظ مقارنة المحركين"));return;
+                }
                 if(request==EXPORT_AUDIT){
                     String csv=ResearchExport.csv(String.valueOf((snapshot.containsKey("v6_trace")?snapshot.get("v6_trace"):"[]")),String.valueOf((snapshot.containsKey("v65_outcomes")?snapshot.get("v65_outcomes"):"[]")),String.valueOf((snapshot.containsKey("v67_notifications")?snapshot.get("v67_notifications"):"[]")));
                     try(java.io.OutputStream stream=getContentResolver().openOutputStream(uri,"wt")){
@@ -214,13 +244,16 @@ public class MainActivity extends Activity {
 
         Button toolsMenu=new Button(this);toolsMenu.setText("☰ الأدوات والتقارير والإشعارات");
         toolsMenu.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("الأدوات")
-            .setItems(new String[]{"الاختبار التاريخي","مختبر الزخم اليومي","سجل قبول ورفض الإشارات","لماذا لم تظهر العملة؟","بطاقة أداء المحرك","إعدادات الإشعارات / اختبار","حالة الاتصال وتغطية الفحص","اختبار ربع الساعة (تجريبي)","تصدير سجل الإشارات CSV"},(d,w)->{
+            .setItems(new String[]{"الاختبار التاريخي","مختبر الزخم اليومي","سجل قبول ورفض الإشارات","لماذا لم تظهر العملة؟","بطاقة أداء المحرك","إعدادات الإشعارات / اختبار","حالة الاتصال وتغطية الفحص","اختبار ربع الساعة (تجريبي)","تصدير سجل الإشارات CSV","التحول وتتابع الشراء (جديد)"},(d,w)->{
                 Button[] actions={replay,research,log,audit,outcomes,alerts};
                 if(w<actions.length)actions[w].performClick();
                 else if(w==7)showPhaseShadow();
                 else if(w==8)exportAudit();
+                else if(w==9)showFlowResearch();
                 else new AlertDialog.Builder(this).setTitle("حالة الفحص والتغطية").setMessage(scanCoverage.getText()).setPositiveButton("إغلاق",null).show();
             }).setNegativeButton("إغلاق",null).show());root.addView(toolsMenu);
+        Button flowButton=new Button(this);flowButton.setText("التحول وتتابع الشراء • مقارنة حية");
+        flowButton.setOnClickListener(v->showFlowResearch());root.addView(flowButton);
         TextView listTitle = new TextView(this);
         listTitle.setText("الرادار والإشارات");
         listTitle.setTextColor(Color.WHITE);

@@ -41,16 +41,26 @@ jobs:
           cp /tmp/results.csv ../v6-results-ci.csv
           cp /tmp/alerts.csv ../v6-alerts-ci.csv
           # Frozen historical CSV remains available for research; changed metrics never alter the BUY gates.
+      - name: Reproduce flow transition comparison
+        working-directory: crypto-radar-lowpower
+        run: |
+          java -cp /tmp/json.jar:/tmp/v6tests com.wahshi.cryptoexplosionradar.FlowReplayCli app/src/main/assets/replay /tmp/flow-transition-replay.json
+          python3 - <<'PYCODE'
+          import json
+          actual = json.load(open('/tmp/flow-transition-replay.json'))
+          expected = json.load(open('app/src/main/assets/research/flow-transition-replay.json'))
+          assert actual == expected, 'Flow replay differs from packaged evidence'
+          PYCODE
       - name: Build native Android V6
         working-directory: crypto-radar-lowpower
-        run: gradle --no-daemon assembleDebug --stacktrace
+        run: gradle --no-daemon assembleResearch --stacktrace
       - name: Verify APK package, version, signature, and replay assets
         run: |
-          cp crypto-radar-lowpower/app/build/outputs/apk/debug/app-debug.apk Explosion-Radar-V6.apk
+          cp crypto-radar-lowpower/app/build/outputs/apk/research/app-research.apk Explosion-Radar-V6.apk
           test -s Explosion-Radar-V6.apk
           "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging Explosion-Radar-V6.apk | tee apk-metadata.txt
-          grep -q "name='com.wahshi.cryptoexplosionradar'" apk-metadata.txt
-          grep -q "versionName='6.9.3-research'" apk-metadata.txt
+          grep -q "name='com.wahshi.cryptoexplosionradar.research'" apk-metadata.txt
+          grep -q "versionName='6.10.0-research'" apk-metadata.txt
           grep -q "application-icon" apk-metadata.txt
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose Explosion-Radar-V6.apk | tee signature.txt
           python3 crypto-radar-lowpower/tests/verify-apk-assets.py Explosion-Radar-V6.apk
@@ -67,6 +77,8 @@ jobs:
             v6-results-ci.csv
             v6-alerts-ci.csv
             crypto-radar-lowpower/research/optional-replay-coverage.txt
+            crypto-radar-lowpower/research/flow-transition-replay.json
+            crypto-radar-lowpower/research/FLOW_TRANSITION.md
             crypto-radar-lowpower/research/v6-results.csv
             crypto-radar-lowpower/research/v6-alerts.csv
           retention-days: 30

@@ -7,11 +7,21 @@ android {
     compileSdk 35
 
     defaultConfig {
+        manifestPlaceholders = [appLabel: "Explosion Radar"]
         applicationId 'com.wahshi.cryptoexplosionradar'
         minSdk 26
         targetSdk 34
-        versionCode 76
-        versionName "6.9.3-research"
+        versionCode 77
+        versionName "6.10.0-research"
+    }
+
+    buildTypes {
+        research {
+            initWith debug
+            applicationIdSuffix '.research'
+            manifestPlaceholders = [appLabel: "Explosion Radar Research"]
+            matchingFallbacks = ['debug']
+        }
     }
 
     buildFeatures { buildConfig true }
