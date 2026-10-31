@@ -16,6 +16,8 @@ public final class MinuteStreams {
     private static int failures;
     private static long healthySince;
     private static final StreamRecovery recovery=new StreamRecovery();
+    public interface Observer { void minute(String symbol,long close,double price,long now); }
+    public static volatile Observer observer;
     private MinuteStreams(){}
     public static synchronized void start(){enabled=true;}
     public static synchronized void stop(){enabled=false;generation++;recovery.invalidate(System.currentTimeMillis());if(socket!=null)socket.cancel();socket=null;connected=false;histories.clear();timings.clear();symbols.clear();retryAfter=0;failures=0;healthySince=0;}
@@ -56,6 +58,7 @@ public final class MinuteStreams {
                     histories.computeIfAbsent(s,key->new MinuteHistory()).stream(k,lastMessage);
                     if(k.optBoolean("x")&&"1m".equals(k.optString("i"))){
                         long close=k.getLong("T");FlowTiming prior=timings.get(s);
+                        Observer listener=observer;if(listener!=null)listener.minute(s,close,k.getDouble("c"),lastMessage);
                         if(close<lastMessage&&(prior==null||close>prior.closedAt))timings.put(s,new FlowTiming(close,data.optLong("E",0),lastMessage,"WEBSOCKET"));
                     }
                 }catch(Exception ignored){} // Bad packets never become usable candles.

@@ -163,6 +163,7 @@ public class ScannerService extends Service {
         if (running) return;
         running = true;
         MinuteStreams.start();
+        MicroStreams.start(prefs);
         prefs.edit().putBoolean("radar_enabled", true).putBoolean("service_alive", true).apply();
         startForeground(SERVICE_NOTIFICATION_ID, buildServiceNotification("Explosion Radar " + BuildConfig.VERSION_NAME + " يعمل"));
         sendUi("Explosion Radar " + BuildConfig.VERSION_NAME, "أول فحص مجاني On-chain خلال ثوانٍ…");
@@ -173,6 +174,7 @@ public class ScannerService extends Service {
     private synchronized void stopScanner() {
         running = false;
         MinuteStreams.stop();
+        MicroStreams.stop();
         scanHandler.removeCallbacks(scheduledScan);
         if(enrichmentWorker!=null)enrichmentWorker.shutdownNow();
         if(fastWorker!=null)fastWorker.shutdownNow();
@@ -816,6 +818,7 @@ public class ScannerService extends Service {
         if(fastWorker!=null)fastWorker.shutdownNow();
         running = false;
         MinuteStreams.stop();
+        MicroStreams.stop();
         scanHandler.removeCallbacks(scheduledScan);
         if(enrichmentWorker!=null)enrichmentWorker.shutdownNow();
         if(fastWorker!=null)fastWorker.shutdownNow();

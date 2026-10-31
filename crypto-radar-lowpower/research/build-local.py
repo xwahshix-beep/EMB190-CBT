@@ -9,14 +9,14 @@ project=pathlib.Path(__file__).resolve().parents[1];build=runtime/'manual';sdk=r
 def run(*a):subprocess.run([str(x) for x in a],check=True,cwd=project)
 for d in ['generated','classes','dex']:(build/d).mkdir(parents=True,exist_ok=True)
 ns='http://schemas.android.com/apk/res/android';E.register_namespace('android',ns)
-r=E.parse(project/'app/src/main/AndroidManifest.xml');r.getroot().set('package','com.wahshi.cryptoexplosionradar.research')
+r=E.parse(project/'app/src/main/AndroidManifest.xml');r.getroot().set('package','com.wahshi.cryptoexplosionradar.research611')
 for el in r.iter():
  key='{'+ns+'}name'
  if el.get(key,'').startswith('.'):el.set(key,'com.wahshi.cryptoexplosionradar'+el.get(key))
-r.find('application').set('{'+ns+'}label','Explosion Radar Research')
+r.find('application').set('{'+ns+'}label','Explosion Radar 6.11')
 r.write(build/'AndroidManifest.xml',encoding='utf-8',xml_declaration=True)
-run(sdk/'aapt','package','-f','-m','--custom-package','com.wahshi.cryptoexplosionradar','-J',build/'generated','-M',build/'AndroidManifest.xml','-S',project/'app/src/main/res','-A',project/'app/src/main/assets','-I',android,'-F',build/'resources.apk','--min-sdk-version','26','--target-sdk-version','34','--version-code','77','--version-name','6.10.0-research')
-(build/'generated/com/wahshi/cryptoexplosionradar/BuildConfig.java').write_text('package com.wahshi.cryptoexplosionradar; public final class BuildConfig {public static final String VERSION_NAME="6.10.0-research";}\n')
+run(sdk/'aapt','package','-f','-m','--custom-package','com.wahshi.cryptoexplosionradar','-J',build/'generated','-M',build/'AndroidManifest.xml','-S',project/'app/src/main/res','-A',project/'app/src/main/assets','-I',android,'-F',build/'resources.apk','--min-sdk-version','26','--target-sdk-version','34','--version-code','78','--version-name','6.11.0-research')
+(build/'generated/com/wahshi/cryptoexplosionradar/BuildConfig.java').write_text('package com.wahshi.cryptoexplosionradar; public final class BuildConfig {public static final String VERSION_NAME="6.11.0-research";}\n')
 app_libs=[libs/n for n in ['okhttp-4.12.0.jar','okio-jvm-3.6.0.jar','kotlin-stdlib-1.9.10.jar','annotations-13.0.jar']]
 sources=list((project/'app/src/main/java').rglob('*.java'))+list((build/'generated').rglob('*.java'))
 run(runtime/'jdk/bin/javac','-source','17','-target','17','-encoding','UTF-8','-cp',os.pathsep.join(map(str,[android]+app_libs)),'-d',build/'classes',*sources)

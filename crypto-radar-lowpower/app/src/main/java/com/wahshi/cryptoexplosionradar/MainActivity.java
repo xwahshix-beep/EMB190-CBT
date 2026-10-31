@@ -49,7 +49,7 @@ public class MainActivity extends Activity {
         }
     };
 
-    private static final int EXPORT_FLOW=610,EXPORT_PHASE=660,EXPORT_AUDIT=670;
+    private static final int EXPORT_MICRO=611,EXPORT_FLOW=610,EXPORT_PHASE=660,EXPORT_AUDIT=670;
     private String flowReplaySummary(){
         try(java.io.InputStream in=getAssets().open("research/flow-transition-replay.json")){
             java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();byte[] buf=new byte[4096];int count;
@@ -62,6 +62,14 @@ public class MainActivity extends Activity {
             }
             return out+"دخول افتتاح الدقيقة التالية؛ احتفاظ 15 دقيقة؛ رسوم 0.10% وانزلاق 0.05% لكل طرف. الضغط: تأخير دقيقتين إضافيتين وانزلاق 0.15%. ليست محفظة أو تحققًا مستقلاً؛ لم تثبت الربحية.";
         }catch(Exception e){return "نتيجة الإعادة التاريخية غير متاحة؛ لا تفترض نجاح المحرك.";}
+    }
+    private void showMicroResearch(){
+        new AlertDialog.Builder(this).setTitle("الرصد المبكر • دفتر السوق • الفرص الفائتة")
+            .setMessage(MicroResearch.report(MicroStreams.snapshot().equals("{}")?prefs().getString(MicroResearch.KEY,"{}"):MicroStreams.snapshot(),System.currentTimeMillis()))
+            .setPositiveButton("إغلاق",null).setNeutralButton("تصدير السجل",(d,w)->{
+                Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");
+                i.putExtra(Intent.EXTRA_TITLE,"Radar-micro-research-"+System.currentTimeMillis()+".json");startActivityForResult(i,EXPORT_MICRO);
+            }).show();
     }
     private void showFlowResearch(){
         new AlertDialog.Builder(this).setTitle("التحول وتتابع الشراء • مقارنة حية")
@@ -90,11 +98,18 @@ public class MainActivity extends Activity {
     }
     @Override protected void onActivityResult(int request,int result,Intent data){
         super.onActivityResult(request,result,data);
-        if((request!=EXPORT_PHASE&&request!=EXPORT_AUDIT&&request!=EXPORT_FLOW)||result!=RESULT_OK||data==null||data.getData()==null)return;
+        if((request!=EXPORT_MICRO&&request!=EXPORT_PHASE&&request!=EXPORT_AUDIT&&request!=EXPORT_FLOW)||result!=RESULT_OK||data==null||data.getData()==null)return;
         final android.net.Uri uri=data.getData();
         final java.util.Map<String,?> snapshot=prefs().getAll();
+        final String microSnapshot=MicroStreams.snapshot();
         new Thread(()->{
             try{
+                if(request==EXPORT_MICRO){
+                    String saved=microSnapshot.equals("{}")?String.valueOf(snapshot.containsKey(MicroResearch.KEY)?snapshot.get(MicroResearch.KEY):"{}"):microSnapshot;
+                    org.json.JSONObject out=new org.json.JSONObject(saved).put("app",BuildConfig.VERSION_NAME).put("exportedAt",System.currentTimeMillis());
+                    try(java.io.OutputStream stream=getContentResolver().openOutputStream(uri,"wt")){if(stream==null)throw new java.io.IOException("No output stream");stream.write(out.toString(2).getBytes(java.nio.charset.StandardCharsets.UTF_8));}
+                    runOnUiThread(()->feedback("تم حفظ سجل الرصد والاختبار الورقي"));return;
+                }
                 if(request==EXPORT_FLOW){
                     Object value=snapshot.get(FlowResearch.KEY);
                     org.json.JSONObject out=new org.json.JSONObject(value==null?"{}":String.valueOf(value));
@@ -254,6 +269,7 @@ public class MainActivity extends Activity {
             }).setNegativeButton("إغلاق",null).show());root.addView(toolsMenu);
         Button flowButton=new Button(this);flowButton.setText("التحول وتتابع الشراء • مقارنة حية");
         flowButton.setOnClickListener(v->showFlowResearch());root.addView(flowButton);
+        Button microButton=new Button(this);microButton.setText("الرصد المبكر · دفتر السوق · الفرص الفائتة");microButton.setOnClickListener(v->showMicroResearch());root.addView(microButton);
         TextView listTitle = new TextView(this);
         listTitle.setText("الرادار والإشارات");
         listTitle.setTextColor(Color.WHITE);

@@ -92,6 +92,7 @@ public final class HybridEngine {
             double rb=hb==null?0:hb.quoteVolume/(day.get(b).quoteVolume/24);
             return Double.compare(rb,ra);
         });
+        MicroStreams.select(eligible);
         EarlyWhaleEngine.Result early = System.currentTimeMillis()-earlyCacheAt<300000
                 ? earlyCache : new EarlyWhaleEngine.Result();
         List<Candidate> candidates = new ArrayList<>();
@@ -246,6 +247,7 @@ public final class HybridEngine {
                         flowBars.add(new PreExplosionEngine.Bar(row.getLong(0),row.getDouble(1),row.getDouble(2),row.getDouble(3),row.getDouble(4),row.getDouble(7),row.getLong(8),row.getDouble(10)));
                     }
                     FlowTransitionEngine.Result flow=FlowTransitionEngine.evaluate(flowBars,flowBars.size()-1);
+                    MicroStreams.baseline(c.symbol,a.pre.state,flow.state,c.checkedAt);
                     String saved=prefs.getString(FlowResearch.KEY,"{}");
                     String updated=FlowResearch.update(saved,c.symbol,flow,a.pre.state,c.checkedAt,MinuteStreams.timing(c.symbol,flow.closedAt,c.checkedAt));
                     if(!saved.equals(updated))prefs.edit().putString(FlowResearch.KEY,updated).remove("flow_research_error").apply();

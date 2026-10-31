@@ -59,8 +59,8 @@ jobs:
           cp crypto-radar-lowpower/app/build/outputs/apk/research/app-research.apk Explosion-Radar-V6.apk
           test -s Explosion-Radar-V6.apk
           "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging Explosion-Radar-V6.apk | tee apk-metadata.txt
-          grep -q "name='com.wahshi.cryptoexplosionradar.research'" apk-metadata.txt
-          grep -q "versionName='6.10.0-research'" apk-metadata.txt
+          grep -q "name='com.wahshi.cryptoexplosionradar.research611'" apk-metadata.txt
+          grep -q "versionName='6.11.0-research'" apk-metadata.txt
           grep -q "application-icon" apk-metadata.txt
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose Explosion-Radar-V6.apk | tee signature.txt
           python3 crypto-radar-lowpower/tests/verify-apk-assets.py Explosion-Radar-V6.apk
@@ -79,6 +79,7 @@ jobs:
             crypto-radar-lowpower/research/optional-replay-coverage.txt
             crypto-radar-lowpower/research/flow-transition-replay.json
             crypto-radar-lowpower/research/FLOW_TRANSITION.md
+            crypto-radar-lowpower/research/MICRO_RESEARCH.md
             crypto-radar-lowpower/research/v6-results.csv
             crypto-radar-lowpower/research/v6-alerts.csv
           retention-days: 30
