@@ -116,6 +116,8 @@ public class ScannerService extends Service {
     @Override public void onCreate() {
         super.onCreate();
         prefs = getSharedPreferences("free_whale_radar_v3", MODE_PRIVATE);
+        Diagnostics.init(prefs);
+        ProductionGate.clearBlocked(this);
         createChannels();
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
         Intent tick = new Intent(this, ScannerService.class).setAction(ACTION_TICK);
@@ -316,6 +318,7 @@ public class ScannerService extends Service {
 
     private void runCycleSafe() {
         if(!running)return;
+        ProductionGate.clearBlocked(this);
         long started=System.currentTimeMillis();
         try {
             startEnrichment(); // asynchronous network enrichment does not need the scan's CPU lock
@@ -329,7 +332,8 @@ public class ScannerService extends Service {
             sendUi(result.status,result.summary+"\n"+wakeSummary()+"\n"+prefs.getString("onchain_health","بيانات السلسلة: انتظار الفحص")+"\nمدة الفحص: "+((finished-started)/1000)+" ثانية");
             updateServiceNotification("رصد بحثي يعمل • تنبيهات الشراء تخضع لقفل الإنتاج");
         } catch(Exception ex) {
-            if(running)sendUi("تعذر تحديث السوق","انتظار — "+safe(ex.getMessage()));
+            Diagnostics.event(prefs,"scan",ex.getClass().getSimpleName());
+            if(running)sendUi("تعذر تحديث السوق","بيانات سابقة — راجع سجل التشغيل");
         } finally {
             releaseCycleWake();
             long elapsed=System.currentTimeMillis()-started;
@@ -361,6 +365,7 @@ public class ScannerService extends Service {
     private void recordEnrichmentError(String stage, Exception failure) {
         // Do not log credentials, URLs, provider bodies or wallet addresses.
         String kind=failure.getClass().getSimpleName();
+        Diagnostics.event(prefs,stage,kind);
         android.util.Log.w("RadarData",stage+": "+kind);
         prefs.edit().putString("enrichment_error",stage+": "+kind)
             .putLong("enrichment_error_at",System.currentTimeMillis()).apply();

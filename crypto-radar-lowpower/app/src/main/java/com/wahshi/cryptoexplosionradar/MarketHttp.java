@@ -6,6 +6,11 @@ public final class MarketHttp {
  private static volatile long retryAt;
  public static long retryDelay(){return Math.max(0,retryAt-System.currentTimeMillis());}
  public static String read(String url)throws Exception{
+  String source=DataHealth.source(url);
+  try {String result=request(url);Diagnostics.transport(source,true,"");return result;}
+  catch(Exception error){Diagnostics.transport(source,false,error.getClass().getSimpleName());throw error;}
+ }
+ private static String request(String url)throws Exception{
   if(Thread.currentThread().isInterrupted())throw new IOException("الفحص متوقف");
   if(retryDelay()>0)throw new IOException("انتظار حدود طلبات Binance");
   HttpsURLConnection c=(HttpsURLConnection)new URL(url).openConnection();

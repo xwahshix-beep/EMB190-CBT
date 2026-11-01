@@ -99,12 +99,12 @@ public final class TradeManager {
     }
 
     private static void notifyExit(Context c, TradeState t) {
-        notify(c, 26000 + Math.abs(t.symbol.hashCode() % 2000), "🔴 متابعة ورقية: خروج — " + t.symbol,
+        notify(c, 26000 + Math.abs(t.symbol.hashCode() % 2000), "رُصد كسر مستوى ورقي — " + t.symbol,
                 "السعر " + fmt(t.price) + " • كسر مستوى الحماية " + fmt(t.protect), Color.rgb(255,90,90));
     }
 
     private static void notifyHold(Context c, TradeState t) {
-        notify(c, 24000 + Math.abs(t.symbol.hashCode() % 2000), "🔵 متابعة ورقية: احتفاظ — " + t.symbol,
+        notify(c, 24000 + Math.abs(t.symbol.hashCode() % 2000), "رُصد سعر فوق المستوى الورقي — " + t.symbol,
                 "السعر أعلى من مستوى الحماية الورقي • " + String.format(Locale.US, "%+.2f%%", t.pnlPct), Color.rgb(94,168,255));
     }
 
@@ -118,7 +118,10 @@ public final class TradeManager {
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(c, CHANNEL) : new Notification.Builder(c);
         Notification n = b.setContentTitle(title).setContentText(body).setStyle(new Notification.BigTextStyle().bigText(body))
                 .setSmallIcon(R.drawable.app_icon).setContentIntent(pi).setAutoCancel(true).setColor(color).build();
-        manager.notify(id, n);
+        try{
+            if(!manager.areNotificationsEnabled()||manager.getNotificationChannel(CHANNEL).getImportance()==0){Diagnostics.event(c.getSharedPreferences("free_whale_radar_v3",0),"paper-notification","إشعارات المتابعة محظورة");return;}
+            manager.notify(id, n);
+        }catch(SecurityException denied){Diagnostics.event(c.getSharedPreferences("free_whale_radar_v3",0),"paper-notification","رفض Android إذن الإشعار");}
     }
 
     public static double currentPrice(String symbol) throws Exception {

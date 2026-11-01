@@ -59,9 +59,10 @@ jobs:
           cp crypto-radar-lowpower/app/build/outputs/apk/research/app-research.apk Explosion-Radar-V6.apk
           test -s Explosion-Radar-V6.apk
           "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging Explosion-Radar-V6.apk | tee apk-metadata.txt
-          grep -q "name='com.wahshi.cryptoexplosionradar.research611'" apk-metadata.txt
-          grep -q "versionName='6.11.0-research'" apk-metadata.txt
+          grep -q "name='com.wahshi.cryptoexplosionradar.research612'" apk-metadata.txt
+          grep -q "versionName='6.12.0-research'" apk-metadata.txt
           grep -q "application-icon" apk-metadata.txt
+          ! grep -q "application-debuggable" apk-metadata.txt
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose Explosion-Radar-V6.apk | tee signature.txt
           python3 crypto-radar-lowpower/tests/verify-apk-assets.py Explosion-Radar-V6.apk
           sha256sum Explosion-Radar-V6.apk > Explosion-Radar-V6.apk.sha256

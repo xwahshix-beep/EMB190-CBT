@@ -11,15 +11,16 @@ android {
         applicationId 'com.wahshi.cryptoexplosionradar'
         minSdk 26
         targetSdk 34
-        versionCode 78
-        versionName "6.11.0-research"
+        versionCode 79
+        versionName "6.12.0-research"
     }
 
     buildTypes {
         research {
             initWith debug
-            applicationIdSuffix '.research611'
-            manifestPlaceholders = [appLabel: "Explosion Radar 6.11"]
+            debuggable false
+            applicationIdSuffix '.research612'
+            manifestPlaceholders = [appLabel: "Explosion Radar 6.12"]
             matchingFallbacks = ['debug']
         }
     }

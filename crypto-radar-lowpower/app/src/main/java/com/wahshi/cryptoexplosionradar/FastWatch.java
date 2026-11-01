@@ -22,7 +22,7 @@ public final class FastWatch {
      SignalChecks.Result stable=SignalChecks.confirm(prefs,symbol,result.window,result.price,result.quoteAt,"selected");
      result.price=stable.price;result.quoteAt=stable.quoteAt;result.reason=stable.reason;stableUntil=stable.until;
      if(!stable.buy)result.state="WAIT";
-    }catch(Exception ex){result.state="WAIT";result.reason=SignalChecks.reject(prefs,symbol,"تعذر تأكيد السعر","selected");}
+    }catch(Exception ex){Diagnostics.event(prefs,"follow-confirm",ex.getClass().getSimpleName());result.state="WAIT";result.reason=SignalChecks.reject(prefs,symbol,"تعذر تأكيد السعر","selected");}
    }else result.reason=SignalChecks.reject(prefs,symbol,result.reason,"selected");
   }
   synchronized(FollowGate.LOCK){
@@ -48,14 +48,14 @@ public final class FastWatch {
     if((result.state.equals("WATCH")||result.state.equals("EARLY_WATCH")||result.state.equals("EXIT"))&&!result.state.equals(prev)
          &&(result.state.equals("EXIT")||now-lastAlert>60000)){
      NotificationManager nm=(NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-     nm.createNotificationChannel(new NotificationChannel("selected_watch_v53","Selected coin Watch / Buy / Exit",NotificationManager.IMPORTANCE_HIGH));
-     if(!nm.areNotificationsEnabled())return;
+     nm.createNotificationChannel(new NotificationChannel("selected_watch_v53","رصد تغيرات العملة المتابعة",NotificationManager.IMPORTANCE_HIGH));
+     if(!nm.areNotificationsEnabled()||nm.getNotificationChannel("selected_watch_v53").getImportance()==0){Diagnostics.event(prefs,"notification","إشعارات المراقبة محظورة في Android");return;}
      PendingIntent pi=PendingIntent.getActivity(context,FollowGate.ALERT,new Intent(context,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
-     String title="بحث غير مثبت — "+(result.state.equals("EXIT")?"🔴 خروج":"🐋 مراقبة مبكرة")+" — "+symbol;
-     nm.notify(FollowGate.ALERT,new Notification.Builder(context,"selected_watch_v53").setSmallIcon(R.drawable.app_icon).setContentTitle(title).setContentText(detail).setStyle(new Notification.BigTextStyle().bigText(detail)).setContentIntent(pi).setAutoCancel(true).build());
+     String title="بحث غير مثبت — "+(result.state.equals("EXIT")?"رُصد تغير شرط المتابعة":"رُصد نشاط مبكر")+" — "+symbol;
+     nm.notify(FollowGate.ALERT,new Notification.Builder(context,"selected_watch_v53").setSmallIcon(R.drawable.app_icon).setContentTitle(title).setContentText("رُصد تغير في حالة المتابعة؛ افتح التطبيق للوقت والسبب. ليس توصية بيع أو شراء.").setStyle(new Notification.BigTextStyle().bigText("رُصد تغير في حالة المتابعة عند "+Diagnostics.time(now)+"؛ افتح التطبيق للاطلاع على القياسات والسبب. ليس توصية بيع أو شراء.")).setContentIntent(pi).setAutoCancel(true).build());
      prefs.edit().putString("fast_alert_state",result.state).putLong("fast_alert_at",now).apply();
     }
-   }catch(SecurityException denied){ /* Results stay available in the app. */ }
+   }catch(SecurityException denied){ Diagnostics.event(prefs,"notification","رفض Android إذن الإشعار"); }
   }
  }
 }

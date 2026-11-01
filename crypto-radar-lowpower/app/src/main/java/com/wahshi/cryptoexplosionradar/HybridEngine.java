@@ -284,6 +284,7 @@ public final class HybridEngine {
                     classifyManagement(c);
                 }
             } catch (Exception ex) {
+                Diagnostics.event(prefs,"candles:"+c.symbol,ex.getClass().getSimpleName());
                 failedCount++;c.waitReason="تعذر تحديث بيانات الدقيقة";
                 logDecision(prefs,c.symbol,null,"DATA",c.waitReason,System.currentTimeMillis());
             }
@@ -330,7 +331,7 @@ public final class HybridEngine {
                     synchronized(HybridEngine.class){prefs.edit().putString("v65_outcomes",OutcomeLedger.start(prefs.getString("v65_outcomes","[]"),c.symbol,"BUY",stable.price,checked,ResearchExport.explanation(c.analysis.pre))).apply();}
                     OpportunityAlerts.send(context,prefs,c.symbol,c.lastPrice,c.entryLow,c.entryHigh,stable.quoteAt,c.liveSignalAt,c.analysis.window,c.analysis.pre);
                 } else c.waitReason=c.lastPrice>c.entryHigh?"فات نطاق الدخول":"انتظار دخول السعر في النطاق";
-            } catch(Exception ignored) {c.liveState="WAIT";c.waitReason="تعذر التحقق من السعر الحالي";}
+            } catch(Exception ignored) {Diagnostics.event(prefs,"price:"+c.symbol,ignored.getClass().getSimpleName());c.liveState="WAIT";c.waitReason="تعذر التحقق من السعر الحالي";}
         }
 
         for(Candidate c:candidates)if(c.analysis!=null&&!"ACTIVE".equals(c.liveState)){c.waitReason=SignalChecks.reject(prefs,c.symbol,c.waitReason);SignalChecks.cancelEnded(context,prefs,c.symbol);}
@@ -406,10 +407,12 @@ public final class HybridEngine {
 
     private static void logDecision(SharedPreferences prefs,String symbol,PreExplosionEngine.Result r,String state,String reason,long now) {
         synchronized (HybridEngine.class) {
+            synchronized(DecisionLedger.class){
             String events=DecisionLedger.append(prefs.getString("v6_trace","[]"),symbol,state,reason,r,now);
             String remembered=DecisionLedger.remember(prefs.getString("v6_recent","{}"),symbol,r,now);
             prefs.edit().putString("v6_trace",events).putString("v6_recent",remembered)
                 .putString("v65_last_"+symbol,state+" • "+reason).putLong("v65_last_at_"+symbol,now).apply();
+            }
         }
     }
 

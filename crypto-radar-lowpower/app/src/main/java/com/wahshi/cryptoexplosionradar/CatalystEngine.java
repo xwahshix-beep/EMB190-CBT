@@ -128,10 +128,10 @@ public final class CatalystEngine {
 
     private static List<Announcement> fetchAnnouncements() throws Exception {
         LinkedHashMap<String, Announcement> out = new LinkedHashMap<>();
-        try { parseBinanceHtml(readText(BINANCE_ANNOUNCEMENTS), out); } catch (Exception ignored) {}
-        try { parseBinanceHtml(readText(BINANCE_LISTINGS), out); } catch (Exception ignored) {}
+        try { int before=out.size(); parseBinanceHtml(readText(BINANCE_ANNOUNCEMENTS), out); Diagnostics.transport("announcements",out.size()>before,out.size()>before?"":"لم تُستخرج عناصر جديدة؛ قد تكون الصفحة فارغة أو تغير تنسيقها"); } catch (Exception failure) { Diagnostics.transport("announcements",false,failure.getClass().getSimpleName()); }
+        try { int before=out.size(); parseBinanceHtml(readText(BINANCE_LISTINGS), out); Diagnostics.transport("listings",out.size()>before,out.size()>before?"":"لم تُستخرج عناصر جديدة؛ قد تكون الصفحة فارغة أو تغير تنسيقها"); } catch (Exception failure) { Diagnostics.transport("listings",false,failure.getClass().getSimpleName()); }
         if (out.size() < 5) {
-            try { parseTelegramHtml(readText(BINANCE_TELEGRAM), out); } catch (Exception ignored) {}
+            try { int before=out.size(); parseTelegramHtml(readText(BINANCE_TELEGRAM), out); Diagnostics.transport("telegram",out.size()>before,out.size()>before?"":"لم تُستخرج عناصر جديدة؛ قد تكون الصفحة فارغة أو تغير تنسيقها"); } catch (Exception failure) { Diagnostics.transport("telegram",false,failure.getClass().getSimpleName()); }
         }
         return new ArrayList<>(out.values());
     }

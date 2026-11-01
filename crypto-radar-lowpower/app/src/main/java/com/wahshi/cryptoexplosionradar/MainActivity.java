@@ -145,6 +145,7 @@ public class MainActivity extends Activity {
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        Diagnostics.init(prefs());
         ProductionGate.clearBlocked(this);
         if (Build.VERSION.SDK_INT >= 33
                 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -269,6 +270,8 @@ public class MainActivity extends Activity {
             }).setNegativeButton("إغلاق",null).show());root.addView(toolsMenu);
         Button flowButton=new Button(this);flowButton.setText("التحول وتتابع الشراء • مقارنة حية");
         flowButton.setOnClickListener(v->showFlowResearch());root.addView(flowButton);
+        Button diagnosticButton=new Button(this);diagnosticButton.setText("حالة البيانات وأسباب حجب الإشعارات");
+        diagnosticButton.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("حالة البيانات وسجل التشغيل").setMessage(Diagnostics.overview(prefs(),System.currentTimeMillis())+"\n\n"+Diagnostics.journal(prefs())).setPositiveButton("إغلاق",null).show());root.addView(diagnosticButton);
         Button microButton=new Button(this);microButton.setText("الرصد المبكر · دفتر السوق · الفرص الفائتة");microButton.setOnClickListener(v->showMicroResearch());root.addView(microButton);
         TextView listTitle = new TextView(this);
         listTitle.setText("الرادار والإشارات");
@@ -491,7 +494,9 @@ public class MainActivity extends Activity {
         coverage=(ProductionGate.enabled(this)?"بحث غير مثبت — ليس توصية":ProductionGate.MESSAGE)+"\n"+coverage;
         coverage="نطاق التنبيهات المطلوب (لا يتجاوز قفل الإنتاج): "+(p.getBoolean("notify_all_buys",true)?"كل الإشارات المؤكدة":"العملة المتابعة فقط")+"\n"+p.getString("push_status","لم يُسجّل إرسال إشعار بعد")+"\n"+coverage;
         scanCoverage.setText(coverage);
-        details.setText(styleDetails(text));
+        long observedAt=symbol.isEmpty()?p.getLong("last_scan_at",0):p.getLong("fast_at",0);
+        String brief="ما الذي رُصد؟ "+(symbol.isEmpty()?"ملخص السوق":symbol+" • "+p.getString("fast_state","انتظار"))+"\nوقت الرصد: "+Diagnostics.time(observedAt)+"\nلماذا؟ الأسباب والقياسات في التفاصيل أدناه.\nالثقة: لم تثبت دقة تنبؤية؛ ليس توصية تداول.\n\n";
+        details.setText(styleDetails(brief+text));
         savedSignals.setText(styleDetails(SignalChecks.history(p)));
     }
     private void inspectAlert(Intent intent){
@@ -528,9 +533,10 @@ public class MainActivity extends Activity {
         }
         long ageMin = Math.max(0L, (System.currentTimeMillis() - t) / 60_000L);
         String when = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date(t));
-        boolean healthy = System.currentTimeMillis()-t <= 120000;
+        long received=p.getLong("health_ok_market",0);
+        boolean healthy = received>0 && System.currentTimeMillis()>=received && System.currentTimeMillis()-received<=120000 && p.getLong("health_fail_market",0)<received;
         health.setTextColor(healthy ? Color.rgb(118, 210, 154) : Color.rgb(245, 183, 43));
-        health.setText((healthy ? "● يعمل" : "● متأخر") + " • آخر فحص " + when);
+        health.setText((healthy ? "● استجابة السوق حديثة" : "⚠ بيانات السوق قديمة أو غير متاحة") + "\nآخر استجابة ناجحة: " + Diagnostics.time(received)+"\nآخر فحص مكتمل: "+when);
     }
 
     private void showNotificationHint() {

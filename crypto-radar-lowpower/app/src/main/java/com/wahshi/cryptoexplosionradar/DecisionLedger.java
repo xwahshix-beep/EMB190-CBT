@@ -10,6 +10,9 @@ public final class DecisionLedger {
    JSONArray before=new JSONArray(json==null?"[]":json),out=new JSONArray();
    long candle=r==null?0:r.closedAt;
    JSONObject event=new JSONObject().put("symbol",symbol).put("state",state).put("reason",reason==null?"":reason)
+     .put("schema_version",1).put("decision_at",now).put("received_at",JSONObject.NULL)
+     .put("source_at",candle>0?candle:JSONObject.NULL).put("data_age",candle>0&&now>=candle?now-candle:JSONObject.NULL)
+     .put("rules_version","pre-explosion-v6-frozen").put("event_type","DECISION")
      .put("observedAt",now).put("closedAt",candle)
      .put("score",r==null?0:r.score).put("audit",r==null?"No complete candles":r.audit());
    if(r!=null)event.put("vol",r.volumeAcceleration).put("trades",r.tradeAcceleration).put("z",r.tradeZ)
@@ -23,6 +26,18 @@ public final class DecisionLedger {
     out.put(e);count++;
    }return out.toString();
   } catch(Exception e){return json==null?"[]":json;}
+ }
+ public static String operational(String json,String source,String state,String reason,long now,long monotonic,String build){
+  try{
+   JSONArray old=new JSONArray(json==null?"[]":json),out=new JSONArray();
+   out.put(new JSONObject().put("schema_version",1).put("event_type","OPERATIONAL").put("source",source)
+    .put("symbol","").put("state",state).put("reason",reason).put("decision_at",now).put("observedAt",now)
+    .put("received_at",JSONObject.NULL).put("source_at",JSONObject.NULL).put("data_age",JSONObject.NULL)
+    .put("monotonic_at",monotonic).put("build_version",build).put("rules_version","unchanged-6.11")
+    .put("audit","مصدر: "+source+" • "+build).put("closedAt",0));
+   for(int i=0;i<old.length()&&out.length()<LIMIT;i++){JSONObject e=old.optJSONObject(i);if(e!=null&&now-e.optLong("observedAt")<=86400000)out.put(e);}
+   return out.toString();
+  }catch(Exception e){throw new IllegalArgumentException("Invalid decision ledger",e);}
  }
  public static String remember(String json,String symbol,PreExplosionEngine.Result r,long now) {
   if(r==null||!("EARLY_WATCH".equals(r.state)||"WATCH".equals(r.state)||"BUY".equals(r.state)||"TOO_LATE".equals(r.state)))return json==null?"{}":json;
