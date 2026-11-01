@@ -7,6 +7,9 @@ public class DataHealthTest {
   check(DataHealth.state(1200,1100,1321,120).contains("قديمة"));
   check(DataHealth.state(1200,0,1100,120).contains("غير متسق"));
   check(DataHealth.source("https://api.binance.com/api/v3/klines?symbol=BTCUSDT").equals("candles"));
+  check(DataHealth.maxAge("depth")==3000 && DataHealth.maxAge("candles")==60000);
+  check(DataHealth.state(10000,0,13000,DataHealth.maxAge("depth")).contains("حديثة"));
+  check(DataHealth.state(10000,0,13001,DataHealth.maxAge("depth")).contains("قديمة"));
   System.out.println("DataHealthTest passed");
  }
  static void check(boolean ok){if(!ok)throw new AssertionError();}

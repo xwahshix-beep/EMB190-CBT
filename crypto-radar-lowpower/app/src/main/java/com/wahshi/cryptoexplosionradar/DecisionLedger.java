@@ -31,7 +31,7 @@ public final class DecisionLedger {
   try{
    JSONArray old=new JSONArray(json==null?"[]":json),out=new JSONArray();
    out.put(new JSONObject().put("schema_version",1).put("event_type","OPERATIONAL").put("source",source)
-    .put("symbol","").put("state",state).put("reason",reason).put("decision_at",now).put("observedAt",now)
+    .put("symbol",source.contains(":")?source.substring(source.indexOf(":")+1):"").put("state",state).put("reason",reason).put("decision_at",now).put("observedAt",now)
     .put("received_at",JSONObject.NULL).put("source_at",JSONObject.NULL).put("data_age",JSONObject.NULL)
     .put("monotonic_at",monotonic).put("build_version",build).put("rules_version","unchanged-6.11")
     .put("audit","مصدر: "+source+" • "+build).put("closedAt",0));
@@ -56,6 +56,7 @@ public final class DecisionLedger {
   try{
    JSONArray a=new JSONArray(json==null?"[]":json);StringBuilder out=new StringBuilder();
    for(int i=0;i<a.length()&&i<max;i++){JSONObject x=a.optJSONObject(i);if(x==null)continue;
+    if("OPERATIONAL".equals(x.optString("event_type"))){out.append(x.optLong("decision_at")).append(" ms UTC • ").append(x.optString("source")).append(" • ").append(x.optString("state")).append("\n").append(x.optString("reason")).append("\n\n");continue;}
     out.append(x.optString("symbol")).append(" • ").append(x.optString("state")).append(" • ")
       .append(x.optInt("score")).append("/100\n").append(x.optString("reason"))
       .append("\n").append(x.optString("audit")).append("\n\n");

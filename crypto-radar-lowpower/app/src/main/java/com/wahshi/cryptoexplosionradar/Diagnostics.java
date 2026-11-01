@@ -16,7 +16,7 @@ public final class Diagnostics {
  }
  public static void event(SharedPreferences p,String source,String reason){
   long now=System.currentTimeMillis();
-  String state=source.equals("buy-blocked")?(reason.equals(ProductionGate.MESSAGE)?"BLOCKED_PRODUCTION_GATE":"BLOCKED_EXECUTION"):"DISCONNECTED";
+  String state=source.startsWith("buy-blocked:")?(reason.equals(ProductionGate.MESSAGE)?"BLOCKED_PRODUCTION_GATE":"BLOCKED_EXECUTION"):source.contains("notification")?"DELIVERY_UNKNOWN":reason.contains("JSON")||reason.contains("تُستخرج")?"PARSE_ERROR":"DISCONNECTED";
   try { synchronized(DecisionLedger.class){
    p.edit().putString("v6_trace",DecisionLedger.operational(p.getString("v6_trace","[]"),source,state,reason,now,android.os.SystemClock.elapsedRealtime(),BuildConfig.VERSION_NAME)).apply();
   }}catch(Exception failure){android.util.Log.w("RadarData","decision journal unavailable");}
