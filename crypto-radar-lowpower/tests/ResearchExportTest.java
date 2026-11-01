@@ -16,6 +16,9 @@ public class ResearchExportTest {
   check(new JSONArray(decision).getJSONObject(0).getDouble("vol")==3,"structured feature persistence");
   check(ResearchExport.explanation(r).contains("3.00")&&ResearchExport.explanation(null).contains("غير متاحة"),"accurate explanation or unavailable");
   String old="[{\"observedAt\":1}]";check(new JSONArray(ResearchExport.notification(old,"AAA",1,now,now,now,"x")).length()==1,"notification retention");
+  String operational=DecisionLedger.operational("[]","buy-blocked:AAAUSDT","BLOCKED_PRODUCTION_GATE","disabled",now,10,"test-build");
+  String exported=ResearchExport.csv(operational,"[]","[]");
+  check(exported.contains("decision_at,received_at,source_at,data_age")&&exported.contains("test-build")&&exported.contains("BLOCKED_PRODUCTION_GATE"),"operational schema survives same CSV export");
   boolean failed=false;try{ResearchExport.csv("broken","[]","[]");}catch(Exception e){failed=true;}check(failed,"corruption must not silently produce partial export");
   System.out.println("ResearchExportTest passed: escaping, formula safety, structured features, losses, missing data, retention");
  }
