@@ -33,7 +33,7 @@ public final class DecisionLedger {
    out.put(new JSONObject().put("schema_version",1).put("event_type","OPERATIONAL").put("source",source)
     .put("symbol",source.contains(":")?source.substring(source.indexOf(":")+1):"").put("state",state).put("reason",reason).put("decision_at",now).put("observedAt",now)
     .put("received_at",JSONObject.NULL).put("source_at",JSONObject.NULL).put("data_age",JSONObject.NULL)
-    .put("monotonic_at",monotonic).put("build_version",build).put("rules_version","unchanged-6.11")
+    .put("monotonic_at",monotonic).put("build_version",build).put("rules_version",JSONObject.NULL).put("rules_baseline_commit","d27d3eb41f4784622e3ab7c6909783cac44f6ecf")
     .put("audit","مصدر: "+source+" • "+build).put("closedAt",0));
    for(int i=0;i<old.length()&&out.length()<LIMIT;i++){JSONObject e=old.optJSONObject(i);if(e!=null&&now-e.optLong("observedAt")<=86400000)out.put(e);}
    return out.toString();

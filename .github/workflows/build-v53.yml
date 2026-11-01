@@ -51,21 +51,51 @@ jobs:
           expected = json.load(open('app/src/main/assets/research/flow-transition-replay.json'))
           assert actual == expected, 'Flow replay differs from packaged evidence'
           PYCODE
+      - name: Record explicit source provenance
+        run: |
+          python3 - <<'PYCODE'
+          import os, json, hashlib, pathlib, subprocess
+          root=pathlib.Path('crypto-radar-lowpower')
+          commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          assert commit==os.environ['GITHUB_SHA']
+          files={}
+          for name in ['FlowTransitionEngine','MicroResearch']:
+              p=root/'app/src/main/java/com/wahshi/cryptoexplosionradar'/f'{name}.java'
+              files[str(p)]=hashlib.sha256(p.read_bytes()).hexdigest()
+          (root/'app/src/main/assets/build-provenance.json').write_text(json.dumps({
+              'source_commit':commit,'repository':os.environ['GITHUB_REPOSITORY'],
+              'run_id':os.environ['GITHUB_RUN_ID'],'version':'6.12-engineering',
+              'engine_source_sha256':files,'purpose':'engineering; no new research evaluation',
+              'physical_device_test':'not performed'},indent=2))
+          PYCODE
       - name: Build native Android V6
         working-directory: crypto-radar-lowpower
-        run: gradle --no-daemon assembleResearch --stacktrace
+        run: gradle --no-daemon assembleEngineering --stacktrace
       - name: Verify APK package, version, signature, and replay assets
         run: |
-          cp crypto-radar-lowpower/app/build/outputs/apk/research/app-research.apk Explosion-Radar-V6.apk
+          cp crypto-radar-lowpower/app/build/outputs/apk/engineering/app-engineering.apk Explosion-Radar-V6.apk
           test -s Explosion-Radar-V6.apk
           "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging Explosion-Radar-V6.apk | tee apk-metadata.txt
-          grep -q "name='com.wahshi.cryptoexplosionradar.research612'" apk-metadata.txt
-          grep -q "versionName='6.12.0-research'" apk-metadata.txt
+          grep -q "name='com.wahshi.cryptoexplosionradar.engineering612'" apk-metadata.txt
+          grep -q "versionName='6.12-engineering'" apk-metadata.txt
           grep -q "application-icon" apk-metadata.txt
           ! grep -q "application-debuggable" apk-metadata.txt
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose Explosion-Radar-V6.apk | tee signature.txt
           python3 crypto-radar-lowpower/tests/verify-apk-assets.py Explosion-Radar-V6.apk
           sha256sum Explosion-Radar-V6.apk > Explosion-Radar-V6.apk.sha256
+      - name: Record release identity
+        run: |
+          python3 - <<'PYCODE'
+          import zipfile,json,hashlib,os,pathlib
+          apk=pathlib.Path('Explosion-Radar-V6.apk')
+          with zipfile.ZipFile(apk) as z:
+              p=json.loads(z.read('assets/build-provenance.json'))
+          assert p['source_commit']==os.environ['GITHUB_SHA']
+          note={**p,'apk_sha256':hashlib.sha256(apk.read_bytes()).hexdigest(),
+              'build_url':f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
+              'icon_and_notification_device_check':'not performed; static resource checks only'}
+          pathlib.Path('release-identity.json').write_text(json.dumps(note,indent=2))
+          PYCODE
       - uses: actions/upload-artifact@v4
         with:
           name: Explosion-Radar-V6-APK
@@ -75,6 +105,7 @@ jobs:
             Explosion-Radar-V6.apk.sha256
             apk-metadata.txt
             signature.txt
+            release-identity.json
             v6-results-ci.csv
             v6-alerts-ci.csv
             crypto-radar-lowpower/research/optional-replay-coverage.txt
